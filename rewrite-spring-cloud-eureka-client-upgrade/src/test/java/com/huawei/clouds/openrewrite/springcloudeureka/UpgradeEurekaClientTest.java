@@ -5,6 +5,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.openrewrite.Recipe;
 import org.openrewrite.config.Environment;
+import org.openrewrite.java.JavaParser;
 import org.openrewrite.test.RecipeSpec;
 import org.openrewrite.test.RewriteTest;
 import org.openrewrite.test.TypeValidation;
@@ -20,6 +21,8 @@ import static org.openrewrite.test.SourceSpecs.text;
 class UpgradeEurekaClientTest implements RewriteTest {
     private static final String RECIPE =
             "com.huawei.clouds.openrewrite.springcloudeureka.UpgradeEurekaClientTo4_2_0";
+    private static final String MIGRATION_RECIPE =
+            "com.huawei.clouds.openrewrite.springcloudeureka.MigrateEurekaClientTo4_2_0";
 
     @Override
     public void defaults(RecipeSpec spec) {
@@ -403,6 +406,81 @@ class UpgradeEurekaClientTest implements RewriteTest {
     }
 
     @Test
+    void migrationRecipeRemovesObsoleteEnableEurekaClientFromRealSource() {
+        // Reduced from emirtotic/aviation-app at 578d5f1a2b9c743b7ead9020006194c1facf9965.
+        rewriteRun(
+                spec -> spec
+                        .recipe(environment().activateRecipes(MIGRATION_RECIPE))
+                        .parser(JavaParser.fromJavaVersion().dependsOn(
+                                """
+                                package org.springframework.cloud.netflix.eureka;
+                                public @interface EnableEurekaClient {}
+                                """,
+                                """
+                                package org.springframework.boot.autoconfigure;
+                                public @interface SpringBootApplication {}
+                                """
+                        )),
+                java(
+                        """
+                        package com.flight;
+
+                        import org.springframework.boot.autoconfigure.SpringBootApplication;
+                        import org.springframework.cloud.netflix.eureka.EnableEurekaClient;
+
+                        @SpringBootApplication
+                        @EnableEurekaClient
+                        public class FlightServiceApplication {
+                        }
+                        """,
+                        """
+                        package com.flight;
+
+                        import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+                        @SpringBootApplication
+                        public class FlightServiceApplication {
+                        }
+                        """
+                )
+        );
+    }
+
+    @Test
+    void migrationRecipeMarksRibbonRuleForManualLoadBalancerPort() {
+        rewriteRun(
+                spec -> spec
+                        .recipe(environment().activateRecipes(MIGRATION_RECIPE))
+                        .parser(JavaParser.fromJavaVersion().dependsOn(
+                                """
+                                package com.netflix.loadbalancer;
+                                public interface IRule {}
+                                """
+                        )),
+                java(
+                        """
+                        package com.flight.config;
+
+                        import com.netflix.loadbalancer.IRule;
+
+                        class RibbonConfiguration {
+                            IRule rule;
+                        }
+                        """,
+                        """
+                        package com.flight.config;
+
+                        import com.netflix.loadbalancer.IRule;
+
+                        class RibbonConfiguration {
+                            /*~~>*/IRule rule;
+                        }
+                        """
+                )
+        );
+    }
+
+    @Test
     void dependencyRecipeLeavesLoadBalancedRestTemplateSourceUntouched() {
         // Reduced from emirtotic/aviation-app at 578d5f1a2b9c743b7ead9020006194c1facf9965.
         rewriteRun(
@@ -464,8 +542,11 @@ class UpgradeEurekaClientTest implements RewriteTest {
     @Test
     void recipeLoadsWithExpectedIdentity() {
         Recipe recipe = environment().activateRecipes(RECIPE);
+        Recipe migrationRecipe = environment().activateRecipes(MIGRATION_RECIPE);
         assertEquals(RECIPE, recipe.getName());
         assertTrue(recipe.validateAll().stream().allMatch(validation -> validation.isValid()));
+        assertEquals(MIGRATION_RECIPE, migrationRecipe.getName());
+        assertTrue(migrationRecipe.validateAll().stream().allMatch(validation -> validation.isValid()));
     }
 
     private static Environment environment() {

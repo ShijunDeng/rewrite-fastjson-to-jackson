@@ -5,6 +5,27 @@ packageName: com.huawei.clouds.openrewrite.springcloudeureka
 description: Upgrade Spring Cloud Netflix Eureka Client while preserving release-train-managed dependencies.
 ---
 type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.springcloudeureka.MigrateEurekaClientTo4_2_0
+displayName: Migrate Spring Cloud Netflix Eureka Client applications to 4.2.0
+description: Upgrade the starter, remove the obsolete EnableEurekaClient annotation, and mark Netflix Ribbon APIs that require an application-specific Spring Cloud LoadBalancer migration.
+tags:
+  - spring-cloud
+  - netflix-eureka
+  - service-discovery
+  - java
+  - migration
+recipeList:
+  - com.huawei.clouds.openrewrite.springcloudeureka.UpgradeEurekaClientTo4_2_0
+  - org.openrewrite.java.RemoveAnnotation:
+      annotationPattern: '@org.springframework.cloud.netflix.eureka.EnableEurekaClient'
+  - org.openrewrite.java.search.FindTypes:
+      fullyQualifiedTypeName: org.springframework.cloud.netflix.ribbon..*
+      checkAssignability: false
+  - org.openrewrite.java.search.FindTypes:
+      fullyQualifiedTypeName: com.netflix.loadbalancer..*
+      checkAssignability: false
+---
+type: specs.openrewrite.org/v1beta/recipe
 name: com.huawei.clouds.openrewrite.springcloudeureka.UpgradeEurekaClientTo4_2_0
 displayName: Upgrade Spring Cloud Netflix Eureka Client to 4.2.0
 description: Upgrade explicit org.springframework.cloud:spring-cloud-starter-netflix-eureka-client versions in Maven and Gradle to 4.2.0 without adding or overriding versions managed by a Spring Cloud BOM.
