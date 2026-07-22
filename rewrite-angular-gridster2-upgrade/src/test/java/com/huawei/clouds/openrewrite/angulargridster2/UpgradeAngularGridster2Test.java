@@ -15,12 +15,20 @@ import static org.openrewrite.json.Assertions.json;
 import static org.openrewrite.test.SourceSpecs.text;
 
 class UpgradeAngularGridster2Test implements RewriteTest {
-    private static final String RECIPE_NAME =
+    private static final String DEPENDENCY_RECIPE =
             "com.huawei.clouds.openrewrite.angulargridster2.UpgradeAngularGridster2To20_2_4";
+    private static final String STANDALONE_RECIPE =
+            "com.huawei.clouds.openrewrite.angulargridster2.MigrateStandaloneGridsterModuleToComponents";
+    private static final String SOURCE_RECIPE =
+            "com.huawei.clouds.openrewrite.angulargridster2.MigrateDeterministicAngularGridster2SourceTo20";
+    private static final String RISK_RECIPE =
+            "com.huawei.clouds.openrewrite.angulargridster2.FindManualAngularGridster2To20MigrationRisks";
+    private static final String COMPOSITE_RECIPE =
+            "com.huawei.clouds.openrewrite.angulargridster2.MigrateAngularGridster2To20_2_4";
 
     @Override
     public void defaults(RecipeSpec spec) {
-        spec.recipe(environment().activateRecipes(RECIPE_NAME));
+        spec.recipe(environment().activateRecipes(DEPENDENCY_RECIPE));
     }
 
     @Test
@@ -341,11 +349,29 @@ class UpgradeAngularGridster2Test implements RewriteTest {
                   "dependencies": {"angular-gridster2": {"version": "16.0.0"}},
                   "devDependencies": {"angular-gridster2": 16},
                   "peerDependencies": {"angular-gridster2": true},
-                  "optionalDependencies": {"angular-gridster2": null}
+                  "optionalDependencies": {"angular-gridster2": null, "fixture": ["13.3.2"]}
                 }
                 """,
                 spec -> spec.path("package.json")
         ));
+    }
+
+    @Test
+    void leavesAngularGridster2ArrayValuesAndArrayShapedSectionsUntouched() {
+        rewriteRun(
+                json(
+                        """
+                        {"dependencies":{"angular-gridster2":["16.0.0"]}}
+                        """,
+                        spec -> spec.path("array-value/package.json")
+                ),
+                json(
+                        """
+                        {"devDependencies":[{"angular-gridster2":"13.3.2"}]}
+                        """,
+                        spec -> spec.path("array-section/package.json")
+                )
+        );
     }
 
     @Test
@@ -396,14 +422,365 @@ class UpgradeAngularGridster2Test implements RewriteTest {
     }
 
     @Test
-    void discoversAndValidatesRecipe() {
+    void migratesHyperIotStrictOptionsChangedCall() {
+        // Reduced from HyperIoT-Labs/HyperIoT-UI at da8e6ebd16aba40fc1996e6da706b2954c3b12f3:
+        // https://github.com/HyperIoT-Labs/HyperIoT-UI/blob/da8e6ebd16aba40fc1996e6da706b2954c3b12f3/projects/widgets/src/lib/dashboard/widgets-layout/widgets-layout.component.ts
+        rewriteRun(
+                spec -> spec.recipe(sourceRecipe()),
+                text(
+                        """
+                        import { GridsterConfig } from 'angular-gridster2';
+                        export class WidgetsDashboardLayoutComponent {
+                          options: GridsterConfig;
+                          refreshLayout() {
+                            this.options.api.optionsChanged();
+                          }
+                        }
+                        """,
+                        """
+                        import { GridsterConfig } from 'angular-gridster2';
+                        export class WidgetsDashboardLayoutComponent {
+                          options: GridsterConfig;
+                          refreshLayout() {
+                            this.options.api?.optionsChanged?.();
+                          }
+                        }
+                        """,
+                        source -> source.path("projects/widgets/src/lib/dashboard/widgets-layout/widgets-layout.component.ts")
+                )
+        );
+    }
+
+    @Test
+    void migratesSostradesGuardedOptionsChangedCall() {
+        // Reduced from os-climate/sostrades-webgui at fe148be3c158cd681fb7bce739575f9d24f2c2d2:
+        // https://github.com/os-climate/sostrades-webgui/blob/fe148be3c158cd681fb7bce739575f9d24f2c2d2/src/app/modules/dashboard/dashboard.component.ts
+        rewriteRun(
+                spec -> spec.recipe(sourceRecipe()),
+                text(
+                        """
+                        import { GridsterConfig } from "angular-gridster2";
+                        export class DashboardComponent {
+                          options: GridsterConfig;
+                          ngAfterViewInit() {
+                            if (this.options.api) this.options.api.optionsChanged();
+                          }
+                        }
+                        """,
+                        """
+                        import { GridsterConfig } from "angular-gridster2";
+                        export class DashboardComponent {
+                          options: GridsterConfig;
+                          ngAfterViewInit() {
+                            this.options.api?.optionsChanged?.();
+                          }
+                        }
+                        """,
+                        source -> source.path("src/app/modules/dashboard/dashboard.component.ts")
+                )
+        );
+    }
+
+    @Test
+    void migratesHyperIotSimpleGridsterItemLoopToBuiltInControlFlow() {
+        // Reduced from HyperIoT-Labs/HyperIoT-UI at da8e6ebd16aba40fc1996e6da706b2954c3b12f3:
+        // https://github.com/HyperIoT-Labs/HyperIoT-UI/blob/da8e6ebd16aba40fc1996e6da706b2954c3b12f3/projects/widgets/src/lib/dashboard/widgets-layout/widgets-layout.component.html
+        rewriteRun(
+                spec -> spec.recipe(sourceRecipe()),
+                text(
+                        """
+                        <gridster [options]="options">
+                          <gridster-item [item]="item" *ngFor="let item of dashboard">
+                            <hyperiot-dynamic-widget [widget]="item"></hyperiot-dynamic-widget>
+                          </gridster-item>
+                        </gridster>
+                        """,
+                        """
+                        <gridster [options]="options">
+                          @for (item of dashboard; track item) {
+                            <gridster-item [item]="item">
+                            <hyperiot-dynamic-widget [widget]="item"></hyperiot-dynamic-widget>
+                            </gridster-item>
+                          }
+                        </gridster>
+                        """,
+                        source -> source.path("projects/widgets/src/lib/dashboard/widgets-layout/widgets-layout.component.html")
+                )
+        );
+    }
+
+    @Test
+    void migratesExactStandaloneModuleUseToPublishedStandaloneComponents() {
+        rewriteRun(
+                spec -> spec.recipe(sourceRecipe()),
+                text(
+                        """
+                        import { Component } from '@angular/core';
+                        import { GridsterModule } from 'angular-gridster2';
+
+                        @Component({
+                          standalone: true,
+                          imports: [CommonModule, GridsterModule],
+                          templateUrl: './dashboard.html'
+                        })
+                        export class DashboardComponent {}
+                        """,
+                        """
+                        import { Component } from '@angular/core';
+                        import { GridsterComponent, GridsterItemComponent } from 'angular-gridster2';
+
+                        @Component({
+                          standalone: true,
+                          imports: [CommonModule, GridsterComponent, GridsterItemComponent],
+                          templateUrl: './dashboard.html'
+                        })
+                        export class DashboardComponent {}
+                        """,
+                        source -> source.path("src/app/dashboard.component.ts")
+                )
+        );
+    }
+
+    @ParameterizedTest(name = "normalizes published symbol deep import {0}")
+    @ValueSource(strings = {
+            "gridster.component", "gridsterItem.component", "gridsterItem.interface",
+            "gridster.interface", "gridsterConfig.interface", "gridsterConfig.constant",
+            "gridster.module", "gridsterPush.service", "gridsterPushResize.service", "gridsterSwap.service"
+    })
+    void normalizesKnownPublicDeepImports(String internalFile) {
+        rewriteRun(
+                spec -> spec.recipe(sourceRecipe()),
+                text(
+                        "import { PublicSymbol } from 'angular-gridster2/lib/" + internalFile + "';\n",
+                        "import { PublicSymbol } from 'angular-gridster2';\n",
+                        source -> source.path("src/app/deep-import.ts")
+                )
+        );
+    }
+
+    @Test
+    void preservesNgModuleApplicationsComplexStandaloneImportsAndComplexLoops() {
+        rewriteRun(
+                spec -> spec.recipe(sourceRecipe()),
+                text(
+                        """
+                        import { GridsterModule } from 'angular-gridster2';
+                        @NgModule({ imports: [GridsterModule] })
+                        export class DashboardModule {}
+                        """,
+                        source -> source.path("src/app/dashboard.module.ts")
+                ),
+                text(
+                        """
+                        import { GridsterConfig, GridsterModule } from 'angular-gridster2';
+                        @Component({ standalone: true, imports: [GridsterModule] })
+                        export class DashboardComponent {}
+                        """,
+                        source -> source.path("src/app/complex-standalone.component.ts")
+                ),
+                text(
+                        """
+                        <gridster [options]="options">
+                          <gridster-item [item]="item" *ngFor="let item of gridContents$ | async; trackBy: trackItem">
+                          </gridster-item>
+                        </gridster>
+                        """,
+                        source -> source.path("src/app/dashboard.component.html")
+                ),
+                text(
+                        "other.options.api.optionsChanged();\n",
+                        source -> source.path("src/app/unrelated.ts")
+                ),
+                text(
+                        "this.options.api.optionsChanged();\n",
+                        source -> source.path("src/app/unrelated-this.ts")
+                )
+        );
+    }
+
+    @Test
+    void marksFischertechnikSsrBrowserGlobalRisk() {
+        // Reduced from fischertechnik/Agile-Production-Simulation-24V-Dev at 24568073:
+        // https://github.com/fischertechnik/Agile-Production-Simulation-24V-Dev/blob/24568073f7f70d0d31dcaa83bcfcd7b595baba1f/frontend/projects/futurefactory/src/lib/components/factory-layout/factory-layout.component.ts
+        rewriteRun(
+                spec -> spec.recipe(riskRecipe()),
+                text(
+                        """
+                        import { GridsterComponent } from 'angular-gridster2';
+                        if (window.ResizeObserver) {
+                          this.resizeObserver = new ResizeObserver(() => {});
+                        }
+                        """,
+                        """
+                        import { GridsterComponent } from 'angular-gridster2';
+                        if (~~>window.~~>ResizeObserver) {
+                          this.resizeObserver = new ~~>ResizeObserver(() => {});
+                        }
+                        """,
+                        source -> source.path("frontend/projects/futurefactory/src/lib/components/factory-layout/factory-layout.component.ts")
+                )
+        );
+    }
+
+    @Test
+    void marksHyperIotResponsiveAndLayoutRisks() {
+        // Reduced from HyperIoT-Labs/HyperIoT-UI at da8e6ebd16aba40fc1996e6da706b2954c3b12f3.
+        rewriteRun(
+                spec -> spec.recipe(riskRecipe()),
+                text(
+                        """
+                        import { GridsterConfig } from 'angular-gridster2';
+                        const availableWidth = document.documentElement.clientWidth;
+                        const options: GridsterConfig = { mobileBreakpoint: 0, compactType: 'compactUp' };
+                        """,
+                        """
+                        import { GridsterConfig } from 'angular-gridster2';
+                        const availableWidth = ~~>document.documentElement.clientWidth;
+                        const options: GridsterConfig = { ~~>mobileBreakpoint: 0, ~~>compactType: 'compactUp' };
+                        """,
+                        source -> source.path("projects/widgets/src/lib/dashboard/widgets-layout/widgets-layout.component.ts")
+                )
+        );
+    }
+
+    @Test
+    void marksSostradesDragConfigurationRisk() {
+        // Reduced from os-climate/sostrades-webgui at fe148be3c158cd681fb7bce739575f9d24f2c2d2.
+        rewriteRun(
+                spec -> spec.recipe(riskRecipe()),
+                text(
+                        """
+                        import { GridsterConfig } from 'angular-gridster2';
+                        const options: GridsterConfig = {
+                          draggable: { enabled: true, dragHandleClass: 'drag-handle' },
+                          resizable: { enabled: true }
+                        };
+                        """,
+                        """
+                        import { GridsterConfig } from 'angular-gridster2';
+                        const options: GridsterConfig = {
+                          ~~>draggable: { enabled: true, ~~>dragHandleClass: 'drag-handle' },
+                          ~~>resizable: { enabled: true }
+                        };
+                        """,
+                        source -> source.path("src/app/modules/dashboard/dashboard.component.ts")
+                )
+        );
+    }
+
+    @Test
+    void marksComplexGridsterLoopForManualControlFlowMigration() {
+        // Reduced from fischertechnik/Agile-Production-Simulation-24V-Dev at 24568073.
+        rewriteRun(
+                spec -> spec.recipe(riskRecipe()),
+                text(
+                        """
+                        <gridster [options]="options">
+                          <gridster-item [item]="item" *ngFor="let item of gridContents$ | async">
+                          </gridster-item>
+                        </gridster>
+                        """,
+                        """
+                        <gridster [options]="options">
+                          <gridster-item [item]="item" ~~>*ngFor="let item of gridContents$ | async">
+                          </gridster-item>
+                        </gridster>
+                        """,
+                        source -> source.path("frontend/projects/futurefactory/src/lib/components/factory-layout/factory-layout.component.html")
+                )
+        );
+    }
+
+    @Test
+    void marksFischertechnikLayoutPositionApiForBehaviorReview() {
+        // Reduced from fischertechnik/Agile-Production-Simulation-24V-Dev at 24568073:
+        // https://github.com/fischertechnik/Agile-Production-Simulation-24V-Dev/blob/24568073f7f70d0d31dcaa83bcfcd7b595baba1f/frontend/projects/futurefactory/src/lib/components/factory-layout/factory-layout.component.ts
+        rewriteRun(
+                spec -> spec.recipe(riskRecipe()),
+                text(
+                        """
+                        import { GridsterComponent } from 'angular-gridster2';
+                        item.x = this.gridster.getFirstPossiblePosition(item).x;
+                        """,
+                        """
+                        import { GridsterComponent } from 'angular-gridster2';
+                        item.x = this.gridster.~~>getFirstPossiblePosition(item).x;
+                        """,
+                        source -> source.path("frontend/projects/futurefactory/src/lib/components/factory-layout/factory-layout.component.ts")
+                )
+        );
+    }
+
+    @Test
+    void marksUnknownDeepImportAndRemovedInternalLayoutFunction() {
+        rewriteRun(
+                spec -> spec.recipe(riskRecipe()),
+                text(
+                        """
+                        import { GridsterDraggable } from 'angular-gridster2/lib/gridsterDraggable.service';
+                        this.gridster.calculateLayoutDebounce();
+                        """,
+                        """
+                        import { GridsterDraggable } ~~>from 'angular-gridster2/lib/gridsterDraggable.service';
+                        this.gridster.~~>calculateLayoutDebounce();
+                        """,
+                        source -> source.path("src/app/internal-gridster.ts")
+                )
+        );
+    }
+
+    @Test
+    void compositeUpgradesDependencyMigratesSafeSourceAndMarksRisks() {
+        rewriteRun(
+                spec -> spec.recipe(environment().activateRecipes(COMPOSITE_RECIPE)),
+                json(
+                        "{\"dependencies\":{\"angular-gridster2\":\"16.0.0\"}}",
+                        "{\"dependencies\":{\"angular-gridster2\":\"20.2.4\"}}",
+                        source -> source.path("package.json")
+                ),
+                text(
+                        """
+                        import { GridsterConfig } from 'angular-gridster2';
+                        this.options.api.optionsChanged();
+                        const options: GridsterConfig = { mobileBreakpoint: 640 };
+                        """,
+                        """
+                        import { GridsterConfig } from 'angular-gridster2';
+                        this.options.api?.optionsChanged?.();
+                        const options: GridsterConfig = { ~~>mobileBreakpoint: 640 };
+                        """,
+                        source -> source.path("src/app/dashboard.component.ts")
+                )
+        );
+    }
+
+    @Test
+    void discoversAndValidatesRecipes() {
         Environment environment = environment();
-        Recipe recipe = environment.activateRecipes(RECIPE_NAME);
+        Recipe dependency = environment.activateRecipes(DEPENDENCY_RECIPE);
+        Recipe standalone = environment.activateRecipes(STANDALONE_RECIPE);
+        Recipe source = environment.activateRecipes(SOURCE_RECIPE);
+        Recipe risks = environment.activateRecipes(RISK_RECIPE);
+        Recipe composite = environment.activateRecipes(COMPOSITE_RECIPE);
 
         assertTrue(environment.listRecipes().stream()
-                .anyMatch(candidate -> RECIPE_NAME.equals(candidate.getName())));
-        assertEquals("Upgrade angular-gridster2 to 20.2.4", recipe.getDisplayName());
-        assertTrue(recipe.validate().isValid(), () -> recipe.validate().failures().toString());
+                .anyMatch(candidate -> DEPENDENCY_RECIPE.equals(candidate.getName())));
+        assertTrue(environment.listRecipes().stream()
+                .anyMatch(candidate -> SOURCE_RECIPE.equals(candidate.getName())));
+        assertTrue(environment.listRecipes().stream()
+                .anyMatch(candidate -> RISK_RECIPE.equals(candidate.getName())));
+        assertTrue(environment.listRecipes().stream()
+                .anyMatch(candidate -> COMPOSITE_RECIPE.equals(candidate.getName())));
+        assertEquals("Upgrade angular-gridster2 to 20.2.4", dependency.getDisplayName());
+        assertEquals("Use angular-gridster2 standalone components in standalone Angular components", standalone.getDisplayName());
+        assertEquals("Migrate deterministic angular-gridster2 source constructs to version 20", source.getDisplayName());
+        assertEquals("Find angular-gridster2 20 migration risks requiring manual review", risks.getDisplayName());
+        assertEquals("Migrate angular-gridster2 applications to 20.2.4", composite.getDisplayName());
+        assertTrue(dependency.validate().isValid(), () -> dependency.validate().failures().toString());
+        assertTrue(standalone.validate().isValid(), () -> standalone.validate().failures().toString());
+        assertTrue(source.validate().isValid(), () -> source.validate().failures().toString());
+        assertTrue(risks.validate().isValid(), () -> risks.validate().failures().toString());
+        assertTrue(composite.validate().isValid(), () -> composite.validate().failures().toString());
     }
 
     private static SourceSpecs packageVersion(String path, String version) {
@@ -412,6 +789,14 @@ class UpgradeAngularGridster2Test implements RewriteTest {
                 "{\"dependencies\":{\"angular-gridster2\":\"20.2.4\"}}",
                 spec -> spec.path(path)
         );
+    }
+
+    private static Recipe sourceRecipe() {
+        return environment().activateRecipes(SOURCE_RECIPE);
+    }
+
+    private static Recipe riskRecipe() {
+        return environment().activateRecipes(RISK_RECIPE);
     }
 
     private static Environment environment() {

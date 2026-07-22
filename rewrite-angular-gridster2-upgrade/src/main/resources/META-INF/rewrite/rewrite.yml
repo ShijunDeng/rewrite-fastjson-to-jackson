@@ -18,19 +18,153 @@ preconditions:
   - org.openrewrite.FindSourceFiles:
       filePattern: package.json;**/package.json
 recipeList:
-  - org.openrewrite.json.ChangeValue:
-      oldKeyPath: >-
-        $.dependencies['angular-gridster2'][?(@ == '12.1.1' || @ == '^12.1.1' || @ == '~12.1.1' || @ == '=12.1.1' || @ == 'v12.1.1' || @ == '^v12.1.1' || @ == '13.3.0' || @ == '^13.3.0' || @ == '~13.3.0' || @ == '=13.3.0' || @ == 'v13.3.0' || @ == '^v13.3.0' || @ == '13.3.2' || @ == '^13.3.2' || @ == '~13.3.2' || @ == '=13.3.2' || @ == 'v13.3.2' || @ == '^v13.3.2' || @ == '16.0.0' || @ == '^16.0.0' || @ == '~16.0.0' || @ == '=16.0.0' || @ == 'v16.0.0' || @ == '^v16.0.0')]
-      value: '"20.2.4"'
-  - org.openrewrite.json.ChangeValue:
-      oldKeyPath: >-
-        $.devDependencies['angular-gridster2'][?(@ == '12.1.1' || @ == '^12.1.1' || @ == '~12.1.1' || @ == '=12.1.1' || @ == 'v12.1.1' || @ == '^v12.1.1' || @ == '13.3.0' || @ == '^13.3.0' || @ == '~13.3.0' || @ == '=13.3.0' || @ == 'v13.3.0' || @ == '^v13.3.0' || @ == '13.3.2' || @ == '^13.3.2' || @ == '~13.3.2' || @ == '=13.3.2' || @ == 'v13.3.2' || @ == '^v13.3.2' || @ == '16.0.0' || @ == '^16.0.0' || @ == '~16.0.0' || @ == '=16.0.0' || @ == 'v16.0.0' || @ == '^v16.0.0')]
-      value: '"20.2.4"'
-  - org.openrewrite.json.ChangeValue:
-      oldKeyPath: >-
-        $.peerDependencies['angular-gridster2'][?(@ == '12.1.1' || @ == '^12.1.1' || @ == '~12.1.1' || @ == '=12.1.1' || @ == 'v12.1.1' || @ == '^v12.1.1' || @ == '13.3.0' || @ == '^13.3.0' || @ == '~13.3.0' || @ == '=13.3.0' || @ == 'v13.3.0' || @ == '^v13.3.0' || @ == '13.3.2' || @ == '^13.3.2' || @ == '~13.3.2' || @ == '=13.3.2' || @ == 'v13.3.2' || @ == '^v13.3.2' || @ == '16.0.0' || @ == '^16.0.0' || @ == '~16.0.0' || @ == '=16.0.0' || @ == 'v16.0.0' || @ == '^v16.0.0')]
-      value: '"20.2.4"'
-  - org.openrewrite.json.ChangeValue:
-      oldKeyPath: >-
-        $.optionalDependencies['angular-gridster2'][?(@ == '12.1.1' || @ == '^12.1.1' || @ == '~12.1.1' || @ == '=12.1.1' || @ == 'v12.1.1' || @ == '^v12.1.1' || @ == '13.3.0' || @ == '^13.3.0' || @ == '~13.3.0' || @ == '=13.3.0' || @ == 'v13.3.0' || @ == '^v13.3.0' || @ == '13.3.2' || @ == '^13.3.2' || @ == '~13.3.2' || @ == '=13.3.2' || @ == 'v13.3.2' || @ == '^v13.3.2' || @ == '16.0.0' || @ == '^16.0.0' || @ == '~16.0.0' || @ == '=16.0.0' || @ == 'v16.0.0' || @ == '^v16.0.0')]
-      value: '"20.2.4"'
+  - com.huawei.clouds.openrewrite.angulargridster2.UpgradeSelectedAngularGridster2Dependency
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.angulargridster2.MigrateStandaloneGridsterModuleToComponents
+displayName: Use angular-gridster2 standalone components in standalone Angular components
+description: Replace the exact GridsterModule-only import and its component imports-array entry when the same TypeScript file is explicitly standalone.
+tags:
+  - angular-gridster2
+  - angular
+  - standalone
+preconditions:
+  - org.openrewrite.text.Find:
+      find: '\bstandalone[ \t]*:[ \t]*true\b'
+      regex: true
+      caseSensitive: true
+      filePattern: "**/*.ts"
+      contextSize: 0
+  - org.openrewrite.text.Find:
+      find: 'import[ \t]*\{[ \t]*GridsterModule[ \t]*\}[ \t]*from[ \t]*["'']angular-gridster2["''][ \t]*;?'
+      regex: true
+      caseSensitive: true
+      filePattern: "**/*.ts"
+      contextSize: 0
+recipeList:
+  - org.openrewrite.text.FindAndReplace:
+      find: 'import(?<space1>[ \t]*)\{[ \t]*GridsterModule[ \t]*\}(?<space2>[ \t]*)from(?<space3>[ \t]*)(?<quote>["''])angular-gridster2\k<quote>[ \t]*;?'
+      replace: 'import${space1}{ GridsterComponent, GridsterItemComponent }${space2}from${space3}${quote}angular-gridster2${quote};'
+      regex: true
+      filePattern: "**/*.ts"
+      plaintextOnly: false
+  - org.openrewrite.text.FindAndReplace:
+      find: '(?<prefix>\bimports[ \t\r\n]*:[ \t\r\n]*\[[^\]]*)\bGridsterModule\b(?<suffix>[^\]]*\])'
+      replace: '${prefix}GridsterComponent, GridsterItemComponent${suffix}'
+      regex: true
+      filePattern: "**/*.ts"
+      plaintextOnly: false
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.angulargridster2.MigrateDeterministicAngularGridster2SourceTo20
+displayName: Migrate deterministic angular-gridster2 source constructs to version 20
+description: Normalize known public deep imports, make the optional optionsChanged API strict-safe, modernize simple identity Gridster item loops, and use standalone components in strictly matched standalone files.
+tags:
+  - angular-gridster2
+  - angular
+  - typescript
+  - source-migration
+preconditions:
+  - org.openrewrite.text.Find:
+      find: '(?:angular-gridster2|<gridster(?:[ >-]))'
+      regex: true
+      caseSensitive: true
+      filePattern: "**/*.{ts,tsx,mts,cts,html}"
+      contextSize: 0
+recipeList:
+  - com.huawei.clouds.openrewrite.angulargridster2.MigrateStandaloneGridsterModuleToComponents
+  - org.openrewrite.text.FindAndReplace:
+      find: '(?<quote>["''])angular-gridster2/(?:lib/)?(?:gridster\.component|gridsterItem\.component|gridsterItem\.interface|gridster\.interface|gridsterConfig\.interface|gridsterConfig\.constant|gridster\.module|gridsterPush\.service|gridsterPushResize\.service|gridsterSwap\.service)\k<quote>'
+      replace: '${quote}angular-gridster2${quote}'
+      regex: true
+      filePattern: "**/*.{ts,tsx,mts,cts}"
+      plaintextOnly: false
+  - org.openrewrite.text.FindAndReplace:
+      find: '\bif[ \t]*\([ \t]*this\.options\.api[ \t]*\)[ \t]*this\.options\.api\.optionsChanged[ \t]*\([ \t]*\)[ \t]*;'
+      replace: 'this.options.api?.optionsChanged?.();'
+      regex: true
+      filePattern: "**/*.{ts,tsx,mts,cts}"
+      plaintextOnly: false
+  - org.openrewrite.text.FindAndReplace:
+      find: '\bthis\.options\.api(?:[ \t]*\?)?\.(?:[ \t]*\?)?optionsChanged(?:[ \t]*\?)?[ \t]*\([ \t]*\)'
+      replace: 'this.options.api?.optionsChanged?.()'
+      regex: true
+      filePattern: "**/*.{ts,tsx,mts,cts}"
+      plaintextOnly: false
+  - org.openrewrite.text.FindAndReplace:
+      find: '(?m)^(?<indent>[ \t]*)<gridster-item(?<before>[^>]*?)[ \t\r\n]+\*ngFor=(?<quote>["''])let[ \t]+(?<item>[A-Za-z_$][A-Za-z0-9_$]*)[ \t]+of[ \t]+(?<items>[A-Za-z_$][A-Za-z0-9_$]*(?:\.[A-Za-z_$][A-Za-z0-9_$]*)*)\k<quote>(?<after>[^>]*)>(?<body>(?s:.*?))^[ \t]*</gridster-item>'
+      replace: |-
+        ${indent}@for (${item} of ${items}; track ${item}) {
+        ${indent}  <gridster-item${before}${after}>${body}${indent}  </gridster-item>
+        ${indent}}
+      regex: true
+      multiline: true
+      filePattern: "**/*.html"
+      plaintextOnly: false
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.angulargridster2.FindManualAngularGridster2To20MigrationRisks
+displayName: Find angular-gridster2 20 migration risks requiring manual review
+description: Mark remaining private imports, complex item loops, mutable layout configuration, drag and resize behavior, responsive breakpoints, browser globals, and internal APIs that require application-level verification.
+tags:
+  - angular-gridster2
+  - search
+  - manual-review
+preconditions:
+  - org.openrewrite.text.Find:
+      find: '(?:angular-gridster2|<gridster(?:[ >-]))'
+      regex: true
+      caseSensitive: true
+      filePattern: "**/*.{ts,tsx,mts,cts,html}"
+      contextSize: 0
+recipeList:
+  - org.openrewrite.text.Find:
+      find: '(?:from[ \t]+["'']angular-gridster2/|require[ \t]*\([ \t]*["'']angular-gridster2/)'
+      regex: true
+      caseSensitive: true
+      filePattern: "**/*.{ts,tsx,mts,cts}"
+      contextSize: 0
+  - org.openrewrite.text.Find:
+      find: '\b(?:gridType|compactType|setGridSize|allowMultiLayer|swapWhileDragging|pushItems|pushResizeItems|disablePushOnDrag|disablePushOnResize|getFirstPossiblePosition|getLastPossiblePosition|getNextPossiblePosition)\b'
+      regex: true
+      caseSensitive: true
+      filePattern: "**/*.{ts,tsx,mts,cts,html}"
+      contextSize: 0
+  - org.openrewrite.text.Find:
+      find: '\b(?:draggable|resizable|dragHandleClass|ignoreContentClass|ignoreContent|dropOverItems|enableEmptyCellClick|enableEmptyCellContextMenu|enableEmptyCellDrop|enableEmptyCellDrag|enableOccupiedCellDrop)\b|\((?:mousedown|touchstart|pointerdown)\)'
+      regex: true
+      caseSensitive: true
+      filePattern: "**/*.{ts,tsx,mts,cts,html}"
+      contextSize: 0
+  - org.openrewrite.text.Find:
+      find: '\b(?:mobileBreakpoint|keepFixedHeightInMobile|keepFixedWidthInMobile|disableWindowResize|useBodyForBreakpoint|ResizeObserver|window|document|isPlatformBrowser|afterNextRender|ngSkipHydration)\b'
+      regex: true
+      caseSensitive: true
+      filePattern: "**/*.{ts,tsx,mts,cts,html}"
+      contextSize: 0
+  - org.openrewrite.text.Find:
+      find: '\b(?:calculateLayoutDebounce|calculateLayout\$|GridsterModule)\b|\.\$options\b|\.(?:curColWidth|curRowHeight|gridRenderer)\b'
+      regex: true
+      caseSensitive: true
+      filePattern: "**/*.{ts,tsx,mts,cts,html}"
+      contextSize: 0
+  - org.openrewrite.text.Find:
+      find: '\*ngFor[ \t]*=[ \t]*(?<quote>["''])[^"'']*(?:\||;[ \t]*(?:trackBy|let))[^"'']*\k<quote>'
+      regex: true
+      caseSensitive: true
+      filePattern: "**/*.html"
+      contextSize: 0
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.angulargridster2.MigrateAngularGridster2To20_2_4
+displayName: Migrate angular-gridster2 applications to 20.2.4
+description: Upgrade selected direct declarations, apply deterministic TypeScript and template migrations, and mark layout, interaction, responsive, SSR, and private API risks for manual review.
+tags:
+  - angular-gridster2
+  - angular
+  - typescript
+  - source-migration
+recipeList:
+  - com.huawei.clouds.openrewrite.angulargridster2.UpgradeAngularGridster2To20_2_4
+  - com.huawei.clouds.openrewrite.angulargridster2.MigrateDeterministicAngularGridster2SourceTo20
+  - com.huawei.clouds.openrewrite.angulargridster2.FindManualAngularGridster2To20MigrationRisks

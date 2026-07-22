@@ -11,7 +11,7 @@
   </parent>
   <artifactId>rewrite-angular-gridster2-upgrade</artifactId>
   <name>OpenRewrite angular-gridster2 Upgrade</name>
-  <description>Configuration-based OpenRewrite recipe for upgrading selected angular-gridster2 12, 13, and 16 declarations to 20.2.4.</description>
+  <description>OpenRewrite recipes for upgrading selected angular-gridster2 12, 13, and 16 declarations and deterministic Angular source constructs to 20.2.4.</description>
   <url>https://github.com/ShijunDeng/openrewrite-migration-recipes/tree/main/rewrite-angular-gridster2-upgrade</url>
   <dependencies>
     <dependency>
