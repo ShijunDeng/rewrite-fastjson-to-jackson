@@ -26,6 +26,7 @@
 | [`rewrite-angular-platform-browser-dynamic-upgrade`](rewrite-angular-platform-browser-dynamic-upgrade) | `com.huawei.clouds.openrewrite.angular.UpgradeAngularPlatformBrowserDynamicTo20_3_26` | 将 `@angular/platform-browser-dynamic` 升级到 20.3.26，并指导迁离已废弃 JIT 平台 |
 | [`rewrite-angular-animations-upgrade`](rewrite-angular-animations-upgrade) | `com.huawei.clouds.openrewrite.angular.UpgradeAngularAnimationsTo20_3_26` | 将 `@angular/animations` 升级到 20.3.26，并指导迁离 legacy animations API |
 | [`rewrite-angular-router-upgrade`](rewrite-angular-router-upgrade) | `com.huawei.clouds.openrewrite.angular.UpgradeAngularRouterTo20_3_26` | 将 `@angular/router` 升级到 20.3.26 |
+| [`rewrite-angular-core-upgrade`](rewrite-angular-core-upgrade) | `com.huawei.clouds.openrewrite.angular.UpgradeAngularCoreTo20_3_26` | 将 `@angular/core` 升级到 20.3.26 |
 
 后续迁移应新增独立模块，例如：
 

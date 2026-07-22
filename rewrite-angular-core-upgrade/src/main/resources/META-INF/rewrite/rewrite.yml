@@ -1,0 +1,31 @@
+---
+type: specs.openrewrite.org/v1beta/category
+name: com.huawei.clouds.openrewrite.angular
+packageName: com.huawei.clouds.openrewrite.angular
+description: Upgrade Angular packages with explicit lockstep and CLI migration guidance.
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.angular.UpgradeAngularCoreTo20_3_26
+displayName: Upgrade @angular/core to 20.3.26
+description: Update direct @angular/core declarations in package.json to 20.3.26. Other Angular packages and CLI migrations must be handled in lockstep.
+tags:
+  - angular
+  - angular-core
+  - nodejs
+  - dependency-upgrade
+preconditions:
+  - org.openrewrite.FindSourceFiles:
+      filePattern: package.json;**/package.json
+recipeList:
+  - org.openrewrite.json.ChangeValue:
+      oldKeyPath: $.dependencies['@angular/core']
+      value: '"20.3.26"'
+  - org.openrewrite.json.ChangeValue:
+      oldKeyPath: $.devDependencies['@angular/core']
+      value: '"20.3.26"'
+  - org.openrewrite.json.ChangeValue:
+      oldKeyPath: $.peerDependencies['@angular/core']
+      value: '"20.3.26"'
+  - org.openrewrite.json.ChangeValue:
+      oldKeyPath: $.optionalDependencies['@angular/core']
+      value: '"20.3.26"'
