@@ -1,0 +1,22 @@
+---
+type: specs.openrewrite.org/v1beta/category
+name: com.huawei.clouds.openrewrite.mssqljdbc
+packageName: com.huawei.clouds.openrewrite.mssqljdbc
+description: Upgrade Microsoft SQL Server JDBC with explicit Java, TLS, authentication, and data-type compatibility guidance.
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.mssqljdbc.UpgradeMssqlJdbcTo13_2_1Jre11
+displayName: Upgrade Microsoft SQL Server JDBC to 13.2.1.jre11
+description: Upgrade explicit com.microsoft.sqlserver:mssql-jdbc Maven and Gradle dependency versions to the spreadsheet target 13.2.1.jre11 without adding versions to platform-managed dependencies.
+tags:
+  - sql-server
+  - jdbc
+  - java
+  - database-driver
+  - dependency-upgrade
+recipeList:
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: com.microsoft.sqlserver
+      artifactId: mssql-jdbc
+      newVersion: 13.2.1.jre11
+      overrideManagedVersion: false

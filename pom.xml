@@ -70,6 +70,7 @@
     <module>rewrite-shedlock-spring-upgrade</module>
     <module>rewrite-ng-dynamic-forms-core-upgrade</module>
     <module>rewrite-tweenjs-upgrade</module>
+    <module>rewrite-mssql-jdbc-upgrade</module>
   </modules>
 
   <dependencyManagement>

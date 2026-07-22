@@ -47,6 +47,7 @@
 | [`rewrite-shedlock-spring-upgrade`](rewrite-shedlock-spring-upgrade) | `com.huawei.clouds.openrewrite.shedlockspring.MigrateShedLockSpringTo7_2_1` | 将 ShedLock Spring 升级到 7.2.1，并迁移 2.x 的 SchedulerLock 包名与字符串 duration 属性 |
 | [`rewrite-ng-dynamic-forms-core-upgrade`](rewrite-ng-dynamic-forms-core-upgrade) | `com.huawei.clouds.openrewrite.ngdynamicforms.UpgradeNgDynamicFormsCoreTo18_0_0` | 将 @ng-dynamic-forms/core 14.x–17.x 升级到 18.0.0，并说明 Angular/standalone/UI 配套迁移 |
 | [`rewrite-tweenjs-upgrade`](rewrite-tweenjs-upgrade) | `com.huawei.clouds.openrewrite.tweenjs.UpgradeTweenJsTo23_1_1` | 将表格指定的 @tweenjs/tween.js 19/20 声明升级到 23.1.1，并说明模块与时间轴行为变化 |
+| [`rewrite-mssql-jdbc-upgrade`](rewrite-mssql-jdbc-upgrade) | `com.huawei.clouds.openrewrite.mssqljdbc.UpgradeMssqlJdbcTo13_2_1Jre11` | 将表格指定的 Microsoft SQL Server JDBC 7.x–11.x 依赖升级到 13.2.1.jre11，并说明 Java、TLS、认证和 vector 行为变化 |
 
 后续迁移应新增独立模块，例如：
 
