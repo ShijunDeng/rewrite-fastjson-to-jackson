@@ -113,6 +113,7 @@
     <module>rewrite-single-spa-angular-upgrade</module>
     <module>rewrite-markdown-it-upgrade</module>
     <module>rewrite-jsch-upgrade</module>
+    <module>rewrite-jaxb-impl-upgrade</module>
   </modules>
 
   <dependencyManagement>

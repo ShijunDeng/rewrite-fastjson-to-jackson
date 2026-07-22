@@ -1,0 +1,34 @@
+---
+type: specs.openrewrite.org/v1beta/category
+name: com.huawei.clouds.openrewrite.jaxbimpl
+packageName: com.huawei.clouds.openrewrite.jaxbimpl
+description: Upgrade the bundled Eclipse JAXB implementation to 4.0.6 with Jakarta namespace, binding-file, provider, build, and runtime compatibility guidance.
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.jaxbimpl.UpgradeJaxbImplTo4_0_6
+displayName: Upgrade JAXB implementation to 4.0.6
+description: Upgrade only workbook-selected com.sun.xml.bind:jaxb-impl versions 2.3.8, 4.0.2, and 4.0.3 to 4.0.6 in owned Maven and Gradle declarations.
+tags:
+  - jaxb
+  - xml-binding
+  - dependency-upgrade
+recipeList:
+  - com.huawei.clouds.openrewrite.jaxbimpl.UpgradeSelectedJaxbImplDependency
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.jaxbimpl.MigrateJaxbImplTo4_0_6
+displayName: Migrate JAXB implementation applications to 4.0.6
+description: Upgrade jaxb-impl, migrate deterministic Java and binding-file namespaces, and mark build, provider, RI-internal, validation, lexical, threading, OSGi, JPMS, and native-image risks.
+tags:
+  - jaxb
+  - jakarta-xml-binding
+  - jakarta-ee-10
+  - java
+  - migration
+recipeList:
+  - com.huawei.clouds.openrewrite.jaxbimpl.UpgradeJaxbImplTo4_0_6
+  - com.huawei.clouds.openrewrite.jaxbimpl.MigrateJaxbImplDeterministicJava
+  - com.huawei.clouds.openrewrite.jaxbimpl.MigrateJaxbBindingFiles
+  - com.huawei.clouds.openrewrite.jaxbimpl.FindJaxbImplJavaRisks
+  - com.huawei.clouds.openrewrite.jaxbimpl.FindJaxbImplBuildRisks
+  - com.huawei.clouds.openrewrite.jaxbimpl.FindJaxbImplConfigurationRisks
