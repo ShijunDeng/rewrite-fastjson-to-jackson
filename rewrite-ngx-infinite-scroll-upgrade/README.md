@@ -1,6 +1,6 @@
 # ngx-infinite-scroll 升级到 17.0.1
 
-本模块对应 `开源软件升级.xlsx` 中的 npm 包 `ngx-infinite-scroll`，处理 `9.1.0`、`10.0.1`、`13.0.1`、`13.1.0`、`14.0.1` 到 `17.0.1` 的依赖升级，并提供可执行的 Angular 源码迁移和兼容性审计。
+本模块对应 `开源软件升级.xlsx` 中的 npm 包 `ngx-infinite-scroll`，严格处理可见行中的 `9.1.0`、`10.0.1`、`13.0.1`、`13.1.0`、`14.0.1`、`16.0.0` 到 `17.0.1` 的依赖升级，并提供可执行的 Angular 源码迁移和兼容性审计。
 
 推荐使用完整迁移配方：
 
@@ -18,12 +18,13 @@ com.huawei.clouds.openrewrite.ngxinfinitescroll.UpgradeNgxInfiniteScrollTo17_0_1
 
 | 不兼容点 | 配方行为 | 测试证据 |
 | --- | --- | --- |
-| 表格列出的 9/10/13/14 版本 | **自动修复**：四个直接依赖区中的精确、caret、tilde 声明升级到 `17.0.1` | 版本×依赖区参数化 before→after，以及协议、未列版本、lockfile 负例 |
-| deprecated `InfiniteScrollModule` | **自动修复**：根入口 named import 改为 `InfiniteScrollDirective`，Angular `imports`/`exports` 同步改写 | 普通 NgModule、standalone component、TestBed、re-export/别名和 5 个真实仓库源码测试 |
-| Angular 17 peer dependency | **精准检测**：在 `@angular/core`、`@angular/common` 声明上添加 SearchResult，不擅自升级整个 Angular 工具链 | package.json marker 测试 |
-| 残留 module 与 `ngx-infinite-scroll/**` 深度导入 | **精准检测**：标记未能安全改写的源代码位置 | TypeScript marker 测试 |
-| container、window、throttle、方向、disabled 等运行时输入 | **精准检测**：标记模板和 TypeScript 中的行为敏感配置 | HTML 多输入 marker 测试 |
-| SSR/hydration、Zone、分页幂等、CSS 高度和滚动容器语义 | **人工验证**：没有跨应用通用的安全替换 | 本文验证清单与业务 E2E/SSR 流程 |
+| 表格列出的 9/10/13/14/16 版本 | **AUTO**：四个直接依赖区中的精确、caret、tilde 声明升级到 `17.0.1` | 6 版本×4 依赖区参数化 before→after，以及协议、未列版本、lockfile 负例 |
+| deprecated `InfiniteScrollModule` | **AUTO**：来源可证明且全部用途均为直接 Angular `imports`/`exports` 数组元素时，named import 改为 `InfiniteScrollDirective` 并同步作用域 | NgModule、standalone component、TestBed、别名、幂等、模糊形态负例和 6 个真实仓库固定提交源码测试 |
+| Angular 17 peer/toolchain | **MARK**：在实际值节点标记不兼容 Angular、TypeScript、RxJS、Node、tslib 和中央约束，不擅自升级整套工具链 | package.json 精确 marker 与兼容/noise 负例 |
+| 残留 module、standalone `declarations` 与深度导入 | **MARK**：在导入、标识符、数组元素或 module specifier 的精确 AST 节点标记 | TypeScript marker 与同名外部符号负例 |
+| directive、container、window、throttle、方向、disabled、output | **MARK**：逐个标记 HTML 属性；只标记类型可证明为本包 directive 的 TypeScript instance property access，并定位 inline template | 多属性独立 marker、同名业务属性/注释/相似属性负例和真实模板测试 |
+| 协议/range/未列版本、动态作用域、namespace/type-only/re-export/双导入 | **NOOP + MARK（适用时）**：依赖和源码不做猜测改写；推荐配方对需要决策的实际节点留 marker | 严格白名单、动态引用与同名包负例 |
+| SSR/hydration、Zone、分页幂等、CSS 高度和滚动容器语义 | **MARK + 人工验证**：没有跨应用通用的安全替换 | 本文验证清单与业务 E2E/SSR 流程 |
 
 ## 配方实际执行的修改
 
@@ -40,7 +41,7 @@ com.huawei.clouds.openrewrite.ngxinfinitescroll.UpgradeNgxInfiniteScrollTo17_0_1
 
 每个表格版本接受精确值以及明确锚定该版本的 caret、tilde 形式，例如 `14.0.1`、`^14.0.1`、`~14.0.1`，命中后统一写为精确版本 `17.0.1`。
 
-实现先用严格的 section、包名和字符串值预条件排除 null、对象、数组和布尔值，再在目标叶节点上做等值白名单判断。这既避免 OpenRewrite 8.87.5 的 JsonPath matcher 对 null 做正则比较时触发 NPE，也避免数组中碰巧包含旧版本时误改整个数组。
+实现使用 `JsonIsoVisitor` 校验文件名、根对象下的直接依赖区、精确包名和字符串叶值，再执行显式白名单判断；不依赖容易把嵌套对象或数组误判为直接声明的文本/JsonPath 正则。`16.0.0` 与表格其它五个可见源版本采用完全相同的规则。
 
 配方不会修改：
 
@@ -48,7 +49,7 @@ com.huawei.clouds.openrewrite.ngxinfinitescroll.UpgradeNgxInfiniteScrollTo17_0_1
 - `=14.0.1`、comparator、OR、hyphen、`13.x`、prerelease、build metadata、tag 和变量；
 - `workspace:`、npm alias、`file:`、`link:`、`portal:`、`catalog:`、Git、GitHub 和 tarball URL；
 - `overrides`、`resolutions`、`pnpm.overrides`、`dependenciesMeta`；
-- npm、pnpm、Yarn lockfile、普通 JSON、备份文件和相似包名；
+- npm、pnpm、Yarn lockfile、普通 JSON、备份文件、安装/构建输出目录中的 manifest 和相似包名；
 - Angular、RxJS、TypeScript、Zone.js 或其它依赖版本。
 
 ### 2. `InfiniteScrollModule` 到 standalone directive
@@ -75,16 +76,16 @@ import { InfiniteScrollDirective } from 'ngx-infinite-scroll';
 
 同一写法也适用于 standalone component 的 `imports` 和 `TestBed.configureTestingModule({ imports: [...] })`。命名导入别名会被保留，例如 `InfiniteScrollModule as ScrollImports` 变为 `InfiniteScrollDirective as ScrollImports`。
 
-本仓库没有引入 OpenRewrite JavaScript/TypeScript AST 模块，因此该迁移使用 OpenRewrite core 的 lossless text recipe，并采用三重约束：仅 `**/*.ts`、必须存在来自根入口 `ngx-infinite-scroll` 的精确 named import、文件不能已经同时导入 directive。它只改 named import 和 `imports`/`exports` 数组中的确定引用。自定义变量、动态数组、namespace import、re-export、已同时导入两个符号等模糊情况不会猜测改写，而由审计配方标记。
+迁移使用 `rewrite-javascript` 的 lossless TypeScript AST。它先解析根入口 named import 及 alias，再枚举直接位于 `imports`/`exports` 数组中的引用；只有一个 module import、不存在 directive import、且文件内该本地符号的全部出现次数都能由 import 与这些确定数组元素解释时才修改。alias 保持不变；自定义变量、动态/spread 数组、namespace/type-only import、re-export、额外引用、同名外部包和同时存在新旧符号等形态不会被文本替换误伤，而由审计配方标记或保持 NOOP。
 
 ### 3. 可执行兼容性审计
 
 完整配方还会写入 OpenRewrite `SearchResult` marker，定位：
 
-- `package.json` 中的 `@angular/core` 和 `@angular/common`，提醒按目标 peer range 对齐；
-- 迁移后仍存在的 `InfiniteScrollModule`；
-- `ngx-infinite-scroll/**` 深度导入；
-- `infiniteScrollContainer`、`fromRoot`、`scrollWindow`、`immediateCheck`、`infiniteScrollThrottle`、`alwaysCallback`、`horizontal`、`infiniteScrollDisabled` 等行为敏感输入。
+- `package.json` 中不满足目标边界的 Angular、TypeScript、RxJS、Node、tslib、未选择的本包声明和中央版本所有者；
+- 迁移后仍存在的 `InfiniteScrollModule` 标识符、standalone directive 的 `declarations` 数组元素；
+- `ngx-infinite-scroll/**` 的精确 module specifier；
+- HTML 中每一个 directive/input/output 属性，以及类型可证明为本包 `InfiniteScrollDirective` 的 TypeScript instance property access 和 inline template literal；普通同名业务对象不会因文件中存在本包 import 而被标记。
 
 这些 marker 是需要人工处理的迁移清单，不是编译期注释。审查完成后应接受或清理搜索结果，并用业务测试确认行为。
 
@@ -103,9 +104,9 @@ import { InfiniteScrollDirective } from 'ngx-infinite-scroll';
 }
 ```
 
-因此不能在 Angular 9、10、13 或 14 工程中只提升本包。必须先把 Angular framework、CLI、compiler-cli、builder、Material/CDK 和其它 Angular wrapper 作为一个兼容集合迁移到 17.x，再安装本目标版本。官方 Angular 兼容表还要求 Angular 17 使用相应的 Node、TypeScript 和 RxJS 区间；例如 Angular 17.0–17.2 需要 TypeScript `>=5.2 <5.4`，17.3 放宽到 `<5.5`，Node 支持线为 `^18.13.0` 或 `^20.9.0`。
+因此不能在 Angular 9、10、13、14 或 16 工程中只提升本包。必须先把 Angular framework、CLI、compiler-cli、builder、Material/CDK 和其它 Angular wrapper 作为一个兼容集合迁移到 17.x，再安装本目标版本。官方 Angular 兼容表还要求 Angular 17 使用相应的 Node、TypeScript 和 RxJS 区间；例如 Angular 17.0–17.2 需要 TypeScript `>=5.2 <5.4`，17.3 放宽到 `<5.5`，Node 支持线为 `^18.13.0` 或 `^20.9.0`。
 
-本配方刻意不自动升级 Angular：跨 9/10/13/14 到 17 还涉及 builder、control flow、SSR、测试框架、浏览器目标及其它 peer dependency，不能由单个 UI 组件配方安全决定。审计 marker 会把实际 Angular 声明留给 Angular 专项配方或人工对齐。
+本配方刻意不自动升级 Angular：跨 9/10/13/14/16 到 17 还涉及 builder、control flow、SSR、测试框架、浏览器目标及其它 peer dependency，不能由单个 UI 组件配方安全决定。审计 marker 会把实际 Angular 声明留给 Angular 专项配方或人工对齐。
 
 ### Standalone 与 NgModule
 
@@ -176,7 +177,7 @@ import { InfiniteScrollDirective } from 'ngx-infinite-scroll';
 
 本模块会自动改依赖并迁移确定的 module import/Angular metadata；不会自动：
 
-- 把 Angular 9/10/13/14、CLI、Material/CDK、RxJS、TypeScript、Node 或 Zone.js 升到 17 兼容集合；
+- 把 Angular 9/10/13/14/16、CLI、Material/CDK、RxJS、TypeScript、Node 或 Zone.js 升到 17 兼容集合；
 - 改写模板阈值、容器 selector、CSS 高度、overflow、HTTP 分页、cursor、重试或缓存；
 - 猜测动态 `imports` 数组、namespace import、re-export、wrapper module 或同时存在新旧符号的代码；
 - 修改 deep import 到哪个公开类型，因为内部 helper 没有一一对应的公共替代；
@@ -206,8 +207,9 @@ import { InfiniteScrollDirective } from 'ngx-infinite-scroll';
 - [jhipster/generator-jhipster @ 47567f4d](https://github.com/jhipster/generator-jhipster/blob/47567f4dfb08935c7e4f89fd2113618e3e25fc1a/generators/client/templates/angular/package.json)：`13.0.1`；其 [shared-libs.module.ts.ejs](https://github.com/jhipster/generator-jhipster/blob/47567f4dfb08935c7e4f89fd2113618e3e25fc1a/generators/client/templates/angular/src/main/webapp/app/shared/shared-libs.module.ts.ejs) 生成 import/export wrapper；
 - [cessda/cessda.cvs.two @ 60c3bc60](https://github.com/cessda/cessda.cvs.two/blob/60c3bc60a5f87f04c1420aad8b1d066ff2bf8942/package.json)：`14.0.1`；其 [shared-libs.module.ts](https://github.com/cessda/cessda.cvs.two/blob/60c3bc60a5f87f04c1420aad8b1d066ff2bf8942/src/main/webapp/app/shared/shared-libs.module.ts) 与多个 Angular shared imports 共存；
 - [CodeCrowCorp/cro-website 的公开镜像 @ 40760961](https://github.com/da7a90-backup/cro-website/blob/4076096174c4398061d8cbbd520020c4f5ec158e/package.json)：`^14.0.1`；其 [app.module.ts](https://github.com/da7a90-backup/cro-website/blob/4076096174c4398061d8cbbd520020c4f5ec158e/src/app/app.module.ts) 和 [chat template](https://github.com/da7a90-backup/cro-website/blob/4076096174c4398061d8cbbd520020c4f5ec158e/src/app/pages/friends/friend-chat/friend-chat.component.html) 覆盖 module、`scrollWindow=false`、上拉距离和 throttle。
+- [Lumeer/web-ui @ 95608052](https://github.com/Lumeer/web-ui/blob/956080521ffc5a1ee0fb705d858cfe4ed09788ab/package.json)：`^16.0.0` 与 Angular `^16.2.12`；其 [shared.module.ts](https://github.com/Lumeer/web-ui/blob/956080521ffc5a1ee0fb705d858cfe4ed09788ab/src/app/shared/shared.module.ts) 在大型 shared import/export 数组中使用 `InfiniteScrollModule`，覆盖表格中此前遗漏的 16.x 源版本。
 
-测试写法参考 OpenRewrite 8.87.5 固定提交中的 [ChangeValueTest](https://github.com/openrewrite/rewrite/blob/b3008cc4a1f0c43f562da16e5933a2a56d9bc568/rewrite-json/src/test/java/org/openrewrite/json/ChangeValueTest.java)、[JsonPathMatcherTest](https://github.com/openrewrite/rewrite/blob/b3008cc4a1f0c43f562da16e5933a2a56d9bc568/rewrite-json/src/test/java/org/openrewrite/json/JsonPathMatcherTest.java)、[FindAndReplaceTest](https://github.com/openrewrite/rewrite/blob/b3008cc4a1f0c43f562da16e5933a2a56d9bc568/rewrite-core/src/test/java/org/openrewrite/text/FindAndReplaceTest.java) 和 [FindTest](https://github.com/openrewrite/rewrite/blob/b3008cc4a1f0c43f562da16e5933a2a56d9bc568/rewrite-core/src/test/java/org/openrewrite/text/FindTest.java)。
+测试写法参考 OpenRewrite 8.87.5 固定提交中的 [ChangeValueTest](https://github.com/openrewrite/rewrite/blob/b3008cc4a1f0c43f562da16e5933a2a56d9bc568/rewrite-json/src/test/java/org/openrewrite/json/ChangeValueTest.java) 与 [FindTest](https://github.com/openrewrite/rewrite/blob/b3008cc4a1f0c43f562da16e5933a2a56d9bc568/rewrite-core/src/test/java/org/openrewrite/text/FindTest.java)，TypeScript import/alias/格式保持用例参考归档的 rewrite-javascript 固定提交 [ImportTest @ 9e3b820e](https://github.com/openrewrite/rewrite-javascript/blob/9e3b820e6a44808b095bb7e3aab670fd67de99a5/rewrite-javascript/src/test/java/org/openrewrite/javascript/tree/ImportTest.java)。本模块当前有 124 个测试，覆盖 90 个严格依赖矩阵/负例、12 个 AST 自动迁移场景和 22 个精确 marker/推荐配方场景。
 
 ## 使用与验证
 

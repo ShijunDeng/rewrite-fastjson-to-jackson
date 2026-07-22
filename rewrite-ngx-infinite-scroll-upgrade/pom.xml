@@ -11,12 +11,17 @@
   </parent>
   <artifactId>rewrite-ngx-infinite-scroll-upgrade</artifactId>
   <name>OpenRewrite ngx-infinite-scroll Upgrade</name>
-  <description>Configuration-based recipes for upgrading ngx-infinite-scroll to 17.0.1 and migrating to its standalone directive.</description>
+  <description>OpenRewrite recipes for upgrading ngx-infinite-scroll to 17.0.1 and migrating to its standalone directive.</description>
   <url>https://github.com/ShijunDeng/openrewrite-migration-recipes/tree/main/rewrite-ngx-infinite-scroll-upgrade</url>
   <dependencies>
     <dependency>
       <groupId>org.openrewrite</groupId>
       <artifactId>rewrite-json</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.openrewrite</groupId>
+      <artifactId>rewrite-javascript</artifactId>
+      <version>${rewrite.version}</version>
     </dependency>
     <dependency>
       <groupId>org.openrewrite</groupId>
