@@ -2,91 +2,57 @@
 type: specs.openrewrite.org/v1beta/category
 name: com.huawei.clouds.openrewrite.diagramjsminimap
 packageName: com.huawei.clouds.openrewrite.diagramjsminimap
-description: Upgrade diagram-js-minimap with explicit diagram-js, bpmn-js, CSS, bundler, keyboard, focus, and touch migration guidance.
+description: Upgrade diagram-js-minimap with strict dependency selection, deterministic source/style/config changes and compatibility audits.
 ---
 type: specs.openrewrite.org/v1beta/recipe
 name: com.huawei.clouds.openrewrite.diagramjsminimap.UpgradeDiagramJsMinimapTo5_2_0
-displayName: Upgrade diagram-js-minimap to 5.2.0
-description: Update only direct diagram-js-minimap 2.1.0 declarations in package.json to 5.2.0 without changing other versions, aliases, protocols, overrides, lockfiles, or source code.
-tags:
-  - diagram-js-minimap
-  - diagram-js
-  - bpmn-js
-  - javascript
-  - dependency-upgrade
-preconditions:
-  - org.openrewrite.FindSourceFiles:
-      filePattern: package.json;**/package.json
+displayName: Upgrade selected diagram-js-minimap declarations to 5.2.0
+description: Upgrade only exact, caret, or tilde source releases visible in the migration spreadsheet; compound ranges, protocols, variables, lockfiles and unlisted versions remain unchanged.
+tags: [diagram-js-minimap, diagram-js, bpmn-js, javascript, dependency-upgrade]
 recipeList:
-  - org.openrewrite.json.ChangeValue:
-      oldKeyPath: $.dependencies['diagram-js-minimap'][?(@ == '2.1.0')]
-      value: '"5.2.0"'
-  - org.openrewrite.json.ChangeValue:
-      oldKeyPath: $.dependencies['diagram-js-minimap'][?(@ == '^2.1.0')]
-      value: '"5.2.0"'
-  - org.openrewrite.json.ChangeValue:
-      oldKeyPath: $.dependencies['diagram-js-minimap'][?(@ == '~2.1.0')]
-      value: '"5.2.0"'
-  - org.openrewrite.json.ChangeValue:
-      oldKeyPath: $.dependencies['diagram-js-minimap'][?(@ == '=2.1.0')]
-      value: '"5.2.0"'
-  - org.openrewrite.json.ChangeValue:
-      oldKeyPath: $.dependencies['diagram-js-minimap'][?(@ == 'v2.1.0')]
-      value: '"5.2.0"'
-  - org.openrewrite.json.ChangeValue:
-      oldKeyPath: $.dependencies['diagram-js-minimap'][?(@ == '^v2.1.0')]
-      value: '"5.2.0"'
-  - org.openrewrite.json.ChangeValue:
-      oldKeyPath: $.devDependencies['diagram-js-minimap'][?(@ == '2.1.0')]
-      value: '"5.2.0"'
-  - org.openrewrite.json.ChangeValue:
-      oldKeyPath: $.devDependencies['diagram-js-minimap'][?(@ == '^2.1.0')]
-      value: '"5.2.0"'
-  - org.openrewrite.json.ChangeValue:
-      oldKeyPath: $.devDependencies['diagram-js-minimap'][?(@ == '~2.1.0')]
-      value: '"5.2.0"'
-  - org.openrewrite.json.ChangeValue:
-      oldKeyPath: $.devDependencies['diagram-js-minimap'][?(@ == '=2.1.0')]
-      value: '"5.2.0"'
-  - org.openrewrite.json.ChangeValue:
-      oldKeyPath: $.devDependencies['diagram-js-minimap'][?(@ == 'v2.1.0')]
-      value: '"5.2.0"'
-  - org.openrewrite.json.ChangeValue:
-      oldKeyPath: $.devDependencies['diagram-js-minimap'][?(@ == '^v2.1.0')]
-      value: '"5.2.0"'
-  - org.openrewrite.json.ChangeValue:
-      oldKeyPath: $.peerDependencies['diagram-js-minimap'][?(@ == '2.1.0')]
-      value: '"5.2.0"'
-  - org.openrewrite.json.ChangeValue:
-      oldKeyPath: $.peerDependencies['diagram-js-minimap'][?(@ == '^2.1.0')]
-      value: '"5.2.0"'
-  - org.openrewrite.json.ChangeValue:
-      oldKeyPath: $.peerDependencies['diagram-js-minimap'][?(@ == '~2.1.0')]
-      value: '"5.2.0"'
-  - org.openrewrite.json.ChangeValue:
-      oldKeyPath: $.peerDependencies['diagram-js-minimap'][?(@ == '=2.1.0')]
-      value: '"5.2.0"'
-  - org.openrewrite.json.ChangeValue:
-      oldKeyPath: $.peerDependencies['diagram-js-minimap'][?(@ == 'v2.1.0')]
-      value: '"5.2.0"'
-  - org.openrewrite.json.ChangeValue:
-      oldKeyPath: $.peerDependencies['diagram-js-minimap'][?(@ == '^v2.1.0')]
-      value: '"5.2.0"'
-  - org.openrewrite.json.ChangeValue:
-      oldKeyPath: $.optionalDependencies['diagram-js-minimap'][?(@ == '2.1.0')]
-      value: '"5.2.0"'
-  - org.openrewrite.json.ChangeValue:
-      oldKeyPath: $.optionalDependencies['diagram-js-minimap'][?(@ == '^2.1.0')]
-      value: '"5.2.0"'
-  - org.openrewrite.json.ChangeValue:
-      oldKeyPath: $.optionalDependencies['diagram-js-minimap'][?(@ == '~2.1.0')]
-      value: '"5.2.0"'
-  - org.openrewrite.json.ChangeValue:
-      oldKeyPath: $.optionalDependencies['diagram-js-minimap'][?(@ == '=2.1.0')]
-      value: '"5.2.0"'
-  - org.openrewrite.json.ChangeValue:
-      oldKeyPath: $.optionalDependencies['diagram-js-minimap'][?(@ == 'v2.1.0')]
-      value: '"5.2.0"'
-  - org.openrewrite.json.ChangeValue:
-      oldKeyPath: $.optionalDependencies['diagram-js-minimap'][?(@ == '^v2.1.0')]
-      value: '"5.2.0"'
+  - com.huawei.clouds.openrewrite.diagramjsminimap.UpgradeSelectedDiagramJsMinimapDependency
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.diagramjsminimap.MigrateDeterministicDiagramJsMinimapTo5
+displayName: Migrate deterministic diagram-js-minimap 5 constructs
+description: Normalize stable package entry points and Sass asset URLs, and remove proven duplicate minimap module registrations.
+tags: [diagram-js-minimap, javascript, typescript, sass, source-migration]
+recipeList:
+  - com.huawei.clouds.openrewrite.diagramjsminimap.MigrateDeterministicDiagramJsMinimapSource
+  - com.huawei.clouds.openrewrite.diagramjsminimap.MigrateDeterministicDiagramJsMinimapStyles
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.diagramjsminimap.AuditDiagramJsMinimap5Source
+displayName: Audit diagram-js-minimap 5 source compatibility
+description: Mark deep entry points, registration/service lifecycle, touch, keyboard, DOM/SVG and copied asset risks.
+tags: [diagram-js-minimap, javascript, typescript, search]
+recipeList:
+  - com.huawei.clouds.openrewrite.diagramjsminimap.FindDiagramJsMinimapJavaScriptRisks
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.diagramjsminimap.AuditDiagramJsMinimap5Project
+displayName: Audit diagram-js-minimap 5 project compatibility
+description: Mark unresolved dependencies, diagram-js/bpmn-js alignment, HammerJS, bundlers, browser targets and build/test configuration.
+tags: [diagram-js-minimap, dependencies, configuration, search]
+recipeList:
+  - com.huawei.clouds.openrewrite.diagramjsminimap.FindDiagramJsMinimapJsonRisks
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.diagramjsminimap.AuditDiagramJsMinimap5TemplatesAndStyles
+displayName: Audit diagram-js-minimap 5 templates and styles
+description: Mark stylesheet delivery, vendor URLs, internal DOM selectors and fixed SVG ID assumptions.
+tags: [diagram-js-minimap, html, css, sass, search]
+recipeList:
+  - com.huawei.clouds.openrewrite.diagramjsminimap.FindDiagramJsMinimapTemplateStyleRisks
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.diagramjsminimap.MigrateDiagramJsMinimapTo5_2_0
+displayName: Migrate diagram-js-minimap applications to 5.2.0
+description: Upgrade spreadsheet-selected declarations, apply deterministic source/style/config migrations, and mark every remaining compatibility decision.
+tags: [diagram-js-minimap, diagram-js, bpmn-js, javascript, migration]
+recipeList:
+  - com.huawei.clouds.openrewrite.diagramjsminimap.UpgradeDiagramJsMinimapTo5_2_0
+  - com.huawei.clouds.openrewrite.diagramjsminimap.MigrateDeterministicDiagramJsMinimapTo5
+  - com.huawei.clouds.openrewrite.diagramjsminimap.AuditDiagramJsMinimap5Source
+  - com.huawei.clouds.openrewrite.diagramjsminimap.AuditDiagramJsMinimap5Project
+  - com.huawei.clouds.openrewrite.diagramjsminimap.AuditDiagramJsMinimap5TemplatesAndStyles
