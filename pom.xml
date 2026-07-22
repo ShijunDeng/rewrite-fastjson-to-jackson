@@ -94,6 +94,7 @@
     <module>rewrite-swiper-upgrade</module>
     <module>rewrite-antv-x6-upgrade</module>
     <module>rewrite-spring-context-support-upgrade</module>
+    <module>rewrite-typescript-upgrade</module>
   </modules>
 
   <dependencyManagement>

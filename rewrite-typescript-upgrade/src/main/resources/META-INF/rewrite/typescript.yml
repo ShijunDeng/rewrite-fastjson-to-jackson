@@ -1,0 +1,34 @@
+---
+type: specs.openrewrite.org/v1beta/category
+name: com.huawei.clouds.openrewrite.typescript
+packageName: com.huawei.clouds.openrewrite.typescript
+description: Strict TypeScript 6.0.3 dependency, configuration, lockfile, and source migration recipes.
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.typescript.UpgradeTypeScriptDependencyTo6_0_3
+displayName: Upgrade selected TypeScript dependencies to 6.0.3
+description: Update only the nine XLSX-visible exact, caret, or tilde direct TypeScript declarations in package.json, preserving the npm range operator.
+tags:
+  - typescript
+  - nodejs
+  - dependency-upgrade
+recipeList:
+  - com.huawei.clouds.openrewrite.typescript.UpgradeSelectedTypeScriptDependency
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.typescript.MigrateTypeScriptTo6_0_3
+displayName: Migrate TypeScript projects to 6.0.3
+description: Apply deterministic dependency, tsconfig, and source changes and precisely mark manifest, lockfile, configuration, and compiler API decisions that need project-owner review.
+tags:
+  - typescript
+  - javascript
+  - nodejs
+  - migration
+recipeList:
+  - com.huawei.clouds.openrewrite.typescript.UpgradeTypeScriptDependencyTo6_0_3
+  - com.huawei.clouds.openrewrite.typescript.MigrateTypeScriptConfig
+  - com.huawei.clouds.openrewrite.typescript.MigrateTypeScriptSource
+  - com.huawei.clouds.openrewrite.typescript.FindTypeScriptManifestRisks
+  - com.huawei.clouds.openrewrite.typescript.FindTypeScriptConfigRisks
+  - com.huawei.clouds.openrewrite.typescript.FindTypeScriptLockRisks
+  - com.huawei.clouds.openrewrite.typescript.FindTypeScriptSourceRisks
