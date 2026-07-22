@@ -2,21 +2,108 @@
 type: specs.openrewrite.org/v1beta/category
 name: com.huawei.clouds.openrewrite.mssqljdbc
 packageName: com.huawei.clouds.openrewrite.mssqljdbc
-description: Upgrade Microsoft SQL Server JDBC with explicit Java, TLS, authentication, and data-type compatibility guidance.
+description: Strictly upgrade spreadsheet-selected Microsoft SQL Server JDBC versions, migrate deterministic authentication syntax, and locate behavior risks.
 ---
 type: specs.openrewrite.org/v1beta/recipe
 name: com.huawei.clouds.openrewrite.mssqljdbc.UpgradeMssqlJdbcTo13_2_1Jre11
-displayName: Upgrade Microsoft SQL Server JDBC to 13.2.1.jre11
-description: Upgrade explicit com.microsoft.sqlserver:mssql-jdbc Maven and Gradle dependency versions to the spreadsheet target 13.2.1.jre11 without adding versions to platform-managed dependencies.
+displayName: Upgrade selected Microsoft SQL Server JDBC declarations to 13.2.1.jre11
+description: Upgrade only exact spreadsheet source versions of com.microsoft.sqlserver:mssql-jdbc when Maven or Gradle version ownership is local and unambiguous.
 tags:
   - sql-server
   - jdbc
   - java
-  - database-driver
   - dependency-upgrade
 recipeList:
-  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
-      groupId: com.microsoft.sqlserver
-      artifactId: mssql-jdbc
-      newVersion: 13.2.1.jre11
-      overrideManagedVersion: false
+  - com.huawei.clouds.openrewrite.mssqljdbc.UpgradeSelectedMssqlJdbcDependency
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.mssqljdbc.MigrateDeterministicMssqlJdbcAuthentication
+displayName: Migrate deterministic SQL Server JDBC authentication syntax
+description: Apply Microsoft's exact DefaultAzureCredential to ActiveDirectoryDefault driver authentication rename in complete JDBC URLs and typed SQLServerDataSource setters.
+tags:
+  - sql-server
+  - jdbc
+  - authentication
+  - source-migration
+recipeList:
+  - com.huawei.clouds.openrewrite.mssqljdbc.MigrateDefaultAzureCredentialAuthentication
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.mssqljdbc.FindManualMssqlJdbc13JavaRisks
+displayName: Find SQL Server JDBC 13.2 Java migration risks
+description: Mark complete JDBC URLs, typed TLS/authentication/timeout/encryption/vector/session APIs, vector SQL, and native authentication library references.
+tags:
+  - sql-server
+  - jdbc
+  - java
+  - search
+recipeList:
+  - com.huawei.clouds.openrewrite.mssqljdbc.FindMssqlJdbc13MigrationRisks
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.mssqljdbc.FindManualMssqlJdbc13BuildRisks
+displayName: Find SQL Server JDBC 13.2 build and runtime risks
+description: Mark Java levels below 11 and optional/native authentication, Always Encrypted, Azure Identity, MSAL, Key Vault, Gson, and Bouncy Castle dependencies requiring alignment.
+tags:
+  - sql-server
+  - jdbc
+  - build
+  - search
+recipeList:
+  - org.openrewrite.text.Find:
+      find: '<(?:maven\.compiler\.(?:source|target|release)|source|target|release)>[ \t]*(?:1\.[0-8]|[0-9]|10)[ \t]*</|<artifactId>(?:mssql-jdbc_auth|msal4j|azure-identity|azure-security-keyvault-keys|azure-keyvault|bcprov-[^<]+|gson)</artifactId>'
+      regex: true
+      caseSensitive: true
+      filePattern: "**/pom.xml"
+      contextSize: 0
+  - org.openrewrite.text.Find:
+      find: '(?:sourceCompatibility|targetCompatibility)[ \t]*(?:=|\.set\()[ \t]*["'']?(?:1\.[0-8]|[0-9]|10)\b|JavaLanguageVersion\.of\([ \t]*(?:[0-9]|10)[ \t]*\)|(?:com\.microsoft\.sqlserver:mssql-jdbc_auth|com\.microsoft\.azure:msal4j|com\.azure:azure-(?:identity|security-keyvault-keys)|org\.bouncycastle:bcprov-|com\.google\.code\.gson:gson)'
+      regex: true
+      caseSensitive: true
+      filePattern: "**/*.gradle;**/*.gradle.kts;**/*.toml"
+      contextSize: 0
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.mssqljdbc.FindManualMssqlJdbc13ConfigurationRisks
+displayName: Find SQL Server JDBC 13.2 connection and behavior configuration risks
+description: Mark SQL Server JDBC URLs and exact TLS, timeout, Microsoft Entra, native authentication, Always Encrypted, vector, and session property names for review.
+tags:
+  - sql-server
+  - jdbc
+  - configuration
+  - search
+recipeList:
+  - org.openrewrite.text.Find:
+      find: 'jdbc:sqlserver:'
+      regex: false
+      caseSensitive: false
+      filePattern: "**/*.properties;**/*.yml;**/*.yaml;**/*.xml;**/*.conf;**/*.env;**/*.json"
+      contextSize: 0
+  - org.openrewrite.text.Find:
+      find: '(?i)\b(?:encrypt|trustServerCertificate|trustStore|trustStorePassword|hostNameInCertificate|serverCertificate|sslProtocol|loginTimeout|socketTimeout|authentication|authenticationScheme|AADSecurePrincipalId|AADSecurePrincipalSecret|accessTokenCallbackClass|msiClientId|columnEncryptionSetting|enclaveAttestationUrl|enclaveAttestationProtocol|keyVaultProviderClientId|keyVaultProviderClientKey|vectorTypeSupport|quotedIdentifier|concatNullYieldsNull)\s*[=:]'
+      regex: true
+      caseSensitive: true
+      filePattern: "**/*.properties;**/*.yml;**/*.yaml;**/*.xml;**/*.conf;**/*.env;**/*.json"
+      contextSize: 0
+  - org.openrewrite.text.Find:
+      find: '(?i)(?:mssql-jdbc_auth|sqljdbc_auth)[^ \t\r\n"'']*'
+      regex: true
+      caseSensitive: true
+      filePattern: "**/*.properties;**/*.yml;**/*.yaml;**/*.xml;**/*.conf;**/*.env;**/*.json;**/*.sh;**/*.bat;**/*.ps1;**/Dockerfile*"
+      contextSize: 0
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.mssqljdbc.MigrateMssqlJdbcTo13_2_1Jre11
+displayName: Migrate selected Microsoft SQL Server JDBC applications to 13.2.1.jre11
+description: Strictly upgrade spreadsheet-selected declarations, apply the deterministic authentication rename, and mark Java, build, TLS, timeout, authentication, encryption, vector, native-library, and session risks.
+tags:
+  - sql-server
+  - jdbc
+  - java
+  - migration
+recipeList:
+  - com.huawei.clouds.openrewrite.mssqljdbc.UpgradeMssqlJdbcTo13_2_1Jre11
+  - com.huawei.clouds.openrewrite.mssqljdbc.MigrateDeterministicMssqlJdbcAuthentication
+  - com.huawei.clouds.openrewrite.mssqljdbc.FindManualMssqlJdbc13JavaRisks
+  - com.huawei.clouds.openrewrite.mssqljdbc.FindManualMssqlJdbc13BuildRisks
+  - com.huawei.clouds.openrewrite.mssqljdbc.FindManualMssqlJdbc13ConfigurationRisks

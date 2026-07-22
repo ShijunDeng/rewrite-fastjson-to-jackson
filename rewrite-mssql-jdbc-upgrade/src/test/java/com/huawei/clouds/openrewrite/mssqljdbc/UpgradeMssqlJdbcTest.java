@@ -5,126 +5,149 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.openrewrite.Recipe;
 import org.openrewrite.config.Environment;
+import org.openrewrite.java.JavaParser;
 import org.openrewrite.test.RecipeSpec;
 import org.openrewrite.test.RewriteTest;
+import org.openrewrite.test.TypeValidation;
 
+import java.util.function.Consumer;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.openrewrite.gradle.Assertions.buildGradle;
+import static org.openrewrite.gradle.Assertions.buildGradleKts;
+import static org.openrewrite.java.Assertions.java;
 import static org.openrewrite.maven.Assertions.pomXml;
+import static org.openrewrite.test.SourceSpecs.text;
+import static org.openrewrite.xml.Assertions.xml;
 
 class UpgradeMssqlJdbcTest implements RewriteTest {
-    private static final String RECIPE_NAME =
+    private static final String DEPENDENCY_RECIPE =
             "com.huawei.clouds.openrewrite.mssqljdbc.UpgradeMssqlJdbcTo13_2_1Jre11";
+    private static final String SOURCE_RECIPE =
+            "com.huawei.clouds.openrewrite.mssqljdbc.MigrateDeterministicMssqlJdbcAuthentication";
+    private static final String JAVA_RISK_RECIPE =
+            "com.huawei.clouds.openrewrite.mssqljdbc.FindManualMssqlJdbc13JavaRisks";
+    private static final String BUILD_RISK_RECIPE =
+            "com.huawei.clouds.openrewrite.mssqljdbc.FindManualMssqlJdbc13BuildRisks";
+    private static final String CONFIG_RISK_RECIPE =
+            "com.huawei.clouds.openrewrite.mssqljdbc.FindManualMssqlJdbc13ConfigurationRisks";
+    private static final String MIGRATION_RECIPE =
+            "com.huawei.clouds.openrewrite.mssqljdbc.MigrateMssqlJdbcTo13_2_1Jre11";
 
     @Override
     public void defaults(RecipeSpec spec) {
-        spec.recipe(environment().activateRecipes(RECIPE_NAME));
+        spec.recipe(recipe(DEPENDENCY_RECIPE));
     }
 
-    @ParameterizedTest(name = "upgrades spreadsheet version {0}")
+    @ParameterizedTest(name = "upgrades exact spreadsheet version {0}")
     @ValueSource(strings = {
             "7.2.2.jre8", "9.4.1.jre11", "10.2.1.jre8",
             "10.2.3.jre8", "10.2.3.jre17", "11.2.2.jre11"
     })
     void upgradesEverySpreadsheetVersion(String oldVersion) {
-        rewriteRun(pomXml(
-                """
-                <project>
-                  <modelVersion>4.0.0</modelVersion>
-                  <groupId>example</groupId><artifactId>sqlserver-app</artifactId><version>1</version>
-                  <dependencies>
-                    <dependency>
-                      <groupId>com.microsoft.sqlserver</groupId>
-                      <artifactId>mssql-jdbc</artifactId>
-                      <version>%s</version>
-                    </dependency>
-                  </dependencies>
-                </project>
-                """.formatted(oldVersion),
-                """
-                <project>
-                  <modelVersion>4.0.0</modelVersion>
-                  <groupId>example</groupId><artifactId>sqlserver-app</artifactId><version>1</version>
-                  <dependencies>
-                    <dependency>
-                      <groupId>com.microsoft.sqlserver</groupId>
-                      <artifactId>mssql-jdbc</artifactId>
-                      <version>13.2.1.jre11</version>
-                    </dependency>
-                  </dependencies>
-                </project>
-                """
-        ));
+        rewriteRun(pomXml(pom(oldVersion), pom("13.2.1.jre11")));
     }
 
     @Test
-    void upgradesPropertyFromApacheFlinkJdbcConnector() {
-        // Reduced from apache/flink-connector-jdbc at 140f179d:
-        // https://github.com/apache/flink-connector-jdbc/blob/140f179d019aba6a3f52e17d180c8d329ccdb8b6/flink-connector-jdbc-sqlserver/pom.xml
+    void upgradesDependencyManagementLiteralAndPreservesVersionlessUse() {
         rewriteRun(pomXml(
                 """
-                <project>
-                  <modelVersion>4.0.0</modelVersion>
-                  <groupId>org.apache.flink</groupId><artifactId>flink-connector-jdbc-sqlserver</artifactId><version>4.0</version>
-                  <properties><sqlserver.version>10.2.1.jre8</sqlserver.version></properties>
-                  <dependencies>
-                    <dependency>
-                      <groupId>com.microsoft.sqlserver</groupId><artifactId>mssql-jdbc</artifactId>
-                      <version>${sqlserver.version}</version><scope>provided</scope>
-                    </dependency>
-                    <dependency>
-                      <groupId>org.testcontainers</groupId><artifactId>mssqlserver</artifactId><version>1.21.0</version><scope>test</scope>
-                    </dependency>
-                  </dependencies>
+                <project><modelVersion>4.0.0</modelVersion><groupId>example</groupId><artifactId>managed</artifactId><version>1</version>
+                  <dependencyManagement><dependencies><dependency><groupId>com.microsoft.sqlserver</groupId><artifactId>mssql-jdbc</artifactId><version>10.2.3.jre8</version></dependency></dependencies></dependencyManagement>
+                  <dependencies><dependency><groupId>com.microsoft.sqlserver</groupId><artifactId>mssql-jdbc</artifactId></dependency></dependencies>
                 </project>
                 """,
                 """
-                <project>
-                  <modelVersion>4.0.0</modelVersion>
-                  <groupId>org.apache.flink</groupId><artifactId>flink-connector-jdbc-sqlserver</artifactId><version>4.0</version>
-                  <properties><sqlserver.version>13.2.1.jre11</sqlserver.version></properties>
-                  <dependencies>
-                    <dependency>
-                      <groupId>com.microsoft.sqlserver</groupId><artifactId>mssql-jdbc</artifactId>
-                      <version>${sqlserver.version}</version><scope>provided</scope>
-                    </dependency>
-                    <dependency>
-                      <groupId>org.testcontainers</groupId><artifactId>mssqlserver</artifactId><version>1.21.0</version><scope>test</scope>
-                    </dependency>
-                  </dependencies>
+                <project><modelVersion>4.0.0</modelVersion><groupId>example</groupId><artifactId>managed</artifactId><version>1</version>
+                  <dependencyManagement><dependencies><dependency><groupId>com.microsoft.sqlserver</groupId><artifactId>mssql-jdbc</artifactId><version>13.2.1.jre11</version></dependency></dependencies></dependencyManagement>
+                  <dependencies><dependency><groupId>com.microsoft.sqlserver</groupId><artifactId>mssql-jdbc</artifactId></dependency></dependencies>
                 </project>
                 """
         ));
     }
 
     @Test
-    void upgradesDirectProvidedDependencyFromUsaceDataQuery() {
-        // Reduced from USACE/data-query at e106e507:
+    void upgradesApacheFlinkRealIsolatedProperty() {
+        // apache/flink-connector-jdbc, fixed commit 140f179d019aba6a3f52e17d180c8d329ccdb8b6
+        // https://github.com/apache/flink-connector-jdbc/blob/140f179d019aba6a3f52e17d180c8d329ccdb8b6/flink-connector-jdbc-sqlserver/pom.xml
+        rewriteRun(pomXml(
+                propertyPom("10.2.1.jre8", "sqlserver.version"),
+                propertyPom("13.2.1.jre11", "sqlserver.version")
+        ));
+    }
+
+    @Test
+    void upgradesAbsaRealManagedProperty() {
+        // AbsaOSS/inception, fixed commit e752c4b0f1d9843b749a9389b58a0deb0f558f22
+        // https://github.com/AbsaOSS/inception/blob/e752c4b0f1d9843b749a9389b58a0deb0f558f22/src/pom.xml
+        rewriteRun(pomXml(
+                managedPropertyPom("9.4.1.jre11"),
+                managedPropertyPom("13.2.1.jre11")
+        ));
+    }
+
+    @Test
+    void upgradesUsaceRealProvidedDependency() {
+        // USACE/data-query, fixed commit e106e50751fd8f7e4c6b524468d3015058d5e678
         // https://github.com/USACE/data-query/blob/e106e50751fd8f7e4c6b524468d3015058d5e678/pom.xml
         rewriteRun(pomXml(
                 """
-                <project>
-                  <modelVersion>4.0.0</modelVersion>
-                  <groupId>mil.army.usace</groupId><artifactId>data-query</artifactId><version>1</version>
-                  <dependencies>
-                    <dependency>
-                      <groupId>com.microsoft.sqlserver</groupId><artifactId>mssql-jdbc</artifactId>
-                      <version>11.2.2.jre11</version><scope>provided</scope>
-                    </dependency>
-                    <dependency><groupId>com.h2database</groupId><artifactId>h2</artifactId><version>2.2.224</version></dependency>
+                <project><modelVersion>4.0.0</modelVersion><groupId>mil.army.usace</groupId><artifactId>data-query</artifactId><version>1</version><dependencies><dependency>
+                  <groupId>com.microsoft.sqlserver</groupId><artifactId>mssql-jdbc</artifactId><version>11.2.2.jre11</version><scope>provided</scope>
+                </dependency></dependencies></project>
+                """,
+                """
+                <project><modelVersion>4.0.0</modelVersion><groupId>mil.army.usace</groupId><artifactId>data-query</artifactId><version>1</version><dependencies><dependency>
+                  <groupId>com.microsoft.sqlserver</groupId><artifactId>mssql-jdbc</artifactId><version>13.2.1.jre11</version><scope>provided</scope>
+                </dependency></dependencies></project>
+                """
+        ));
+    }
+
+    @Test
+    void preservesSharedMavenProperty() {
+        rewriteRun(xml(
+                """
+                <project><modelVersion>4.0.0</modelVersion><groupId>example</groupId><artifactId>shared</artifactId><version>1</version>
+                  <properties><shared.version>10.2.3.jre17</shared.version></properties><dependencies>
+                    <dependency><groupId>com.microsoft.sqlserver</groupId><artifactId>mssql-jdbc</artifactId><version>${shared.version}</version></dependency>
+                    <dependency><groupId>com.example</groupId><artifactId>database-adapter</artifactId><version>${shared.version}</version></dependency>
                   </dependencies>
                 </project>
                 """,
+                source -> source.path("pom.xml")
+        ));
+    }
+
+    @Test
+    void preservesUnresolvedRangeUnlistedTargetVariantAndFutureVersions() {
+        rewriteRun(xml(
                 """
-                <project>
-                  <modelVersion>4.0.0</modelVersion>
-                  <groupId>mil.army.usace</groupId><artifactId>data-query</artifactId><version>1</version>
-                  <dependencies>
-                    <dependency>
-                      <groupId>com.microsoft.sqlserver</groupId><artifactId>mssql-jdbc</artifactId>
-                      <version>13.2.1.jre11</version><scope>provided</scope>
-                    </dependency>
-                    <dependency><groupId>com.h2database</groupId><artifactId>h2</artifactId><version>2.2.224</version></dependency>
+                <project><modelVersion>4.0.0</modelVersion><groupId>example</groupId><artifactId>safety</artifactId><version>1</version><dependencies>
+                  <dependency><groupId>com.microsoft.sqlserver</groupId><artifactId>mssql-jdbc</artifactId><version>${missing.version}</version></dependency>
+                  <dependency><groupId>com.microsoft.sqlserver</groupId><artifactId>mssql-jdbc</artifactId><version>[10,12)</version></dependency>
+                  <dependency><groupId>com.microsoft.sqlserver</groupId><artifactId>mssql-jdbc</artifactId><version>10.2.2.jre8</version></dependency>
+                  <dependency><groupId>com.microsoft.sqlserver</groupId><artifactId>mssql-jdbc</artifactId><version>12.10.0.jre11</version></dependency>
+                  <dependency><groupId>com.microsoft.sqlserver</groupId><artifactId>mssql-jdbc</artifactId><version>13.2.1.jre11</version></dependency>
+                  <dependency><groupId>com.microsoft.sqlserver</groupId><artifactId>mssql-jdbc</artifactId><version>13.2.1.jre8</version></dependency>
+                  <dependency><groupId>com.microsoft.sqlserver</groupId><artifactId>mssql-jdbc</artifactId><version>13.4.0.jre11</version></dependency>
+                </dependencies></project>
+                """,
+                source -> source.path("pom.xml")
+        ));
+    }
+
+    @Test
+    void preservesExternalBomManagedVersionlessDependency() {
+        // Azure-Samples/azure-spring-boot-samples, fixed commit 7a287e56608bf691239323610c890de95f33d435
+        // https://github.com/Azure-Samples/azure-spring-boot-samples/blob/7a287e56608bf691239323610c890de95f33d435/spring-cloud-azure-testcontainers/service-bus/spring-messaging/pom.xml
+        rewriteRun(pomXml(
+                """
+                <project><modelVersion>4.0.0</modelVersion>
+                  <parent><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-parent</artifactId><version>4.1.0</version></parent>
+                  <groupId>com.azure.spring</groupId><artifactId>spring-cloud-azure-testcontainers-for-service-bus-spring-messaging-sample</artifactId><version>1.0.0</version><dependencies>
+                    <dependency><groupId>com.microsoft.sqlserver</groupId><artifactId>mssql-jdbc</artifactId><scope>test</scope></dependency>
                   </dependencies>
                 </project>
                 """
@@ -132,173 +155,373 @@ class UpgradeMssqlJdbcTest implements RewriteTest {
     }
 
     @Test
-    void upgradesManagedPropertyFromAbsaInception() {
-        // Reduced from AbsaOSS/inception at e752c4b0:
-        // https://github.com/AbsaOSS/inception/blob/e752c4b0f1d9843b749a9389b58a0deb0f558f22/src/pom.xml
+    void upgradesGroovyStringMapAndKotlinLiteralNotation() {
+        rewriteRun(
+                buildGradle(
+                        "plugins { id 'java' }\ndependencies { runtimeOnly 'com.microsoft.sqlserver:mssql-jdbc:7.2.2.jre8' }",
+                        "plugins { id 'java' }\ndependencies { runtimeOnly 'com.microsoft.sqlserver:mssql-jdbc:13.2.1.jre11' }",
+                        source -> source.path("string.gradle")
+                ),
+                buildGradle(
+                        "plugins { id 'java' }\ndependencies { testImplementation group: 'com.microsoft.sqlserver', name: 'mssql-jdbc', version: '10.2.3.jre17' }",
+                        "plugins { id 'java' }\ndependencies { testImplementation group: 'com.microsoft.sqlserver', name: 'mssql-jdbc', version: '13.2.1.jre11' }",
+                        source -> source.path("map.gradle")
+                ),
+                buildGradleKts(
+                        "plugins { java }\ndependencies { implementation(\"com.microsoft.sqlserver:mssql-jdbc:11.2.2.jre11\") }",
+                        "plugins { java }\ndependencies { implementation(\"com.microsoft.sqlserver:mssql-jdbc:13.2.1.jre11\") }"
+                )
+        );
+    }
+
+    @Test
+    void preservesGradleInterpolationAndCatalogAlias() {
+        rewriteRun(
+                buildGradle(
+                        """
+                        plugins { id 'java' }
+                        ext { sqlServerVersion = '10.2.3.jre8' }
+                        dependencies {
+                          runtimeOnly "com.microsoft.sqlserver:mssql-jdbc:${sqlServerVersion}"
+                          runtimeOnly libs.mssql.jdbc
+                        }
+                        """
+                ),
+                buildGradleKts(
+                        """
+                        plugins { java }
+                        val sqlServerVersion = "10.2.3.jre8"
+                        dependencies { runtimeOnly("com.microsoft.sqlserver:mssql-jdbc:$sqlServerVersion") }
+                        """
+                )
+        );
+    }
+
+    @Test
+    void preservesSimilarCoordinatesAndAuthArtifact() {
+        rewriteRun(xml(
+                """
+                <project><modelVersion>4.0.0</modelVersion><groupId>example</groupId><artifactId>other</artifactId><version>1</version><dependencies>
+                  <dependency><groupId>example</groupId><artifactId>mssql-jdbc</artifactId><version>10.2.1.jre8</version></dependency>
+                  <dependency><groupId>com.microsoft.sqlserver</groupId><artifactId>mssql-jdbc_auth</artifactId><version>10.2.1.x64</version></dependency>
+                  <dependency><groupId>com.microsoft.sqlserver</groupId><artifactId>mssql-jdbc</artifactId></dependency>
+                </dependencies></project>
+                """,
+                source -> source.path("pom.xml")
+        ));
+    }
+
+    @Test
+    void preservesDependencyShape() {
         rewriteRun(pomXml(
                 """
-                <project>
-                  <modelVersion>4.0.0</modelVersion>
-                  <groupId>za.co.absa</groupId><artifactId>inception</artifactId><version>1</version>
-                  <properties><mssql-jdbc.version>9.4.1.jre11</mssql-jdbc.version></properties>
-                  <dependencyManagement><dependencies>
-                    <dependency>
-                      <groupId>com.microsoft.sqlserver</groupId><artifactId>mssql-jdbc</artifactId>
-                      <version>${mssql-jdbc.version}</version>
-                    </dependency>
-                  </dependencies></dependencyManagement>
-                </project>
+                <project><modelVersion>4.0.0</modelVersion><groupId>example</groupId><artifactId>shape</artifactId><version>1</version><dependencies><dependency>
+                  <groupId>com.microsoft.sqlserver</groupId><artifactId>mssql-jdbc</artifactId><version>10.2.3.jre8</version><classifier>sources</classifier><scope>runtime</scope><optional>true</optional>
+                  <exclusions><exclusion><groupId>com.azure</groupId><artifactId>*</artifactId></exclusion></exclusions>
+                </dependency></dependencies></project>
                 """,
                 """
-                <project>
-                  <modelVersion>4.0.0</modelVersion>
-                  <groupId>za.co.absa</groupId><artifactId>inception</artifactId><version>1</version>
-                  <properties><mssql-jdbc.version>13.2.1.jre11</mssql-jdbc.version></properties>
-                  <dependencyManagement><dependencies>
-                    <dependency>
-                      <groupId>com.microsoft.sqlserver</groupId><artifactId>mssql-jdbc</artifactId>
-                      <version>${mssql-jdbc.version}</version>
-                    </dependency>
-                  </dependencies></dependencyManagement>
-                </project>
+                <project><modelVersion>4.0.0</modelVersion><groupId>example</groupId><artifactId>shape</artifactId><version>1</version><dependencies><dependency>
+                  <groupId>com.microsoft.sqlserver</groupId><artifactId>mssql-jdbc</artifactId><version>13.2.1.jre11</version><classifier>sources</classifier><scope>runtime</scope><optional>true</optional>
+                  <exclusions><exclusion><groupId>com.azure</groupId><artifactId>*</artifactId></exclusion></exclusions>
+                </dependency></dependencies></project>
                 """
         ));
     }
 
     @Test
-    void upgradesGradleStringNotation() {
-        rewriteRun(buildGradle(
-                """
-                plugins { id 'java' }
-                repositories { mavenCentral() }
-                dependencies {
-                    runtimeOnly 'com.microsoft.sqlserver:mssql-jdbc:10.2.3.jre17'
-                }
-                """,
-                """
-                plugins { id 'java' }
-                repositories { mavenCentral() }
-                dependencies {
-                    runtimeOnly 'com.microsoft.sqlserver:mssql-jdbc:13.2.1.jre11'
-                }
-                """
-        ));
+    void dependencyUpgradeIsIdempotent() {
+        rewriteRun(spec -> spec.cycles(2).expectedCyclesThatMakeChanges(1),
+                pomXml(pom("7.2.2.jre8"), pom("13.2.1.jre11")));
     }
 
     @Test
-    void upgradesGradleMapNotationAndPreservesConfiguration() {
-        rewriteRun(buildGradle(
-                """
-                plugins { id 'java' }
-                repositories { mavenCentral() }
-                dependencies {
-                    testImplementation group: 'com.microsoft.sqlserver', name: 'mssql-jdbc', version: '7.2.2.jre8'
-                }
-                """,
-                """
-                plugins { id 'java' }
-                repositories { mavenCentral() }
-                dependencies {
-                    testImplementation group: 'com.microsoft.sqlserver', name: 'mssql-jdbc', version: '13.2.1.jre11'
-                }
-                """
-        ));
+    void migratesOfficialAuthenticationRenameInCompleteJdbcUrl() {
+        rewriteRun(
+                sourceSpec(),
+                java(
+                        """
+                        package example;
+                        class ConnectionFactory {
+                            String url = "jdbc:sqlserver://db;databaseName=app;authentication=DefaultAzureCredential;encrypt=true";
+                        }
+                        """,
+                        """
+                        package example;
+                        class ConnectionFactory {
+                            String url = "jdbc:sqlserver://db;databaseName=app;authentication=ActiveDirectoryDefault;encrypt=true";
+                        }
+                        """
+                )
+        );
     }
 
     @Test
-    void preservesMavenScopeOptionalExclusionsAndClassifier() {
-        rewriteRun(pomXml(
-                """
-                <project>
-                  <modelVersion>4.0.0</modelVersion><groupId>example</groupId><artifactId>details</artifactId><version>1</version>
-                  <dependencies><dependency>
-                    <groupId>com.microsoft.sqlserver</groupId><artifactId>mssql-jdbc</artifactId><version>10.2.3.jre8</version>
-                    <classifier>sources</classifier><scope>runtime</scope><optional>true</optional>
-                    <exclusions><exclusion><groupId>com.azure</groupId><artifactId>*</artifactId></exclusion></exclusions>
-                  </dependency></dependencies>
-                </project>
-                """,
-                """
-                <project>
-                  <modelVersion>4.0.0</modelVersion><groupId>example</groupId><artifactId>details</artifactId><version>1</version>
-                  <dependencies><dependency>
-                    <groupId>com.microsoft.sqlserver</groupId><artifactId>mssql-jdbc</artifactId><version>13.2.1.jre11</version>
-                    <classifier>sources</classifier><scope>runtime</scope><optional>true</optional>
-                    <exclusions><exclusion><groupId>com.azure</groupId><artifactId>*</artifactId></exclusion></exclusions>
-                  </dependency></dependencies>
-                </project>
-                """
-        ));
+    void migratesOfficialAuthenticationRenameInTypedDataSourceSetter() {
+        rewriteRun(
+                sourceSpec(),
+                java(
+                        """
+                        package example;
+                        import com.microsoft.sqlserver.jdbc.SQLServerDataSource;
+                        class DataSourceConfig { void configure(SQLServerDataSource ds) { ds.setAuthentication("DefaultAzureCredential"); } }
+                        """,
+                        """
+                        package example;
+                        import com.microsoft.sqlserver.jdbc.SQLServerDataSource;
+                        class DataSourceConfig { void configure(SQLServerDataSource ds) { ds.setAuthentication("ActiveDirectoryDefault"); } }
+                        """
+                )
+        );
     }
 
     @Test
-    void preservesBootManagedVersionlessDependency() {
-        // Real projects commonly let Spring Boot manage this coordinate; the recipe intentionally does not override it.
-        rewriteRun(pomXml(
-                """
-                <project>
-                  <modelVersion>4.0.0</modelVersion>
-                  <parent><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-parent</artifactId><version>3.1.3</version></parent>
-                  <groupId>example</groupId><artifactId>boot-app</artifactId><version>1</version>
-                  <dependencies><dependency>
-                    <groupId>com.microsoft.sqlserver</groupId><artifactId>mssql-jdbc</artifactId><scope>runtime</scope>
-                  </dependency></dependencies>
-                </project>
-                """
-        ));
+    void doesNotRenameAzureSdkClassNameOrUntypedString() {
+        rewriteRun(
+                sourceSpec(),
+                java(
+                        """
+                        package example;
+                        class AzureSdkConfig { String credentialClass = "DefaultAzureCredential"; String fragment = "authentication=DefaultAzureCredential;"; }
+                        """
+                )
+        );
     }
 
     @Test
-    void preservesTargetVersion() {
-        rewriteRun(pomXml(pomWithVersion("13.2.1.jre11")));
+    void authenticationMigrationIsIdempotent() {
+        rewriteRun(
+                spec -> {
+                    sourceSpec().accept(spec);
+                    spec.cycles(2).expectedCyclesThatMakeChanges(1);
+                },
+                java(
+                        "class App { String url = \"jdbc:sqlserver://db;authentication=DefaultAzureCredential;\"; }",
+                        "class App { String url = \"jdbc:sqlserver://db;authentication=ActiveDirectoryDefault;\"; }"
+                )
+        );
     }
 
     @Test
-    void doesNotDowngradeNewerVersion() {
-        rewriteRun(pomXml(pomWithVersion("13.4.0.jre11")));
+    void marksUrlWithoutExplicitTlsAndTimeoutPolicy() {
+        rewriteRun(
+                riskSpec(),
+                java(
+                        "class App { String url = \"jdbc:sqlserver://localhost;databaseName=app\"; }",
+                        "class App { String url = /*~~(SQL Server JDBC 13.2: encrypt now defaults to true; define and test certificate policy; loginTimeout default changed from 15s to 30s)~~>*/\"jdbc:sqlserver://localhost;databaseName=app\"; }"
+                )
+        );
     }
 
     @Test
-    void preservesDifferentTargetRuntimeVariant() {
-        rewriteRun(pomXml(pomWithVersion("13.2.1.jre8")));
+    void marksPentahoRealTlsAlwaysEncryptedAndEntraFragments() {
+        // pentaho/pentaho-kettle, fixed commit a0e1ed445ba96e8f1105caa878d7526231f6a037
+        // https://github.com/pentaho/pentaho-kettle/blob/a0e1ed445ba96e8f1105caa878d7526231f6a037/core/src/main/java/org/pentaho/di/core/database/AzureSqlDataBaseMeta.java
+        rewriteRun(
+                riskSpec(),
+                java(
+                        """
+                        package example;
+                        class AzureSqlDataBaseMeta {
+                            String getURL(String host, String port, String database) {
+                                String url = "jdbc:sqlserver://" + host + ":" + port + ";database=" + database + ";encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net;loginTimeout=30;";
+                                url += "columnEncryptionSetting=Enabled;keyVaultProviderClientId=id;keyVaultProviderClientKey=secret;";
+                                return url + "authentication=ActiveDirectoryPassword;";
+                            }
+                        }
+                        """,
+                        """
+                        package example;
+                        class AzureSqlDataBaseMeta {
+                            String getURL(String host, String port, String database) {
+                                String url = /*~~(SQL Server JDBC 13.2: encrypt now defaults to true; define and test certificate policy; loginTimeout default changed from 15s to 30s)~~>*/"jdbc:sqlserver://" + host + ":" + port + ";database=" + database + ";encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net;loginTimeout=30;";
+                                url += /*~~(Always Encrypted connection fragment detected; verify key provider, optional dependencies, attestation, metadata cache and failover behavior)~~>*/"columnEncryptionSetting=Enabled;keyVaultProviderClientId=id;keyVaultProviderClientKey=secret;";
+                                return url + /*~~(Microsoft Entra connection fragment detected; review deprecated modes/properties, token callbacks and Azure Identity/MSAL dependencies)~~>*/"authentication=ActiveDirectoryPassword;";
+                            }
+                        }
+                        """
+                )
+        );
     }
 
     @Test
-    void doesNotChangeSimilarCoordinates() {
-        rewriteRun(pomXml(
-                """
-                <project><modelVersion>4.0.0</modelVersion><groupId>example</groupId><artifactId>other</artifactId><version>1</version>
-                  <dependencyManagement><dependencies>
-                    <dependency><groupId>example</groupId><artifactId>mssql-jdbc</artifactId><version>10.2.1.jre8</version></dependency>
-                    <dependency><groupId>com.microsoft.sqlserver</groupId><artifactId>mssql-jdbc-auth</artifactId><version>10.2.1</version></dependency>
-                  </dependencies></dependencyManagement>
-                </project>
-                """
-        ));
+    void marksTypedTlsTimeoutAuthEncryptionVectorAndSessionCalls() {
+        rewriteRun(
+                riskSpec(),
+                java(
+                        """
+                        import com.microsoft.sqlserver.jdbc.SQLServerDataSource;
+                        class Risks { void configure(SQLServerDataSource ds) {
+                            ds.setEncrypt("strict");
+                            ds.setLoginTimeout(15);
+                            ds.setAADSecurePrincipalId("client");
+                            ds.setColumnEncryptionSetting("Enabled");
+                            ds.setVectorTypeSupport("off");
+                            ds.setQuotedIdentifier(true);
+                        } }
+                        """,
+                        """
+                        import com.microsoft.sqlserver.jdbc.SQLServerDataSource;
+                        class Risks { void configure(SQLServerDataSource ds) {
+                            /*~~(Retest SQL Server JDBC 13.2 encryption defaults, strict/TDS 8.0, certificate chain and hostname validation)~~>*/ds.setEncrypt("strict");
+                            /*~~(13.2 inherits the 30-second default and revised socket/login timeout interaction; verify failover, pool and probe budgets)~~>*/ds.setLoginTimeout(15);
+                            /*~~(Review Microsoft Entra/integrated authentication: deprecated AAD properties, renamed modes, optional Azure Identity/MSAL dependencies and token callbacks)~~>*/ds.setAADSecurePrincipalId("client");
+                            /*~~(Always Encrypted or enclave API detected; verify key provider, attestation, metadata cache, optional dependencies and failover behavior)~~>*/ds.setColumnEncryptionSetting("Enabled");
+                            /*~~(Verify SQL Server 13.2 native vector representation and bulk-copy/ResultSet/ORM mappings; use off only as a temporary compatibility choice)~~>*/ds.setVectorTypeSupport("off");
+                            /*~~(Verify quotedIdentifier/concatNullYieldsNull on new and pooled connections; session state affects SQL semantics)~~>*/ds.setQuotedIdentifier(true);
+                        } }
+                        """
+                )
+        );
     }
 
     @Test
-    void discoversAndValidatesRecipe() {
+    void marksVectorSqlAndNativeAuthenticationLibrary() {
+        rewriteRun(
+                riskSpec(),
+                java(
+                        """
+                        class NativeAndVector {
+                            String create = "CREATE TABLE embeddings (v VECTOR(1536))";
+                            String dll = "mssql-jdbc_auth-10.2.3.x64.dll";
+                        }
+                        """,
+                        """
+                        class NativeAndVector {
+                            String create = /*~~(SQL Server VECTOR detected: 13.2 returns native vector values unless vectorTypeSupport=off; update ResultSet/ORM mappings deliberately)~~>*/"CREATE TABLE embeddings (v VECTOR(1536))";
+                            String dll = /*~~(Native integrated-authentication library reference detected; deploy the 13.2 architecture-specific mssql-jdbc_auth binary and retest Kerberos/NTLM)~~>*/"mssql-jdbc_auth-10.2.3.x64.dll";
+                        }
+                        """
+                )
+        );
+    }
+
+    @Test
+    void buildSearchMarksJava8AndOptionalAuthEncryptionDependencies() {
+        rewriteRun(
+                spec -> spec.recipe(recipe(BUILD_RISK_RECIPE)),
+                text(
+                        """
+                        <project><properties><maven.compiler.release>8</maven.compiler.release></properties><dependencies>
+                          <dependency><artifactId>mssql-jdbc_auth</artifactId></dependency>
+                          <dependency><artifactId>azure-identity</artifactId></dependency>
+                        </dependencies></project>
+                        """,
+                        """
+                        <project><properties>~~><maven.compiler.release>8</maven.compiler.release></properties><dependencies>
+                          <dependency>~~><artifactId>mssql-jdbc_auth</artifactId></dependency>
+                          <dependency>~~><artifactId>azure-identity</artifactId></dependency>
+                        </dependencies></project>
+                        """,
+                        source -> source.path("pom.xml")
+                ),
+                text(
+                        "java { toolchain { languageVersion = JavaLanguageVersion.of(8) } }",
+                        "java { toolchain { languageVersion = ~~>JavaLanguageVersion.of(8) } }",
+                        source -> source.path("build.gradle")
+                )
+        );
+    }
+
+    @Test
+    void configurationSearchMarksExactConnectionPropertyAndNativeDll() {
+        rewriteRun(
+                spec -> spec.recipe(recipe(CONFIG_RISK_RECIPE)),
+                text("encrypt=true", "~~>encrypt=true", source -> source.path("application.properties")),
+                text("AUTH_DLL=mssql-jdbc_auth-10.2.3.x64.dll", "AUTH_DLL=~~>mssql-jdbc_auth-10.2.3.x64.dll",
+                        source -> source.path("runtime.env"))
+        );
+    }
+
+    @Test
+    void compositeUpgradesRenamesAuthenticationAndMarksRemainingUrlRisks() {
+        rewriteRun(
+                spec -> {
+                    sourceSpec().accept(spec);
+                    spec.recipe(recipe(MIGRATION_RECIPE)).typeValidationOptions(TypeValidation.none());
+                },
+                pomXml(pom("10.2.3.jre17"), pom("13.2.1.jre11")),
+                java(
+                        "class App { String url = \"jdbc:sqlserver://db;authentication=DefaultAzureCredential;\"; }",
+                        "class App { String url = /*~~(SQL Server JDBC 13.2: encrypt now defaults to true; define and test certificate policy; loginTimeout default changed from 15s to 30s; review Microsoft Entra authentication and optional Azure/MSAL dependencies)~~>*/\"jdbc:sqlserver://db;authentication=ActiveDirectoryDefault;\"; }"
+                )
+        );
+    }
+
+    @Test
+    void allRecipesAreDiscoverableAndValid() {
         Environment environment = environment();
-        Recipe recipe = environment.activateRecipes(RECIPE_NAME);
-        assertTrue(environment.listRecipes().stream().anyMatch(candidate -> RECIPE_NAME.equals(candidate.getName())));
-        assertTrue(recipe.validate().isValid(), () -> recipe.validate().failures().toString());
+        String[] names = {
+                DEPENDENCY_RECIPE, SOURCE_RECIPE, JAVA_RISK_RECIPE, BUILD_RISK_RECIPE,
+                CONFIG_RISK_RECIPE, MIGRATION_RECIPE
+        };
+        for (String name : names) {
+            Recipe recipe = environment.activateRecipes(name);
+            assertEquals(name, recipe.getName());
+            assertTrue(recipe.validateAll().stream().allMatch(validation -> validation.isValid()),
+                    () -> name + ": " + recipe.validateAll());
+        }
     }
 
-    private static String pomWithVersion(String version) {
-        return """
-               <project><modelVersion>4.0.0</modelVersion><groupId>example</groupId><artifactId>driver</artifactId><version>1</version>
-                 <dependencies><dependency>
-                   <groupId>com.microsoft.sqlserver</groupId><artifactId>mssql-jdbc</artifactId><version>%s</version>
-                 </dependency></dependencies>
-               </project>
-               """.formatted(version);
+    private Recipe recipe(String name) {
+        return environment().activateRecipes(name);
+    }
+
+    private static Consumer<RecipeSpec> sourceSpec() {
+        return spec -> spec.recipe(environment().activateRecipes(SOURCE_RECIPE))
+                .parser(mssqlParser()).typeValidationOptions(TypeValidation.none());
+    }
+
+    private static Consumer<RecipeSpec> riskSpec() {
+        return spec -> spec.recipe(environment().activateRecipes(JAVA_RISK_RECIPE))
+                .parser(mssqlParser()).typeValidationOptions(TypeValidation.none());
+    }
+
+    private static JavaParser.Builder<?, ?> mssqlParser() {
+        return JavaParser.fromJavaVersion().dependsOn(
+                """
+                package com.microsoft.sqlserver.jdbc;
+                public class SQLServerDataSource {
+                    public void setAuthentication(String v) {} public void setEncrypt(String v) {}
+                    public void setTrustServerCertificate(boolean v) {} public void setLoginTimeout(int v) {}
+                    public void setAADSecurePrincipalId(String v) {} public void setAADSecurePrincipalSecret(String v) {}
+                    public void setColumnEncryptionSetting(String v) {} public void setVectorTypeSupport(String v) {}
+                    public String getVectorTypeSupport() { return null; } public void setQuotedIdentifier(boolean v) {}
+                    public void setConcatNullYieldsNull(boolean v) {}
+                }
+                """
+        );
     }
 
     private static Environment environment() {
-        return Environment.builder()
-                .scanRuntimeClasspath("com.huawei.clouds.openrewrite.mssqljdbc")
-                .scanYamlResources()
-                .build();
+        return Environment.builder().scanRuntimeClasspath().build();
+    }
+
+    private static String pom(String version) {
+        return """
+               <project><modelVersion>4.0.0</modelVersion><groupId>example</groupId><artifactId>driver</artifactId><version>1</version><dependencies><dependency>
+                 <groupId>com.microsoft.sqlserver</groupId><artifactId>mssql-jdbc</artifactId><version>%s</version>
+               </dependency></dependencies></project>
+               """.formatted(version);
+    }
+
+    private static String propertyPom(String version, String property) {
+        return """
+               <project><modelVersion>4.0.0</modelVersion><groupId>org.apache.flink</groupId><artifactId>flink-connector-jdbc-sqlserver</artifactId><version>4.0</version>
+                 <properties><%1$s>%2$s</%1$s></properties><dependencies><dependency>
+                   <groupId>com.microsoft.sqlserver</groupId><artifactId>mssql-jdbc</artifactId><version>${%1$s}</version><scope>provided</scope>
+                 </dependency></dependencies>
+               </project>
+               """.formatted(property, version);
+    }
+
+    private static String managedPropertyPom(String version) {
+        return """
+               <project><modelVersion>4.0.0</modelVersion><groupId>za.co.absa</groupId><artifactId>inception</artifactId><version>1</version>
+                 <properties><mssql-jdbc.version>%s</mssql-jdbc.version></properties><dependencyManagement><dependencies><dependency>
+                   <groupId>com.microsoft.sqlserver</groupId><artifactId>mssql-jdbc</artifactId><version>${mssql-jdbc.version}</version>
+                 </dependency></dependencies></dependencyManagement>
+               </project>
+               """.formatted(version);
     }
 }
