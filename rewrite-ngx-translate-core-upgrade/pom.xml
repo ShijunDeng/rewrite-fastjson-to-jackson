@@ -13,7 +13,7 @@
 
   <artifactId>rewrite-ngx-translate-core-upgrade</artifactId>
   <name>OpenRewrite ngx-translate Core Upgrade</name>
-  <description>Configuration-based OpenRewrite recipe for upgrading @ngx-translate/core to 17.0.0.</description>
+  <description>OpenRewrite recipes for strictly upgrading selected @ngx-translate/core declarations and deterministic Angular source constructs to 17.0.0.</description>
   <url>https://github.com/ShijunDeng/openrewrite-migration-recipes/tree/main/rewrite-ngx-translate-core-upgrade</url>
 
   <dependencies>

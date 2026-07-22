@@ -2,12 +2,12 @@
 type: specs.openrewrite.org/v1beta/category
 name: com.huawei.clouds.openrewrite.ngxtranslate
 packageName: com.huawei.clouds.openrewrite.ngxtranslate
-description: Upgrade ngx-translate with explicit Angular compatibility guidance.
+description: Upgrade ngx-translate with explicit dependency, Angular standalone, fallback-language, provider, HTTP loader, event, typing, concurrency, and SSR migration behavior.
 ---
 type: specs.openrewrite.org/v1beta/recipe
 name: com.huawei.clouds.openrewrite.ngxtranslate.UpgradeNgxTranslateCoreTo17
-displayName: Upgrade @ngx-translate/core to 17.0.0
-description: Update direct @ngx-translate/core declarations in package.json to 17.0.0. Lock files must be regenerated with the project's package manager.
+displayName: Upgrade selected @ngx-translate/core declarations to 17.0.0
+description: Update only spreadsheet-selected direct @ngx-translate/core declarations in package.json without changing protocols, aliases, ranges, overrides, lockfiles, source code, or unlisted versions.
 tags:
   - ngx-translate
   - angular
@@ -17,15 +17,221 @@ preconditions:
   - org.openrewrite.FindSourceFiles:
       filePattern: package.json;**/package.json
 recipeList:
-  - org.openrewrite.json.ChangeValue:
-      oldKeyPath: $.dependencies['@ngx-translate/core']
-      value: '"17.0.0"'
-  - org.openrewrite.json.ChangeValue:
-      oldKeyPath: $.devDependencies['@ngx-translate/core']
-      value: '"17.0.0"'
-  - org.openrewrite.json.ChangeValue:
-      oldKeyPath: $.peerDependencies['@ngx-translate/core']
-      value: '"17.0.0"'
-  - org.openrewrite.json.ChangeValue:
-      oldKeyPath: $.optionalDependencies['@ngx-translate/core']
-      value: '"17.0.0"'
+  - com.huawei.clouds.openrewrite.ngxtranslate.UpgradeSelectedNgxTranslateCoreDependency
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.ngxtranslate.MigrateStandaloneTranslateModuleToPipeAndDirective
+displayName: Use standalone ngx-translate pipe and directive in standalone components
+description: Replace an exact TranslateModule-only import and its component imports-array entry when the same TypeScript file is explicitly standalone.
+tags:
+  - ngx-translate
+  - angular
+  - standalone
+preconditions:
+  - org.openrewrite.text.Find:
+      find: '\bstandalone[ \t]*:[ \t]*true\b'
+      regex: true
+      caseSensitive: true
+      filePattern: "**/*.ts"
+      contextSize: 0
+  - org.openrewrite.text.Find:
+      find: 'import[ \t]*\{[ \t]*TranslateModule[ \t]*\}[ \t]*from[ \t]*["'']@ngx-translate/core["''][ \t]*;?'
+      regex: true
+      caseSensitive: true
+      filePattern: "**/*.ts"
+      contextSize: 0
+recipeList:
+  - org.openrewrite.text.FindAndReplace:
+      find: 'import(?<space1>[ \t]*)\{[ \t]*TranslateModule[ \t]*\}(?<space2>[ \t]*)from(?<space3>[ \t]*)(?<quote>["''])@ngx-translate/core\k<quote>[ \t]*;?'
+      replace: 'import${space1}{ TranslatePipe, TranslateDirective }${space2}from${space3}${quote}@ngx-translate/core${quote};'
+      regex: true
+      filePattern: "**/*.ts"
+      plaintextOnly: false
+  - org.openrewrite.text.FindAndReplace:
+      find: '(?<prefix>\bimports[ \t\r\n]*:[ \t\r\n]*\[[^\]]*)\bTranslateModule\b(?<suffix>[^\]]*\])'
+      replace: '${prefix}TranslatePipe, TranslateDirective${suffix}'
+      regex: true
+      filePattern: "**/*.ts"
+      plaintextOnly: false
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.ngxtranslate.MigrateDeterministicNgxTranslateSourceTo17
+displayName: Migrate deterministic ngx-translate source constructs to version 17
+description: Rename fallback-language APIs and types, normalize selected service getters and configuration keys, rename public default implementations, and modernize strictly matched standalone component imports.
+tags:
+  - ngx-translate
+  - angular
+  - typescript
+  - source-migration
+preconditions:
+  - org.openrewrite.text.Find:
+      find: '@ngx-translate/(?:core|http-loader)'
+      regex: true
+      caseSensitive: true
+      filePattern: "**/*.{ts,tsx,mts,cts}"
+      contextSize: 0
+recipeList:
+  - com.huawei.clouds.openrewrite.ngxtranslate.MigrateStandaloneTranslateModuleToPipeAndDirective
+  - org.openrewrite.text.FindAndReplace:
+      find: '\bDefaultLangChangeEvent\b'
+      replace: FallbackLangChangeEvent
+      regex: true
+      filePattern: "**/*.{ts,tsx,mts,cts}"
+      plaintextOnly: false
+  - org.openrewrite.text.FindAndReplace:
+      find: '\bFakeMissingTranslationHandler\b'
+      replace: DefaultMissingTranslationHandler
+      regex: true
+      filePattern: "**/*.{ts,tsx,mts,cts}"
+      plaintextOnly: false
+  - org.openrewrite.text.FindAndReplace:
+      find: '\bTranslateFakeCompiler\b'
+      replace: TranslateNoOpCompiler
+      regex: true
+      filePattern: "**/*.{ts,tsx,mts,cts}"
+      plaintextOnly: false
+  - org.openrewrite.text.FindAndReplace:
+      find: '\bTranslateFakeLoader\b'
+      replace: TranslateNoOpLoader
+      regex: true
+      filePattern: "**/*.{ts,tsx,mts,cts}"
+      plaintextOnly: false
+  - org.openrewrite.text.FindAndReplace:
+      find: '(?<receiver>\b(?:this\.)?(?:translate|translateService))\.setDefaultLang(?=[ \t]*\()'
+      replace: '${receiver}.setFallbackLang'
+      regex: true
+      filePattern: "**/*.{ts,tsx,mts,cts}"
+      plaintextOnly: false
+  - org.openrewrite.text.FindAndReplace:
+      find: '(?<receiver>\b(?:this\.)?(?:translate|translateService))\.getDefaultLang(?=[ \t]*\()'
+      replace: '${receiver}.getFallbackLang'
+      regex: true
+      filePattern: "**/*.{ts,tsx,mts,cts}"
+      plaintextOnly: false
+  - org.openrewrite.text.FindAndReplace:
+      find: '(?<receiver>\b(?:this\.)?(?:translate|translateService))\.onDefaultLangChange\b'
+      replace: '${receiver}.onFallbackLangChange'
+      regex: true
+      filePattern: "**/*.{ts,tsx,mts,cts}"
+      plaintextOnly: false
+  - org.openrewrite.text.FindAndReplace:
+      find: '(?<receiver>\b(?:this\.)?(?:translate|translateService))\.defaultLang\b(?![ \t]*(?:=|\+=|-=|\?\?=))'
+      replace: '${receiver}.getFallbackLang()'
+      regex: true
+      filePattern: "**/*.{ts,tsx,mts,cts}"
+      plaintextOnly: false
+  - org.openrewrite.text.FindAndReplace:
+      find: '(?<receiver>\b(?:this\.)?(?:translate|translateService))\.currentLang\b(?![ \t]*(?:=|\+=|-=|\?\?=))'
+      replace: '${receiver}.getCurrentLang()'
+      regex: true
+      filePattern: "**/*.{ts,tsx,mts,cts}"
+      plaintextOnly: false
+  - org.openrewrite.text.FindAndReplace:
+      find: '(?<receiver>\b(?:this\.)?(?:translate|translateService))\.langs\b(?![ \t]*(?:=|\+=|-=|\?\?=))'
+      replace: '${receiver}.getLangs()'
+      regex: true
+      filePattern: "**/*.{ts,tsx,mts,cts}"
+      plaintextOnly: false
+  - org.openrewrite.text.FindAndReplace:
+      find: '(?s)(?<prefix>\b(?:TranslateModule\.(?:forRoot|forChild)|provideTranslateService)[ \t\r\n]*\([ \t\r\n]*\{(?:(?!\}[ \t\r\n]*\)).){0,2000}?)\bdefaultLanguage(?=[ \t]*:)'
+      replace: '${prefix}fallbackLang'
+      regex: true
+      filePattern: "**/*.{ts,tsx,mts,cts}"
+      plaintextOnly: false
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.ngxtranslate.FindManualNgxTranslate17MigrationRisks
+displayName: Find ngx-translate 17 migration risks requiring manual review
+description: Mark provider restructuring, HTTP loader construction, deprecated config and APIs, event writes, direct loading, custom plugin types, language-switch concurrency, SSR browser detection, remaining legacy properties, and private imports.
+tags:
+  - ngx-translate
+  - search
+  - manual-review
+preconditions:
+  - org.openrewrite.text.Find:
+      find: '@ngx-translate/(?:core|http-loader)'
+      regex: true
+      caseSensitive: true
+      filePattern: "**/*.{ts,tsx,mts,cts}"
+      contextSize: 0
+recipeList:
+  - org.openrewrite.text.Find:
+      find: '\bTranslateModule\.(?:forRoot|forChild)[ \t\r\n]*\('
+      regex: true
+      caseSensitive: true
+      filePattern: "**/*.{ts,tsx,mts,cts}"
+      contextSize: 0
+  - org.openrewrite.text.Find:
+      find: '\b(?:loader|compiler|parser|missingTranslationHandler)[ \t\r\n]*:[ \t\r\n]*\{[ \t\r\n]*provide[ \t\r\n]*:[ \t\r\n]*(?:TranslateLoader|TranslateCompiler|TranslateParser|MissingTranslationHandler)\b'
+      regex: true
+      caseSensitive: true
+      filePattern: "**/*.{ts,tsx,mts,cts}"
+      contextSize: 0
+  - org.openrewrite.text.Find:
+      find: '\bnew[ \t]+TranslateHttpLoader[ \t]*\('
+      regex: true
+      caseSensitive: true
+      filePattern: "**/*.{ts,tsx,mts,cts}"
+      contextSize: 0
+  - org.openrewrite.text.Find:
+      find: '\buseDefaultLang\b|\bdefaultLanguage\b'
+      regex: true
+      caseSensitive: true
+      filePattern: "**/*.{ts,tsx,mts,cts}"
+      contextSize: 0
+  - org.openrewrite.text.Find:
+      find: '\.(?:setDefaultLang|getDefaultLang)[ \t]*\(|\.onDefaultLangChange\b'
+      regex: true
+      caseSensitive: true
+      filePattern: "**/*.{ts,tsx,mts,cts}"
+      contextSize: 0
+  - org.openrewrite.text.Find:
+      find: '\.(?:onLangChange|onTranslationChange|onFallbackLangChange|onDefaultLangChange)[ \t]*\.[ \t]*emit[ \t]*\('
+      regex: true
+      caseSensitive: true
+      filePattern: "**/*.{ts,tsx,mts,cts}"
+      contextSize: 0
+  - org.openrewrite.text.Find:
+      find: '\.(?:getTranslation)[ \t]*\('
+      regex: true
+      caseSensitive: true
+      filePattern: "**/*.{ts,tsx,mts,cts}"
+      contextSize: 0
+  - org.openrewrite.text.Find:
+      find: '\bimplements[ \t]+(?:TranslateLoader|TranslateCompiler|TranslateParser|MissingTranslationHandler)\b|\bextends[ \t]+(?:TranslateLoader|TranslateCompiler|TranslateParser)\b'
+      regex: true
+      caseSensitive: true
+      filePattern: "**/*.{ts,tsx,mts,cts}"
+      contextSize: 0
+  - org.openrewrite.text.Find:
+      find: '\b(?:translate|translateService)\.use[ \t]*\(|\bthis\.(?:translate|translateService)\.use[ \t]*\('
+      regex: true
+      caseSensitive: true
+      filePattern: "**/*.{ts,tsx,mts,cts}"
+      contextSize: 0
+  - org.openrewrite.text.Find:
+      find: '\.(?:defaultLang|currentLang|langs)\b|\b(?:window|document|navigator|isPlatformBrowser|afterNextRender)\b'
+      regex: true
+      caseSensitive: true
+      filePattern: "**/*.{ts,tsx,mts,cts}"
+      contextSize: 0
+  - org.openrewrite.text.Find:
+      find: '(?:from[ \t]+["'']@ngx-translate/core/|require[ \t]*\([ \t]*["'']@ngx-translate/core/)'
+      regex: true
+      caseSensitive: true
+      filePattern: "**/*.{ts,tsx,mts,cts}"
+      contextSize: 0
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.ngxtranslate.MigrateNgxTranslateCoreTo17
+displayName: Migrate ngx-translate applications to core 17.0.0
+description: Upgrade selected direct declarations, apply deterministic fallback-language and Angular source migrations, and mark provider, loader, event, typing, concurrency, SSR, and private API risks.
+tags:
+  - ngx-translate
+  - angular
+  - typescript
+  - source-migration
+recipeList:
+  - com.huawei.clouds.openrewrite.ngxtranslate.UpgradeNgxTranslateCoreTo17
+  - com.huawei.clouds.openrewrite.ngxtranslate.MigrateDeterministicNgxTranslateSourceTo17
+  - com.huawei.clouds.openrewrite.ngxtranslate.FindManualNgxTranslate17MigrationRisks
