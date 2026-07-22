@@ -37,6 +37,7 @@
     <module>rewrite-rxjs-upgrade</module>
     <module>rewrite-guava-upgrade</module>
     <module>rewrite-ngx-translate-core-upgrade</module>
+    <module>rewrite-hibernate-validator-upgrade</module>
   </modules>
 
   <dependencyManagement>
