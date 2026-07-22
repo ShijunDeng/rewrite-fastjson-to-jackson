@@ -64,6 +64,7 @@
     <module>rewrite-mybatis-spring-upgrade</module>
     <module>rewrite-marked-upgrade</module>
     <module>rewrite-ngx-echarts-upgrade</module>
+    <module>rewrite-flyway-core-upgrade</module>
   </modules>
 
   <dependencyManagement>

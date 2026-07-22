@@ -1,0 +1,59 @@
+---
+type: specs.openrewrite.org/v1beta/category
+name: com.huawei.clouds.openrewrite.flyway
+packageName: com.huawei.clouds.openrewrite.flyway
+description: Upgrade Flyway Core and its build plugins with explicit safeguards for managed dependencies and database modules.
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.flyway.UpgradeFlywayCoreDependencyTo11_14_1
+displayName: Upgrade Flyway Core dependency to 11.14.1
+description: Upgrade explicit org.flywaydb:flyway-core versions in Maven and Gradle without overriding a platform-managed version or changing source and database modules.
+tags:
+  - flyway
+  - database-migration
+  - java
+  - dependency-upgrade
+recipeList:
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.flywaydb
+      artifactId: flyway-core
+      newVersion: 11.14.1
+      overrideManagedVersion: false
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.flyway.UpgradeFlywayBuildPluginsTo11_14_1
+displayName: Upgrade Flyway Maven and Gradle plugins to 11.14.1
+description: Upgrade explicitly versioned open-source Flyway Maven and Gradle plugins without adding missing versions or changing Redgate edition coordinates.
+tags:
+  - flyway
+  - maven
+  - gradle
+  - plugin-upgrade
+recipeList:
+  - org.openrewrite.maven.UpgradePluginVersion:
+      groupId: org.flywaydb
+      artifactId: flyway-maven-plugin
+      newVersion: 11.14.1
+      trustParent: false
+      addVersionIfMissing: false
+  - org.openrewrite.gradle.plugins.UpgradePluginVersion:
+      pluginIdPattern: org.flywaydb.flyway
+      newVersion: 11.14.1
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.flyway.MigrateFlywayTo11_14_1
+displayName: Migrate Flyway builds to 11.14.1
+description: Upgrade explicit Flyway Core and build plugin versions and rename the removed report filename property while leaving database module selection and behavioral changes for review.
+tags:
+  - flyway
+  - database-migration
+  - java
+  - build-migration
+recipeList:
+  - com.huawei.clouds.openrewrite.flyway.UpgradeFlywayCoreDependencyTo11_14_1
+  - com.huawei.clouds.openrewrite.flyway.UpgradeFlywayBuildPluginsTo11_14_1
+  - org.openrewrite.properties.ChangePropertyKey:
+      oldPropertyKey: flyway.check.reportFilename
+      newPropertyKey: flyway.reportFilename
+      relaxedBinding: false
+      regex: false
