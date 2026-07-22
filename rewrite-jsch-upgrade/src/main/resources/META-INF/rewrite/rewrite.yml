@@ -1,0 +1,33 @@
+---
+type: specs.openrewrite.org/v1beta/category
+name: com.huawei.clouds.openrewrite.jsch
+packageName: com.huawei.clouds.openrewrite.jsch
+description: Upgrade the mwiede JSch fork with deterministic dependency/configuration changes and precise security, compatibility, and operational review markers.
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.jsch.MigrateJschTo2_27_7
+displayName: Migrate mwiede JSch applications to 2.27.7
+description: Upgrade workbook-selected mwiede JSch dependencies, canonicalize an exact configuration-key alias, and mark security or behavioral boundaries that require application intent.
+tags:
+  - jsch
+  - ssh
+  - sftp
+  - java
+  - migration
+recipeList:
+  - com.huawei.clouds.openrewrite.jsch.UpgradeJschTo2_27_7
+  - com.huawei.clouds.openrewrite.jsch.CanonicalizeJschConfigKeys
+  - com.huawei.clouds.openrewrite.jsch.FindJsch227JavaRisks
+  - com.huawei.clouds.openrewrite.jsch.FindJsch227ConfigurationRisks
+  - com.huawei.clouds.openrewrite.jsch.FindJsch227BuildRisks
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.jsch.UpgradeJschTo2_27_7
+displayName: Upgrade mwiede JSch to 2.27.7
+description: Upgrade only com.github.mwiede:jsch versions 0.1.55, 0.1.70, 0.2.3, 0.2.7, and 0.2.9 in owned Maven and Gradle declarations to 2.27.7.
+tags:
+  - jsch
+  - ssh
+  - dependency-upgrade
+recipeList:
+  - com.huawei.clouds.openrewrite.jsch.UpgradeSelectedJschDependency

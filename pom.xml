@@ -112,6 +112,7 @@
     <module>rewrite-grafana-upgrade</module>
     <module>rewrite-single-spa-angular-upgrade</module>
     <module>rewrite-markdown-it-upgrade</module>
+    <module>rewrite-jsch-upgrade</module>
   </modules>
 
   <dependencyManagement>
