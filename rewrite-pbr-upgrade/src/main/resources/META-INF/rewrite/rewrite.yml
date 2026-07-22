@@ -1,0 +1,30 @@
+---
+type: specs.openrewrite.org/v1beta/category
+name: com.huawei.clouds.openrewrite.pbr
+packageName: com.huawei.clouds.openrewrite.pbr
+description: Strict pbr dependency and Python packaging migrations with deterministic setup.cfg changes and precise manual-review markers.
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.pbr.MigratePbrTo7_0_3
+displayName: Migrate pbr consumers to 7.0.3
+description: Upgrade workbook-selected dependency pins, apply conflict-free official setup.cfg aliases, and mark removed commands, configuration owners, internal APIs, and dynamic dependency boundaries.
+tags:
+  - pbr
+  - python
+  - packaging
+  - migration
+recipeList:
+  - com.huawei.clouds.openrewrite.pbr.UpgradePbrTo7_0_3
+  - com.huawei.clouds.openrewrite.pbr.MigratePbrSetupCfg
+  - com.huawei.clouds.openrewrite.pbr.FindPbrMigrationRisks
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.pbr.UpgradePbrTo7_0_3
+displayName: Upgrade exact pbr pins to 7.0.3
+description: Upgrade only pbr 5.11.1 and 5.5.1 exact pins explicitly visible in the workbook, in maintained Python dependency owner files.
+tags:
+  - pbr
+  - python
+  - dependency-upgrade
+recipeList:
+  - com.huawei.clouds.openrewrite.pbr.UpgradeSelectedPbrDependency

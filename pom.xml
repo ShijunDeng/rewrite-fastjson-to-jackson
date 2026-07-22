@@ -104,6 +104,7 @@
     <module>rewrite-jcl-over-slf4j-upgrade</module>
     <module>rewrite-ojdbc8-upgrade</module>
     <module>rewrite-react-resizable-upgrade</module>
+    <module>rewrite-pbr-upgrade</module>
   </modules>
 
   <dependencyManagement>
