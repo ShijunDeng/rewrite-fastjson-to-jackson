@@ -11,6 +11,7 @@
 | `rewrite-fastjson-to-jackson-common` | 内部模块 | Fastjson 1.x / Fastjson2 共用迁移引擎，不直接激活 |
 | [`rewrite-fastjson-to-jackson`](rewrite-fastjson-to-jackson) | `com.huawei.clouds.openrewrite.fastjson.MigrateFastjsonToJackson` | 将 Fastjson 1.x Java 工程迁移到 Jackson 2.x |
 | [`rewrite-fastjson2-to-jackson`](rewrite-fastjson2-to-jackson) | `com.huawei.clouds.openrewrite.fastjson2.MigrateFastjson2ToJackson` | 将 Fastjson2 Java 工程迁移到 Jackson 2.x |
+| [`rewrite-rxjs-upgrade`](rewrite-rxjs-upgrade) | `com.huawei.clouds.openrewrite.rxjs.UpgradeRxjsTo7_8_2` | 将 RxJS 6.x 的 `package.json` 声明升级到 7.8.2 |
 
 后续迁移应新增独立模块，例如：
 
@@ -51,8 +52,9 @@ mvn -pl rewrite-fastjson2-to-jackson -am clean verify
 
 - 一个独立迁移目标对应一个 Maven module。
 - Java package 使用 `com.huawei.clouds.openrewrite.<domain>`。
-- artifact ID 使用 `rewrite-<source>-to-<target>`。
+- 迁移类 artifact ID 使用 `rewrite-<source>-to-<target>`，原地升级类使用 `rewrite-<software>-upgrade`。
 - 每个模块独立声明公开 recipe，并包含源码、依赖和安全回退测试。
+- 配置型升级模块必须限制目标文件、覆盖依赖声明测试，并在 README 中区分自动修改与人工兼容项。
 - 同一迁移族的稳定公共能力放入 `-common` 内部模块，公开模块只保留版本入口和版本差异。
 
 ## License

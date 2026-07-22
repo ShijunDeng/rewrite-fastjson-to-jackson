@@ -1,0 +1,30 @@
+---
+type: specs.openrewrite.org/v1beta/category
+name: com.huawei.clouds.openrewrite.rxjs
+packageName: com.huawei.clouds.openrewrite.rxjs
+description: Upgrade RxJS applications with explicit compatibility guidance.
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.rxjs.UpgradeRxjsTo7_8_2
+displayName: Upgrade RxJS 6.x to 7.8.2
+description: Update direct RxJS declarations in package.json to 7.8.2. Lock files must be regenerated with the project's package manager.
+tags:
+  - rxjs
+  - nodejs
+  - dependency-upgrade
+preconditions:
+  - org.openrewrite.FindSourceFiles:
+      filePattern: package.json;**/package.json
+recipeList:
+  - org.openrewrite.json.ChangeValue:
+      oldKeyPath: $.dependencies.rxjs
+      value: '"7.8.2"'
+  - org.openrewrite.json.ChangeValue:
+      oldKeyPath: $.devDependencies.rxjs
+      value: '"7.8.2"'
+  - org.openrewrite.json.ChangeValue:
+      oldKeyPath: $.peerDependencies.rxjs
+      value: '"7.8.2"'
+  - org.openrewrite.json.ChangeValue:
+      oldKeyPath: $.optionalDependencies.rxjs
+      value: '"7.8.2"'

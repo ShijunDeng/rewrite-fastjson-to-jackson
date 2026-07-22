@@ -34,6 +34,7 @@
     <module>rewrite-fastjson-to-jackson-common</module>
     <module>rewrite-fastjson-to-jackson</module>
     <module>rewrite-fastjson2-to-jackson</module>
+    <module>rewrite-rxjs-upgrade</module>
   </modules>
 
   <dependencyManagement>
@@ -56,6 +57,11 @@
       <dependency>
         <groupId>org.openrewrite</groupId>
         <artifactId>rewrite-gradle</artifactId>
+        <version>${rewrite.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.openrewrite</groupId>
+        <artifactId>rewrite-json</artifactId>
         <version>${rewrite.version}</version>
       </dependency>
       <dependency>
