@@ -30,7 +30,7 @@ recipeList:
 type: specs.openrewrite.org/v1beta/recipe
 name: com.huawei.clouds.openrewrite.springdataelasticsearch.MigrateSpringDataElasticsearchTo6_0_5
 displayName: Migrate Spring Data Elasticsearch applications to 6.0.5
-description: Apply the conservative dependency upgrade; the Spring, Jakarta, Elasticsearch server, client, query, mapping, repository, and reactive migrations require application-specific validation and are intentionally not rewritten without type and runtime context.
+description: Upgrade the dependency, apply source-compatible Spring Data type moves, and mark removed client, query, mapping, repository, cache, and reactive APIs that need an explicit application decision.
 tags:
   - spring-data
   - elasticsearch
@@ -38,6 +38,190 @@ tags:
   - migration
 recipeList:
   - com.huawei.clouds.openrewrite.springdataelasticsearch.UpgradeSpringDataElasticsearchDependencyTo6_0_5
+  - org.openrewrite.java.ChangeType:
+      oldFullyQualifiedTypeName: org.springframework.data.elasticsearch.core.query.NativeSearchQuery
+      newFullyQualifiedTypeName: org.springframework.data.elasticsearch.client.elc.NativeQuery
+      ignoreDefinition: true
+  - org.openrewrite.java.ChangeType:
+      oldFullyQualifiedTypeName: org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder
+      newFullyQualifiedTypeName: org.springframework.data.elasticsearch.client.elc.NativeQueryBuilder
+      ignoreDefinition: true
+  - org.openrewrite.java.ChangeType:
+      oldFullyQualifiedTypeName: org.springframework.data.elasticsearch.core.Range
+      newFullyQualifiedTypeName: org.springframework.data.domain.Range
+      ignoreDefinition: true
+  - org.openrewrite.java.ChangeType:
+      oldFullyQualifiedTypeName: org.springframework.data.elasticsearch.ELCQueries
+      newFullyQualifiedTypeName: org.springframework.data.elasticsearch.client.elc.Queries
+      ignoreDefinition: true
+  - org.openrewrite.java.ChangeType:
+      oldFullyQualifiedTypeName: org.springframework.data.elasticsearch.client.elc.QueryBuilders
+      newFullyQualifiedTypeName: org.springframework.data.elasticsearch.client.elc.Queries
+      ignoreDefinition: true
+  - org.openrewrite.java.ChangeType:
+      oldFullyQualifiedTypeName: org.springframework.data.elasticsearch.core.completion.Completion
+      newFullyQualifiedTypeName: org.springframework.data.elasticsearch.core.suggest.Completion
+      ignoreDefinition: true
+  - org.openrewrite.java.ChangeType:
+      oldFullyQualifiedTypeName: org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentPropertyConverter
+      newFullyQualifiedTypeName: org.springframework.data.elasticsearch.core.mapping.PropertyValueConverter
+      ignoreDefinition: true
+  - org.openrewrite.java.ChangeType:
+      oldFullyQualifiedTypeName: org.springframework.data.elasticsearch.core.RuntimeField
+      newFullyQualifiedTypeName: org.springframework.data.elasticsearch.core.query.RuntimeField
+      ignoreDefinition: true
+  - com.huawei.clouds.openrewrite.springdataelasticsearch.AuditRemovedElasticsearchClients
+  - com.huawei.clouds.openrewrite.springdataelasticsearch.AuditRemovedSpringDataElasticsearchApis
+  - com.huawei.clouds.openrewrite.springdataelasticsearch.AuditSpringDataElasticsearchRepositorySemantics
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.springdataelasticsearch.AuditRemovedElasticsearchClients
+displayName: Locate removed Elasticsearch client implementations
+description: Mark TransportClient, RHLC, old RestClients/configuration, direct Elasticsearch 7 request and query DSL, and implementation template types that cannot be safely mapped to the Elasticsearch 9 Rest5Client without connection and runtime context.
+tags:
+  - spring-data
+  - elasticsearch
+  - client-migration
+  - search
+recipeList:
+  - org.openrewrite.java.search.FindTypes:
+      fullyQualifiedTypeName: org.elasticsearch.client.RestHighLevelClient
+      checkAssignability: true
+  - org.openrewrite.java.search.FindTypes:
+      fullyQualifiedTypeName: org.elasticsearch.client.transport.TransportClient
+      checkAssignability: true
+  - org.openrewrite.java.search.FindTypes:
+      fullyQualifiedTypeName: org.elasticsearch.action..*
+      checkAssignability: false
+  - org.openrewrite.java.search.FindTypes:
+      fullyQualifiedTypeName: org.elasticsearch.index.query..*
+      checkAssignability: false
+  - org.openrewrite.java.search.FindTypes:
+      fullyQualifiedTypeName: org.elasticsearch.search..*
+      checkAssignability: false
+  - org.openrewrite.java.search.FindTypes:
+      fullyQualifiedTypeName: org.springframework.data.elasticsearch.client.RestClients
+      checkAssignability: false
+  - org.openrewrite.java.search.FindTypes:
+      fullyQualifiedTypeName: org.springframework.data.elasticsearch.client.erhlc..*
+      checkAssignability: false
+  - org.openrewrite.java.search.FindTypes:
+      fullyQualifiedTypeName: org.springframework.data.elasticsearch.client.reactive..*
+      checkAssignability: false
+  - org.openrewrite.java.search.FindTypes:
+      fullyQualifiedTypeName: org.springframework.data.elasticsearch.config.AbstractElasticsearchConfiguration
+      checkAssignability: true
+  - org.openrewrite.java.search.FindTypes:
+      fullyQualifiedTypeName: org.springframework.data.elasticsearch.core.ElasticsearchTemplate
+      checkAssignability: true
+  - org.openrewrite.java.search.FindTypes:
+      fullyQualifiedTypeName: org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate
+      checkAssignability: true
+  - org.openrewrite.java.search.FindTypes:
+      fullyQualifiedTypeName: org.springframework.data.elasticsearch.core.ReactiveElasticsearchTemplate
+      checkAssignability: true
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.springdataelasticsearch.AuditRemovedSpringDataElasticsearchApis
+displayName: Locate removed Spring Data Elasticsearch APIs
+description: Mark removed operations methods, annotations, enum constants, scripting types, and intermediate kNN/reactive APIs whose replacement changes runtime semantics or parameter types.
+tags:
+  - spring-data
+  - elasticsearch
+  - api-migration
+  - search
+recipeList:
+  - org.openrewrite.java.search.FindMethods:
+      methodPattern: org.springframework.data.elasticsearch.core.ElasticsearchOperations stringIdRepresentation(java.lang.Object)
+      matchOverrides: false
+  - org.openrewrite.java.search.FindMethods:
+      methodPattern: org.springframework.data.elasticsearch.core.query.IndexQuery getParentId()
+      matchOverrides: false
+  - org.openrewrite.java.search.FindMethods:
+      methodPattern: org.springframework.data.elasticsearch.core.query.IndexQuery setParentId(java.lang.String)
+      matchOverrides: false
+  - org.openrewrite.java.search.FindMethods:
+      methodPattern: org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations execute(..)
+      matchOverrides: false
+  - org.openrewrite.java.search.FindMethods:
+      methodPattern: org.springframework.data.elasticsearch.core.SearchOperations suggest(org.elasticsearch.search.suggest.SuggestBuilder,java.lang.Class)
+      matchOverrides: false
+  - org.openrewrite.java.search.FindMethods:
+      methodPattern: org.springframework.data.elasticsearch.core.SearchOperations suggest(org.elasticsearch.search.suggest.SuggestBuilder,org.springframework.data.elasticsearch.core.mapping.IndexCoordinates)
+      matchOverrides: false
+  - org.openrewrite.java.search.FindMethods:
+      methodPattern: org.springframework.data.elasticsearch.core.ReactiveSearchOperations suggest(org.elasticsearch.search.suggest.SuggestBuilder,java.lang.Class)
+      matchOverrides: false
+  - org.openrewrite.java.search.FindMethods:
+      methodPattern: org.springframework.data.elasticsearch.core.ReactiveSearchOperations suggest(org.elasticsearch.search.suggest.SuggestBuilder,org.springframework.data.elasticsearch.core.mapping.IndexCoordinates)
+      matchOverrides: false
+  - org.openrewrite.java.search.FindMethods:
+      methodPattern: org.springframework.data.elasticsearch.core.DocumentOperations delete(org.springframework.data.elasticsearch.core.query.Query,java.lang.Class)
+      matchOverrides: true
+  - org.openrewrite.java.search.FindMethods:
+      methodPattern: org.springframework.data.elasticsearch.core.DocumentOperations delete(org.springframework.data.elasticsearch.core.query.Query,java.lang.Class,org.springframework.data.elasticsearch.core.mapping.IndexCoordinates)
+      matchOverrides: true
+  - org.openrewrite.java.search.FindMethods:
+      methodPattern: org.springframework.data.elasticsearch.core.ReactiveDocumentOperations delete(org.springframework.data.elasticsearch.core.query.Query,java.lang.Class)
+      matchOverrides: true
+  - org.openrewrite.java.search.FindMethods:
+      methodPattern: org.springframework.data.elasticsearch.core.ReactiveDocumentOperations delete(org.springframework.data.elasticsearch.core.query.Query,java.lang.Class,org.springframework.data.elasticsearch.core.mapping.IndexCoordinates)
+      matchOverrides: true
+  - org.openrewrite.java.search.FindMethods:
+      methodPattern: org.springframework.data.elasticsearch.client.elc.NativeQueryBuilder withKnnQuery(..)
+      matchOverrides: false
+  - org.openrewrite.java.search.FindMethods:
+      methodPattern: org.springframework.data.elasticsearch.client.elc.ReactiveElasticsearchIndicesClient unfreeze(..)
+      matchOverrides: false
+  - org.openrewrite.java.search.FindTypes:
+      fullyQualifiedTypeName: org.springframework.data.elasticsearch.annotations.DynamicMapping
+      checkAssignability: false
+  - org.openrewrite.java.search.FindTypes:
+      fullyQualifiedTypeName: org.springframework.data.elasticsearch.annotations.DynamicMappingValue
+      checkAssignability: false
+  - org.openrewrite.java.search.FindFields:
+      fullyQualifiedTypeName: org.springframework.data.elasticsearch.annotations.DateFormat
+      fieldName: none
+      matchInherited: false
+  - org.openrewrite.java.search.FindFields:
+      fullyQualifiedTypeName: org.springframework.data.elasticsearch.annotations.DateFormat
+      fieldName: custom
+      matchInherited: false
+  - org.openrewrite.java.search.FindTypes:
+      fullyQualifiedTypeName: org.springframework.data.elasticsearch.core.ScriptType
+      checkAssignability: false
+  - org.openrewrite.java.search.FindTypes:
+      fullyQualifiedTypeName: org.springframework.data.elasticsearch.core.query.ScriptType
+      checkAssignability: false
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.springdataelasticsearch.AuditSpringDataElasticsearchRepositorySemantics
+displayName: Locate repository query and cache semantics that require regression tests
+description: In source files using Spring Data Elasticsearch APIs, mark repository query and Spring cache annotations because null parameter rendering and Spring 5 to 7 cache behavior, especially for reactive return values, require application-level tests.
+tags:
+  - spring-data
+  - elasticsearch
+  - repository
+  - cache
+  - reactive
+  - search
+preconditions:
+  - org.openrewrite.java.search.FindTypes:
+      fullyQualifiedTypeName: org.springframework.data.elasticsearch..*
+      checkAssignability: false
+recipeList:
+  - org.openrewrite.java.search.FindAnnotations:
+      annotationPattern: '@org.springframework.data.elasticsearch.annotations.Query'
+      matchMetaAnnotations: false
+  - org.openrewrite.java.search.FindAnnotations:
+      annotationPattern: '@org.springframework.cache.annotation.Cacheable'
+      matchMetaAnnotations: false
+  - org.openrewrite.java.search.FindAnnotations:
+      annotationPattern: '@org.springframework.cache.annotation.CachePut'
+      matchMetaAnnotations: false
+  - org.openrewrite.java.search.FindAnnotations:
+      annotationPattern: '@org.springframework.cache.annotation.CacheEvict'
+      matchMetaAnnotations: false
 ---
 type: specs.openrewrite.org/v1beta/recipe
 name: com.huawei.clouds.openrewrite.springdataelasticsearch.UpgradeSpringDataElasticsearch4_2_4To6_0_5

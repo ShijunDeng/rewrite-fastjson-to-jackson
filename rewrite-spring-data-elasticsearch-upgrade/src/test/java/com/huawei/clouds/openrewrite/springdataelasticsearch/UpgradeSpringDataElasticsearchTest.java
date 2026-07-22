@@ -6,6 +6,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.openrewrite.InMemoryExecutionContext;
 import org.openrewrite.Recipe;
 import org.openrewrite.config.Environment;
+import org.openrewrite.java.JavaParser;
 import org.openrewrite.maven.MavenExecutionContextView;
 import org.openrewrite.maven.tree.MavenRepository;
 import org.openrewrite.maven.tree.MavenRepositoryMirror;
@@ -177,12 +178,16 @@ class UpgradeSpringDataElasticsearchTest implements RewriteTest {
     }
 
     @Test
-    void upgradesResftulElasticsearchKotlinBuildAndLeavesMappingRepositoryAndRhlcSourceUntouched() {
+    void upgradesResftulElasticsearchAndMarksRhlcConfiguration() {
         // Reduced from bben636/Resftul_Elasticsearch at 0931cd4a:
         // https://github.com/bben636/Resftul_Elasticsearch/blob/0931cd4aa3e1dd19859b7d577361cb323d030164/build.gradle.kts
         // https://github.com/bben636/Resftul_Elasticsearch/tree/0931cd4aa3e1dd19859b7d577361cb323d030164/src/main/java/com/practical/restful/training
         rewriteRun(
-                spec -> spec.beforeRecipe(withToolingApi()).typeValidationOptions(TypeValidation.none()),
+                spec -> spec
+                        .recipe(environment().activateRecipes(MIGRATION_RECIPE))
+                        .parser(migrationApiParser())
+                        .beforeRecipe(withToolingApi())
+                        .typeValidationOptions(TypeValidation.none()),
                 buildGradleKts(
                         """
                         plugins { java }
@@ -251,18 +256,36 @@ class UpgradeSpringDataElasticsearchTest implements RewriteTest {
                             }
                         }
                         """,
+                        """
+                        package com.practical.restful.training.common;
+
+                        import org.elasticsearch.client.RestHighLevelClient;
+                        import org.springframework.data.elasticsearch.client.ClientConfiguration;
+                        import org.springframework.data.elasticsearch.client.RestClients;
+                        import org.springframework.data.elasticsearch.config.AbstractElasticsearchConfiguration;
+
+                        public class /*~~>*/ElasticsearchConfig extends /*~~>*/AbstractElasticsearchConfiguration {
+                            public /*~~>*/RestHighLevelClient elasticsearchClient() {
+                                ClientConfiguration configuration = ClientConfiguration.builder().connectedTo("localhost:9200").build();
+                                return /*~~>*/RestClients.create(configuration).rest();
+                            }
+                        }
+                        """,
                         source -> source.path("src/main/java/com/practical/restful/training/common/ElasticsearchConfig.java")
                 )
         );
     }
 
     @Test
-    void upgradesElasticsearchStudyBuildAndLeavesNativeSearchQueryAndSearchHitsForManualMigration() {
+    void upgradesElasticsearchStudyAndMigratesNativeQueryTypeWhileMarkingOldDsl() {
         // Reduced from Withbini/ElasticsearchStudy at 9aaa0022:
         // https://github.com/Withbini/ElasticsearchStudy/blob/9aaa00220d0a5abf1b4a25988a269a120e1312e2/build.gradle
         // https://github.com/Withbini/ElasticsearchStudy/blob/9aaa00220d0a5abf1b4a25988a269a120e1312e2/src/main/java/com/example/demo/repository/BoardRepositoryOperations.java
         rewriteRun(
-                spec -> spec.typeValidationOptions(TypeValidation.none()),
+                spec -> spec
+                        .recipe(environment().activateRecipes(MIGRATION_RECIPE))
+                        .parser(migrationApiParser())
+                        .typeValidationOptions(TypeValidation.none()),
                 buildGradle(
                         """
                         plugins { id 'java' }
@@ -321,18 +344,46 @@ class UpgradeSpringDataElasticsearchTest implements RewriteTest {
                             }
                         }
                         """,
+                        """
+                        package com.example.demo.repository;
+
+                        import com.example.demo.entity.Board;
+                        import org.elasticsearch.index.query.QueryBuilders;
+                        import org.springframework.data.elasticsearch.client.elc.NativeQueryBuilder;
+                        import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+                        import org.springframework.data.elasticsearch.core.SearchHits;
+                        import org.springframework.data.elasticsearch.core.query.Query;
+
+                        public class BoardRepositoryOperations {
+                            private final ElasticsearchOperations operations;
+
+                            public BoardRepositoryOperations(ElasticsearchOperations operations) {
+                                this.operations = operations;
+                            }
+
+                            SearchHits<Board> searchAll() {
+                                Query query = new NativeQueryBuilder()
+                                        .withQuery(/*~~>*/QueryBuilders.matchAllQuery())
+                                        .build();
+                                return operations.search(query, Board.class);
+                            }
+                        }
+                        """,
                         source -> source.path("src/main/java/com/example/demo/repository/BoardRepositoryOperations.java")
                 )
         );
     }
 
     @Test
-    void upgradesHaebangBuildAndLeavesRepositoryRhlcAndJavaxBoundaryVisible() {
+    void upgradesHaebangAndMarksRhlcWhileLeavingJpaNamespaceForDedicatedMigration() {
         // Reduced from HaeBangProject/HAEBANG at 087c93b6:
         // https://github.com/HaeBangProject/HAEBANG/blob/087c93b667006612803721c4d9c27da31f081d98/build.gradle
         // https://github.com/HaeBangProject/HAEBANG/tree/087c93b667006612803721c4d9c27da31f081d98/src/main/java/com/haebang/haebang
         rewriteRun(
-                spec -> spec.typeValidationOptions(TypeValidation.none()),
+                spec -> spec
+                        .recipe(environment().activateRecipes(MIGRATION_RECIPE))
+                        .parser(migrationApiParser())
+                        .typeValidationOptions(TypeValidation.none()),
                 buildGradle(
                         """
                         plugins { id 'java' }
@@ -395,18 +446,36 @@ class UpgradeSpringDataElasticsearchTest implements RewriteTest {
                             }
                         }
                         """,
+                        """
+                        package com.haebang.haebang.configuration;
+
+                        import org.elasticsearch.client.RestHighLevelClient;
+                        import org.springframework.data.elasticsearch.client.ClientConfiguration;
+                        import org.springframework.data.elasticsearch.client.RestClients;
+
+                        public class ElasticSearchConfig {
+                            /*~~>*/RestHighLevelClient elasticsearchClient(String host, int port) {
+                                ClientConfiguration configuration = ClientConfiguration.builder()
+                                        .connectedTo(host + ":" + port).build();
+                                return /*~~>*/RestClients.create(configuration).rest();
+                            }
+                        }
+                        """,
                         source -> source.path("src/main/java/com/haebang/haebang/configuration/ElasticSearchConfig.java")
                 )
         );
     }
 
     @Test
-    void upgradesNxConductorBuildAndLeavesDirectElasticsearchClientCodeForManualMigration() {
+    void upgradesNxConductorAndMarksDirectElasticsearch7ClientCode() {
         // Reduced from sudhiry/nx-conductor at 24b9e190:
         // https://github.com/sudhiry/nx-conductor/blob/24b9e1909517180703e78cf1d3dfd25c33e902b7/elasticsearch-persistence/build.gradle
         // https://github.com/sudhiry/nx-conductor/blob/24b9e1909517180703e78cf1d3dfd25c33e902b7/elasticsearch-persistence/src/main/java/com/netflix/conductor/elasticsearch/dao/index/ElasticSearchRestDAOV7.java
         rewriteRun(
-                spec -> spec.typeValidationOptions(TypeValidation.none()),
+                spec -> spec
+                        .recipe(environment().activateRecipes(MIGRATION_RECIPE))
+                        .parser(migrationApiParser())
+                        .typeValidationOptions(TypeValidation.none()),
                 buildGradle(
                         """
                         plugins { id 'java-library' }
@@ -446,6 +515,30 @@ class UpgradeSpringDataElasticsearchTest implements RewriteTest {
                             long count(String index) throws IOException {
                                 SearchResponse response = elasticSearchClient.search(new SearchRequest(index), RequestOptions.DEFAULT);
                                 SearchHits searchHits = response.getHits();
+                                return searchHits.getTotalHits().value;
+                            }
+                        }
+                        """,
+                        """
+                        package com.netflix.conductor.elasticsearch.dao.index;
+
+                        import org.elasticsearch.action.search.SearchRequest;
+                        import org.elasticsearch.action.search.SearchResponse;
+                        import org.elasticsearch.client.RequestOptions;
+                        import org.elasticsearch.client.RestHighLevelClient;
+                        import org.elasticsearch.search.SearchHits;
+                        import java.io.IOException;
+
+                        public class ElasticSearchRestDAOV7 {
+                            private final /*~~>*/RestHighLevelClient elasticSearchClient;
+
+                            public ElasticSearchRestDAOV7(/*~~>*/RestHighLevelClient elasticSearchClient) {
+                                /*~~>*/this.elasticSearchClient = elasticSearchClient;
+                            }
+
+                            long count(String index) throws IOException {
+                                /*~~>*/SearchResponse response = elasticSearchClient.search(new /*~~>*/SearchRequest(index), RequestOptions.DEFAULT);
+                                /*~~>*/SearchHits searchHits = response.getHits();
                                 return searchHits.getTotalHits().value;
                             }
                         }
@@ -545,6 +638,305 @@ class UpgradeSpringDataElasticsearchTest implements RewriteTest {
     }
 
     @Test
+    void migratesOfficiallyRenamedSpringDataTypes() {
+        rewriteRun(
+                spec -> spec
+                        .recipe(environment().activateRecipes(MIGRATION_RECIPE))
+                        .parser(migrationApiParser()),
+                java(
+                        """
+                        package example;
+
+                        import org.springframework.data.elasticsearch.ELCQueries;
+                        import org.springframework.data.elasticsearch.client.elc.QueryBuilders;
+                        import org.springframework.data.elasticsearch.core.Range;
+                        import org.springframework.data.elasticsearch.core.RuntimeField;
+                        import org.springframework.data.elasticsearch.core.completion.Completion;
+                        import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentPropertyConverter;
+                        import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
+                        import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
+
+                        class LegacyTypes {
+                            NativeSearchQuery query;
+                            NativeSearchQueryBuilder builder;
+                            Range<Integer> range = Range.closed(1, 10);
+                            Range.Bound<Integer> bound;
+                            Completion completion;
+                            ElasticsearchPersistentPropertyConverter converter;
+                            RuntimeField runtimeField;
+
+                            Object helpers() {
+                                return ELCQueries.matchAllQueryAsQuery() == QueryBuilders.matchAllQueryAsQuery();
+                            }
+                        }
+                        """,
+                        """
+                        package example;
+
+                        import org.springframework.data.domain.Range;
+                        import org.springframework.data.elasticsearch.client.elc.NativeQuery;
+                        import org.springframework.data.elasticsearch.client.elc.NativeQueryBuilder;
+                        import org.springframework.data.elasticsearch.client.elc.Queries;
+                        import org.springframework.data.elasticsearch.core.mapping.PropertyValueConverter;
+                        import org.springframework.data.elasticsearch.core.query.RuntimeField;
+                        import org.springframework.data.elasticsearch.core.suggest.Completion;
+
+                        class LegacyTypes {
+                            NativeQuery query;
+                            NativeQueryBuilder builder;
+                            Range<Integer> range = Range.closed(1, 10);
+                            Range.Bound<Integer> bound;
+                            Completion completion;
+                            PropertyValueConverter converter;
+                            RuntimeField runtimeField;
+
+                            Object helpers() {
+                                return Queries.matchAllQueryAsQuery() == Queries.matchAllQueryAsQuery();
+                            }
+                        }
+                        """
+                )
+        );
+    }
+
+    @Test
+    void migratesNativeBuilderButMarksTheElasticsearch7QueryDsl() {
+        rewriteRun(
+                spec -> spec
+                        .recipe(environment().activateRecipes(MIGRATION_RECIPE))
+                        .parser(migrationApiParser()),
+                java(
+                        """
+                        package example;
+
+                        import org.elasticsearch.index.query.QueryBuilders;
+                        import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
+                        import org.springframework.data.elasticsearch.core.query.Query;
+
+                        class SearchService {
+                            Query all() {
+                                return new NativeSearchQueryBuilder()
+                                        .withQuery(QueryBuilders.matchAllQuery())
+                                        .build();
+                            }
+                        }
+                        """,
+                        """
+                        package example;
+
+                        import org.elasticsearch.index.query.QueryBuilders;
+                        import org.springframework.data.elasticsearch.client.elc.NativeQueryBuilder;
+                        import org.springframework.data.elasticsearch.core.query.Query;
+
+                        class SearchService {
+                            Query all() {
+                                return new NativeQueryBuilder()
+                                        .withQuery(/*~~>*/QueryBuilders.matchAllQuery())
+                                        .build();
+                            }
+                        }
+                        """
+                )
+        );
+    }
+
+    @Test
+    void marksRemovedOperationsMethodsPrecisely() {
+        rewriteRun(
+                spec -> spec
+                        .recipe(environment().activateRecipes(MIGRATION_RECIPE))
+                        .parser(migrationApiParser()),
+                java(
+                        """
+                        package example;
+
+                        import org.springframework.data.elasticsearch.core.DocumentOperations;
+                        import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+                        import org.springframework.data.elasticsearch.core.ReactiveDocumentOperations;
+                        import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
+                        import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
+                        import org.springframework.data.elasticsearch.core.query.IndexQuery;
+                        import org.springframework.data.elasticsearch.core.query.Query;
+
+                        class RemovedCalls {
+                            void use(ElasticsearchOperations operations,
+                                     ReactiveElasticsearchOperations reactive,
+                                     DocumentOperations documents,
+                                     ReactiveDocumentOperations reactiveDocuments,
+                                     Query query, IndexCoordinates index, IndexQuery indexQuery) {
+                                operations.stringIdRepresentation(42L);
+                                reactive.execute(callback -> null);
+                                documents.delete(query, Object.class, index);
+                                reactiveDocuments.delete(query, Object.class);
+                                indexQuery.getParentId();
+                                indexQuery.setParentId("parent");
+                            }
+                        }
+                        """,
+                        """
+                        package example;
+
+                        import org.springframework.data.elasticsearch.core.DocumentOperations;
+                        import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+                        import org.springframework.data.elasticsearch.core.ReactiveDocumentOperations;
+                        import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
+                        import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
+                        import org.springframework.data.elasticsearch.core.query.IndexQuery;
+                        import org.springframework.data.elasticsearch.core.query.Query;
+
+                        class RemovedCalls {
+                            void use(ElasticsearchOperations operations,
+                                     ReactiveElasticsearchOperations reactive,
+                                     DocumentOperations documents,
+                                     ReactiveDocumentOperations reactiveDocuments,
+                                     Query query, IndexCoordinates index, IndexQuery indexQuery) {
+                                /*~~>*/operations.stringIdRepresentation(42L);
+                                /*~~>*/reactive.execute(callback -> null);
+                                /*~~>*/documents.delete(query, Object.class, index);
+                                /*~~>*/reactiveDocuments.delete(query, Object.class);
+                                /*~~>*/indexQuery.getParentId();
+                                /*~~>*/indexQuery.setParentId("parent");
+                            }
+                        }
+                        """
+                )
+        );
+    }
+
+    @Test
+    void marksRemovedAnnotationsAndDateFormats() {
+        rewriteRun(
+                spec -> spec
+                        .recipe(environment().activateRecipes(MIGRATION_RECIPE))
+                        .parser(migrationApiParser()),
+                java(
+                        """
+                        package example;
+
+                        import org.springframework.data.elasticsearch.annotations.DateFormat;
+                        import org.springframework.data.elasticsearch.annotations.DynamicMapping;
+                        import org.springframework.data.elasticsearch.annotations.DynamicMappingValue;
+
+                        @DynamicMapping(DynamicMappingValue.Strict)
+                        class LegacyMapping {
+                            DateFormat first = DateFormat.none;
+                            DateFormat second = DateFormat.custom;
+                        }
+                        """,
+                        """
+                        package example;
+
+                        import org.springframework.data.elasticsearch.annotations.DateFormat;
+                        import org.springframework.data.elasticsearch.annotations.DynamicMapping;
+                        import org.springframework.data.elasticsearch.annotations.DynamicMappingValue;
+
+                        @/*~~>*/DynamicMapping(/*~~>*/DynamicMappingValue.Strict)
+                        class LegacyMapping {
+                            DateFormat first = /*~~>*/DateFormat.none;
+                            DateFormat second = /*~~>*/DateFormat.custom;
+                        }
+                        """
+                )
+        );
+    }
+
+    @Test
+    void marksRepositoryQueryAndCacheAnnotationsOnlyInElasticsearchSource() {
+        rewriteRun(
+                spec -> spec
+                        .recipe(environment().activateRecipes(MIGRATION_RECIPE))
+                        .parser(migrationApiParser()),
+                java(
+                        """
+                        package example;
+
+                        import org.springframework.cache.annotation.Cacheable;
+                        import org.springframework.data.elasticsearch.annotations.Query;
+                        import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
+
+                        interface ProductRepository extends ElasticsearchRepository<Product, String> {
+                            @Cacheable("products")
+                            @Query("{ \\"match\\": { \\"name\\": \\"?0\\" } }")
+                            Product findCached(String name);
+                        }
+                        class Product {}
+                        """,
+                        """
+                        package example;
+
+                        import org.springframework.cache.annotation.Cacheable;
+                        import org.springframework.data.elasticsearch.annotations.Query;
+                        import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
+
+                        interface ProductRepository extends ElasticsearchRepository<Product, String> {
+                            /*~~>*/@Cacheable("products")
+                            /*~~>*/@Query("{ \\"match\\": { \\"name\\": \\"?0\\" } }")
+                            Product findCached(String name);
+                        }
+                        class Product {}
+                        """
+                ),
+                java(
+                        """
+                        package example;
+                        import org.springframework.cache.annotation.Cacheable;
+                        class UnrelatedCache {
+                            @Cacheable("values") String value() { return "value"; }
+                        }
+                        """,
+                        source -> source.path("src/main/java/example/UnrelatedCache.java")
+                )
+        );
+    }
+
+    @Test
+    void marksRhlcOldTemplatesAndDirectElasticsearchRequests() {
+        rewriteRun(
+                spec -> spec
+                        .recipe(environment().activateRecipes(MIGRATION_RECIPE))
+                        .parser(migrationApiParser()),
+                java(
+                        """
+                        package example;
+
+                        import org.elasticsearch.action.search.SearchRequest;
+                        import org.elasticsearch.client.RestHighLevelClient;
+                        import org.springframework.data.elasticsearch.client.RestClients;
+                        import org.springframework.data.elasticsearch.config.AbstractElasticsearchConfiguration;
+                        import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
+                        import org.springframework.data.elasticsearch.core.ReactiveElasticsearchTemplate;
+
+                        class LegacyConfig extends AbstractElasticsearchConfiguration {
+                            RestHighLevelClient client;
+                            RestClients clients;
+                            ElasticsearchTemplate transportTemplate;
+                            ReactiveElasticsearchTemplate reactiveTemplate;
+                            SearchRequest request;
+                        }
+                        """,
+                        """
+                        package example;
+
+                        import org.elasticsearch.action.search.SearchRequest;
+                        import org.elasticsearch.client.RestHighLevelClient;
+                        import org.springframework.data.elasticsearch.client.RestClients;
+                        import org.springframework.data.elasticsearch.config.AbstractElasticsearchConfiguration;
+                        import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
+                        import org.springframework.data.elasticsearch.core.ReactiveElasticsearchTemplate;
+
+                        class /*~~>*/LegacyConfig extends /*~~>*/AbstractElasticsearchConfiguration {
+                            /*~~>*/RestHighLevelClient client;
+                            /*~~>*/RestClients clients;
+                            /*~~>*/ElasticsearchTemplate transportTemplate;
+                            /*~~>*/ReactiveElasticsearchTemplate reactiveTemplate;
+                            /*~~>*/SearchRequest request;
+                        }
+                        """
+                )
+        );
+    }
+
+    @Test
     void discoversAndValidatesPublicRecipes() {
         Environment environment = environment();
         Recipe dependencyRecipe = environment.activateRecipes(DEPENDENCY_RECIPE);
@@ -613,6 +1005,233 @@ class UpgradeSpringDataElasticsearchTest implements RewriteTest {
                repositories { mavenCentral() }
                dependencies { %s 'org.springframework.data:spring-data-elasticsearch:%s' }
                """.formatted(configuration, version);
+    }
+
+    private static JavaParser.Builder<?, ?> migrationApiParser() {
+        return JavaParser.fromJavaVersion().dependsOn(
+                """
+                package org.springframework.data.elasticsearch.core.query;
+                public interface Query {}
+                """,
+                """
+                package org.springframework.data.elasticsearch.core.query;
+                public class NativeSearchQuery implements Query {}
+                """,
+                """
+                package org.springframework.data.elasticsearch.core.query;
+                import org.elasticsearch.index.query.QueryBuilder;
+                public class NativeSearchQueryBuilder {
+                    public NativeSearchQueryBuilder withQuery(QueryBuilder query) { return this; }
+                    public NativeSearchQuery build() { return new NativeSearchQuery(); }
+                }
+                """,
+                """
+                package org.springframework.data.elasticsearch.core.query;
+                public class IndexQuery {
+                    public String getParentId() { return null; }
+                    public void setParentId(String parentId) {}
+                }
+                """,
+                """
+                package org.springframework.data.elasticsearch.core;
+                public class Range<T> {
+                    public static <T> Range<T> closed(T from, T to) { return new Range<>(); }
+                    public static class Bound<T> {}
+                }
+                """,
+                """
+                package org.springframework.data.elasticsearch.core;
+                public class RuntimeField {}
+                """,
+                """
+                package org.springframework.data.elasticsearch.core.completion;
+                public class Completion {}
+                """,
+                """
+                package org.springframework.data.elasticsearch.core.mapping;
+                public interface ElasticsearchPersistentPropertyConverter {}
+                """,
+                """
+                package org.springframework.data.elasticsearch;
+                public final class ELCQueries {
+                    public static Object matchAllQueryAsQuery() { return null; }
+                }
+                """,
+                """
+                package org.springframework.data.elasticsearch.client.elc;
+                public final class QueryBuilders {
+                    public static Object matchAllQueryAsQuery() { return null; }
+                }
+                """,
+                """
+                package org.elasticsearch.index.query;
+                public interface QueryBuilder {}
+                """,
+                """
+                package org.elasticsearch.index.query;
+                public final class QueryBuilders {
+                    public static QueryBuilder matchAllQuery() { return null; }
+                }
+                """,
+                """
+                package org.springframework.data.elasticsearch.core;
+                import org.springframework.data.elasticsearch.core.query.Query;
+                public interface ElasticsearchOperations {
+                    String stringIdRepresentation(Object id);
+                    <T> SearchHits<T> search(Query query, Class<T> type);
+                }
+                """,
+                """
+                package org.springframework.data.elasticsearch.core;
+                public interface SearchHits<T> {}
+                """,
+                """
+                package org.springframework.data.elasticsearch.core;
+                public interface ReactiveElasticsearchOperations {
+                    Object execute(java.util.function.Function<Object, Object> callback);
+                }
+                """,
+                """
+                package org.springframework.data.elasticsearch.core;
+                import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
+                import org.springframework.data.elasticsearch.core.query.Query;
+                public interface DocumentOperations {
+                    Object delete(Query query, Class<?> type);
+                    Object delete(Query query, Class<?> type, IndexCoordinates index);
+                }
+                """,
+                """
+                package org.springframework.data.elasticsearch.core;
+                import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
+                import org.springframework.data.elasticsearch.core.query.Query;
+                public interface ReactiveDocumentOperations {
+                    Object delete(Query query, Class<?> type);
+                    Object delete(Query query, Class<?> type, IndexCoordinates index);
+                }
+                """,
+                """
+                package org.springframework.data.elasticsearch.core.mapping;
+                public class IndexCoordinates {}
+                """,
+                """
+                package org.springframework.data.elasticsearch.annotations;
+                public @interface DynamicMapping { DynamicMappingValue value(); }
+                """,
+                """
+                package org.springframework.data.elasticsearch.annotations;
+                public enum DynamicMappingValue { Strict, True, False }
+                """,
+                """
+                package org.springframework.data.elasticsearch.annotations;
+                public enum DateFormat { none, custom, date }
+                """,
+                """
+                package org.springframework.data.annotation;
+                public @interface Id {}
+                """,
+                """
+                package org.springframework.data.elasticsearch.annotations;
+                public @interface Document {
+                    String indexName();
+                    boolean createIndex() default true;
+                }
+                """,
+                """
+                package org.springframework.data.elasticsearch.annotations;
+                public @interface Field {
+                    FieldType type();
+                    DateFormat format();
+                }
+                """,
+                """
+                package org.springframework.data.elasticsearch.annotations;
+                public enum FieldType { Date, Text, Keyword }
+                """,
+                """
+                package org.springframework.data.elasticsearch.annotations;
+                public @interface Query { String value(); }
+                """,
+                """
+                package org.springframework.data.elasticsearch.repository;
+                public interface ElasticsearchRepository<T, ID> {}
+                """,
+                """
+                package org.springframework.cache.annotation;
+                public @interface Cacheable { String value(); }
+                """,
+                """
+                package org.springframework.cache.annotation;
+                public @interface CachePut { String value(); }
+                """,
+                """
+                package org.springframework.cache.annotation;
+                public @interface CacheEvict { String value(); }
+                """,
+                """
+                package org.elasticsearch.client;
+                import java.io.IOException;
+                import org.elasticsearch.action.search.SearchRequest;
+                import org.elasticsearch.action.search.SearchResponse;
+                public class RestHighLevelClient {
+                    public SearchResponse search(SearchRequest request, RequestOptions options) throws IOException { return null; }
+                }
+                """,
+                """
+                package org.elasticsearch.action.search;
+                public class SearchRequest { public SearchRequest(String index) {} }
+                """,
+                """
+                package org.springframework.data.elasticsearch.client;
+                import org.elasticsearch.client.RestHighLevelClient;
+                public final class RestClients {
+                    public static RestClients create(ClientConfiguration configuration) { return new RestClients(); }
+                    public RestHighLevelClient rest() { return null; }
+                }
+                """,
+                """
+                package org.springframework.data.elasticsearch.client;
+                public final class ClientConfiguration {
+                    public static Builder builder() { return new Builder(); }
+                    public static class Builder {
+                        public Builder connectedTo(String host) { return this; }
+                        public ClientConfiguration build() { return new ClientConfiguration(); }
+                    }
+                }
+                """,
+                """
+                package org.springframework.data.elasticsearch.config;
+                public abstract class AbstractElasticsearchConfiguration {}
+                """,
+                """
+                package org.springframework.data.elasticsearch.core;
+                public class ElasticsearchTemplate {}
+                """,
+                """
+                package org.springframework.data.elasticsearch.core;
+                public class ReactiveElasticsearchTemplate {}
+                """,
+                """
+                package javax.persistence;
+                public @interface Id {}
+                """,
+                """
+                package org.elasticsearch.client;
+                public class RequestOptions { public static final RequestOptions DEFAULT = new RequestOptions(); }
+                """,
+                """
+                package org.elasticsearch.action.search;
+                public class SearchResponse {
+                    public org.elasticsearch.search.SearchHits getHits() { return null; }
+                }
+                """,
+                """
+                package org.elasticsearch.search;
+                public class SearchHits {
+                    public TotalHits getTotalHits() { return null; }
+                    public static class TotalHits { public long value; }
+                }
+                """
+        );
     }
 
     private static Environment environment() {
