@@ -150,7 +150,53 @@ class UpgradeJasyptSpringBootStarterTest implements RewriteTest {
     }
 
     @Test
-    void upgradesGradleStringNotationFromSgExam() {
+    void upgradesStarterButNotPluginFromSpringBootLearning() {
+        // Reduced from dyc87112/SpringBoot-Learning at 4212d163:
+        // https://github.com/dyc87112/SpringBoot-Learning/blob/4212d163da816c6fa5b28d59130318dac2379a73/2.x/chapter1-5/pom.xml
+        rewriteRun(
+                pomXml(
+                        """
+                        <project>
+                          <modelVersion>4.0.0</modelVersion>
+                          <groupId>com.didispace</groupId><artifactId>chapter1-5</artifactId><version>0.0.1-SNAPSHOT</version>
+                          <dependencies>
+                            <dependency>
+                              <groupId>com.github.ulisesbocchio</groupId>
+                              <artifactId>jasypt-spring-boot-starter</artifactId>
+                              <version>3.0.3</version>
+                            </dependency>
+                          </dependencies>
+                          <build><plugins><plugin>
+                            <groupId>com.github.ulisesbocchio</groupId>
+                            <artifactId>jasypt-maven-plugin</artifactId>
+                            <version>3.0.3</version>
+                          </plugin></plugins></build>
+                        </project>
+                        """,
+                        """
+                        <project>
+                          <modelVersion>4.0.0</modelVersion>
+                          <groupId>com.didispace</groupId><artifactId>chapter1-5</artifactId><version>0.0.1-SNAPSHOT</version>
+                          <dependencies>
+                            <dependency>
+                              <groupId>com.github.ulisesbocchio</groupId>
+                              <artifactId>jasypt-spring-boot-starter</artifactId>
+                              <version>4.0.3</version>
+                            </dependency>
+                          </dependencies>
+                          <build><plugins><plugin>
+                            <groupId>com.github.ulisesbocchio</groupId>
+                            <artifactId>jasypt-maven-plugin</artifactId>
+                            <version>3.0.3</version>
+                          </plugin></plugins></build>
+                        </project>
+                        """
+                )
+        );
+    }
+
+    @Test
+    void leavesUnlistedGradleVersionFromSgExamUntouched() {
         // Adapted from wells2333/sg-exam at 4a7215ac:
         // https://github.com/wells2333/sg-exam/blob/4a7215ace7f56555bc683e4a4c0188f86986fd9f/sg-common/build.gradle
         rewriteRun(
@@ -166,19 +212,6 @@ class UpgradeJasyptSpringBootStarterTest implements RewriteTest {
 
                         dependencies {
                             implementation 'com.github.ulisesbocchio:jasypt-spring-boot-starter:1.18'
-                        }
-                        """,
-                        """
-                        plugins {
-                            id 'java'
-                        }
-
-                        repositories {
-                            mavenCentral()
-                        }
-
-                        dependencies {
-                            implementation 'com.github.ulisesbocchio:jasypt-spring-boot-starter:4.0.3'
                         }
                         """
                 )

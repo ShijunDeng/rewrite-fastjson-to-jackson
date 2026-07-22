@@ -14,8 +14,30 @@ tags:
   - java
   - dependency-upgrade
 recipeList:
-  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
-      groupId: com.github.ulisesbocchio
-      artifactId: jasypt-spring-boot-starter
-      newVersion: 4.0.3
-      overrideManagedVersion: true
+  - com.huawei.clouds.openrewrite.jasypt.UpgradeSelectedJasyptStarterDependency
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.jasypt.MigrateJasyptSpringBootStarterTo4_0_3
+displayName: Migrate Jasypt Spring Boot Starter to 4.0.3
+description: Strictly upgrade spreadsheet-selected dependency versions, migrate proven-equivalent configuration names and auto-configuration packages, and mark compatibility/security work requiring a human decision.
+tags:
+  - jasypt
+  - spring-boot
+  - java
+  - migration
+recipeList:
+  - com.huawei.clouds.openrewrite.jasypt.FindJasyptBuildCompatibilityRisks
+  - com.huawei.clouds.openrewrite.jasypt.UpgradeSelectedJasyptStarterDependency
+  - com.huawei.clouds.openrewrite.jasypt.MigrateJasyptProperties
+  - org.openrewrite.java.ChangeType:
+      oldFullyQualifiedTypeName: com.ulisesbocchio.jasyptspringboot.JasyptSpringBootAutoConfiguration
+      newFullyQualifiedTypeName: com.ulisesbocchio.jasyptspringbootstarter.JasyptSpringBootAutoConfiguration
+      ignoreDefinition: false
+  - org.openrewrite.java.ChangeType:
+      oldFullyQualifiedTypeName: com.ulisesbocchio.jasyptspringboot.JasyptSpringCloudBootstrapConfiguration
+      newFullyQualifiedTypeName: com.ulisesbocchio.jasyptspringbootstarter.JasyptSpringCloudBootstrapConfiguration
+      ignoreDefinition: false
+  - com.huawei.clouds.openrewrite.jasypt.FindJasyptPropertiesRisks
+  - com.huawei.clouds.openrewrite.jasypt.FindJasyptYamlRisks
+  - com.huawei.clouds.openrewrite.jasypt.FindJasyptJavaRisks
+  - com.huawei.clouds.openrewrite.jasypt.FindJasyptCommandRisks
