@@ -49,6 +49,9 @@ public final class FindJasyptCommandRisks extends Recipe {
     }
 
     private static boolean scriptLike(PlainText text) {
+        if (!JasyptVersions.isProjectPath(text.getSourcePath())) {
+            return false;
+        }
         String path = text.getSourcePath().toString().toLowerCase(Locale.ROOT);
         return path.endsWith(".sh") || path.endsWith(".bash") || path.endsWith(".zsh") ||
                path.endsWith(".ps1") || path.endsWith(".cmd") || path.endsWith(".bat") ||

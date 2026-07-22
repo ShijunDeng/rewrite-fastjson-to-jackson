@@ -19,6 +19,12 @@ public final class FindJasyptPropertiesRisks extends Recipe {
             "jasypt.encryptor.bean", "jasypt.encryptor.property.detector-bean",
             "jasypt.encryptor.property.resolver-bean", "jasypt.encryptor.property.filter-bean"
     );
+    private static final Set<String> COMPATIBILITY_TUPLE_KEYS = Set.of(
+            "jasypt.encryptor.key-obtention-iterations", "jasypt.encryptor.salt-generator-classname",
+            "jasypt.encryptor.string-output-type", "jasypt.encryptor.provider-name",
+            "jasypt.encryptor.provider-class-name", "jasypt.encryptor.gcm-secret-key-salt",
+            "jasypt.encryptor.gcm-secret-key-algorithm"
+    );
 
     @Override
     public String getDisplayName() {
@@ -33,6 +39,11 @@ public final class FindJasyptPropertiesRisks extends Recipe {
     @Override
     public PropertiesIsoVisitor<ExecutionContext> getVisitor() {
         return new PropertiesIsoVisitor<ExecutionContext>() {
+            @Override
+            public Properties.File visitFile(Properties.File file, ExecutionContext ctx) {
+                return JasyptVersions.isProjectPath(file.getSourcePath()) ? super.visitFile(file, ctx) : file;
+            }
+
             @Override
             public Properties.Entry visitEntry(Properties.Entry entry, ExecutionContext ctx) {
                 Properties.Entry e = super.visitEntry(entry, ctx);
@@ -101,10 +112,7 @@ public final class FindJasyptPropertiesRisks extends Recipe {
                     return SearchResult.found(e,
                             "Ciphertext has no algorithm declaration in this file; verify the runtime profile and preserve 2.x PBEWithMD5AndDES/NoIvGenerator only long enough to re-encrypt");
                 }
-                if (key.equals("jasypt.encryptor.key-obtention-iterations") ||
-                    key.equals("jasypt.encryptor.salt-generator-classname") ||
-                    key.equals("jasypt.encryptor.string-output-type") ||
-                    key.equals("jasypt.encryptor.provider-name") || key.equals("jasypt.encryptor.provider-class-name")) {
+                if (COMPATIBILITY_TUPLE_KEYS.contains(key)) {
                     return SearchResult.found(e,
                             "This value is part of the ciphertext compatibility tuple; verify algorithm, IV, salt, iterations, provider, pool, and output encoding together");
                 }

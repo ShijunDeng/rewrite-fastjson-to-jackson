@@ -22,7 +22,7 @@ class UpgradeJasyptSpringBootStarterTest implements RewriteTest {
     @Test
     void upgradesDirectMavenDependencyFromOfficialDocumentation() {
         // Adapted from the official starter dependency example:
-        // https://github.com/ulisesbocchio/jasypt-spring-boot/blob/jasypt-spring-boot-parent-4.0.3/README.md
+        // https://github.com/ulisesbocchio/jasypt-spring-boot/blob/e8d16bdcc92f3fd85f5d4ea05944bc0c46b9bd91/README.md
         rewriteRun(
                 pomXml(
                         """

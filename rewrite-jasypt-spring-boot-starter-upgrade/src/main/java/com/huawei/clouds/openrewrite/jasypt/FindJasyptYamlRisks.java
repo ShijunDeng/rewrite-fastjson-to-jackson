@@ -43,7 +43,8 @@ public final class FindJasyptYamlRisks extends Recipe {
                     "$.jasypt.encryptor.key-obtention-iterations", "$.jasypt.encryptor.keyObtentionIterations",
                     "$.jasypt.encryptor.salt-generator-classname", "$.jasypt.encryptor.saltGeneratorClassname",
                     "$.jasypt.encryptor.string-output-type", "$.jasypt.encryptor.stringOutputType",
-                    "$.jasypt.encryptor.provider-name", "$.jasypt.encryptor.providerName");
+                    "$.jasypt.encryptor.provider-name", "$.jasypt.encryptor.providerName",
+                    "$.jasypt.encryptor.gcm-secret-key-salt", "$.jasypt.encryptor.gcm-secret-key-algorithm");
             private final JsonPathMatcher refresh = new JsonPathMatcher("$.jasypt.encryptor.refreshed-event-classes");
             private final JsonPathMatcher lazy = new JsonPathMatcher("$.spring.main.lazy-initialization");
             private final List<JsonPathMatcher> filters = matchers(
@@ -52,6 +53,12 @@ public final class FindJasyptYamlRisks extends Recipe {
                     "$.jasypt.encryptor.property.filter.include-names",
                     "$.jasypt.encryptor.property.filter.exclude-names",
                     "$.jasypt.encryptor.skip-property-sources");
+
+            @Override
+            public Yaml.Documents visitDocuments(Yaml.Documents documents, ExecutionContext ctx) {
+                return JasyptVersions.isProjectPath(documents.getSourcePath()) ?
+                        super.visitDocuments(documents, ctx) : documents;
+            }
 
             @Override
             public Yaml.Mapping.Entry visitMappingEntry(Yaml.Mapping.Entry entry, ExecutionContext ctx) {
@@ -126,6 +133,11 @@ public final class FindJasyptYamlRisks extends Recipe {
                 if (value.contains("ENC(")) {
                     return SearchResult.found(s,
                             "Verify this ciphertext with the active profile's algorithm/IV/salt/provider tuple; 2.x defaults differ from 4.0.3");
+                }
+                if (value.equals("com.ulisesbocchio.jasyptspringboot.JasyptSpringBootAutoConfiguration") ||
+                    value.equals("com.ulisesbocchio.jasyptspringboot.JasyptSpringCloudBootstrapConfiguration")) {
+                    return SearchResult.found(s,
+                            "Jasypt 4 moved this starter auto-configuration type to com.ulisesbocchio.jasyptspringbootstarter; update this non-properties metadata reference");
                 }
                 return s;
             }

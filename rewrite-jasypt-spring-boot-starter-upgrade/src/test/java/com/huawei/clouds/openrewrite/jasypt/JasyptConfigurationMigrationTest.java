@@ -175,6 +175,92 @@ class JasyptConfigurationMigrationTest implements RewriteTest {
         );
     }
 
+    @Test
+    void doesNotRewriteMovedClassNameEmbeddedInALargerToken() {
+        rewriteRun(
+                spec -> spec.recipe(new MigrateJasyptProperties()),
+                properties("registration=com.ulisesbocchio.jasyptspringboot.JasyptSpringBootAutoConfigurationSuffix\n")
+        );
+    }
+
+    @Test
+    void marksMovedAutoConfigurationInYamlButNotSimilarProse() {
+        rewriteRun(
+                spec -> spec.recipe(new FindJasyptYamlRisks()),
+                yaml(
+                        """
+                        exact: com.ulisesbocchio.jasyptspringboot.JasyptSpringBootAutoConfiguration
+                        prose: prefix-com.ulisesbocchio.jasyptspringboot.JasyptSpringBootAutoConfiguration-suffix
+                        """,
+                        """
+                        exact: ~~(Jasypt 4 moved this starter auto-configuration type to com.ulisesbocchio.jasyptspringbootstarter; update this non-properties metadata reference)~~>com.ulisesbocchio.jasyptspringboot.JasyptSpringBootAutoConfiguration
+                        prose: prefix-com.ulisesbocchio.jasyptspringboot.JasyptSpringBootAutoConfiguration-suffix
+                        """
+                )
+        );
+    }
+
+    @Test
+    void marksOfficialGcmPasswordDerivationTuple() {
+        rewriteRun(
+                spec -> spec.recipe(new FindJasyptPropertiesRisks()),
+                properties(
+                        """
+                        jasypt.encryptor.gcm-secret-key-salt=${JASYPT_GCM_SALT}
+                        jasypt.encryptor.gcm-secret-key-algorithm=PBKDF2WithHmacSHA256
+                        """,
+                        """
+                        ~~(This value is part of the ciphertext compatibility tuple; verify algorithm, IV, salt, iterations, provider, pool, and output encoding together)~~>jasypt.encryptor.gcm-secret-key-salt=${JASYPT_GCM_SALT}
+                        ~~(This value is part of the ciphertext compatibility tuple; verify algorithm, IV, salt, iterations, provider, pool, and output encoding together)~~>jasypt.encryptor.gcm-secret-key-algorithm=PBKDF2WithHmacSHA256
+                        """
+                )
+        );
+    }
+
+    @Test
+    void searchMarkersAreIdempotentAcrossCycles() {
+        rewriteRun(
+                spec -> spec.recipe(new FindJasyptPropertiesRisks())
+                        .cycles(2).expectedCyclesThatMakeChanges(1),
+                properties(
+                        "jasypt.encryptor.proxy-property-sources=true\n",
+                        "~~(CGLIB property-source proxying preserves concrete types but changes identity/getSource behavior; test every custom PropertySource on Boot 3.5)~~>jasypt.encryptor.proxy-property-sources=true\n"
+                )
+        );
+    }
+
+    @Test
+    void allRecipesIgnoreGeneratedConfigurationAndScripts() {
+        rewriteRun(
+                spec -> spec.recipe(environment().activateRecipes(MIGRATION)),
+                properties(
+                        "jasypt.encryptor.poolSize=2\njasypt.encryptor.password=tracked-placeholder\n",
+                        source -> source.path("build/generated/application.properties")
+                ),
+                text(
+                        "mvn jasypt:decrypt -Djasypt.encryptor.password=tracked-placeholder\n",
+                        source -> source.path("target/generated/decrypt.sh")
+                ),
+                yaml(
+                        "jasypt:\n  encryptor:\n    password: tracked-placeholder\n",
+                        source -> source.path("build/generated/application.yml")
+                )
+        );
+    }
+
+    @Test
+    void exposesExactlyThreePublicRecipes() {
+        Environment environment = environment();
+        assertTrue(environment.listRecipes().stream()
+                .filter(recipe -> recipe.getName().startsWith("com.huawei.clouds.openrewrite.jasypt."))
+                .map(recipe -> recipe.getName())
+                .filter(name -> name.endsWith("To4_0_3") || name.contains("ReviewJasyptSpringBootStarter"))
+                .distinct().count() == 3);
+        assertTrue(environment.activateRecipes(
+                "com.huawei.clouds.openrewrite.jasypt.ReviewJasyptSpringBootStarter4_0_3Risks")
+                .validate().isValid());
+    }
+
     private static Environment environment() {
         return Environment.builder()
                 .scanRuntimeClasspath("com.huawei.clouds.openrewrite.jasypt")

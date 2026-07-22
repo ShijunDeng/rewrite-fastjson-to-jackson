@@ -13,6 +13,13 @@ import java.util.Set;
 public final class FindJasyptJavaRisks extends Recipe {
     private static final String STRING_ENCRYPTOR = "org.jasypt.encryption.StringEncryptor";
     private static final String PBE_CONFIG = "org.jasypt.encryption.pbe.config.SimpleStringPBEConfig";
+    private static final String GCM_CONFIG = "com.ulisesbocchio.jasyptspringboot.encryptor.SimpleGCMConfig";
+    private static final String ASYMMETRIC_CONFIG =
+            "com.ulisesbocchio.jasyptspringboot.encryptor.SimpleAsymmetricConfig";
+    private static final Set<String> MOVED_AUTO_CONFIGURATIONS = Set.of(
+            "com.ulisesbocchio.jasyptspringboot.JasyptSpringBootAutoConfiguration",
+            "com.ulisesbocchio.jasyptspringboot.JasyptSpringCloudBootstrapConfiguration"
+    );
     private static final Set<String> EXTENSION_POINTS = Set.of(
             "com.ulisesbocchio.jasyptspringboot.EncryptablePropertyDetector",
             "com.ulisesbocchio.jasyptspringboot.EncryptablePropertyResolver",
@@ -38,6 +45,12 @@ public final class FindJasyptJavaRisks extends Recipe {
     @Override
     public JavaIsoVisitor<ExecutionContext> getVisitor() {
         return new JavaIsoVisitor<ExecutionContext>() {
+            @Override
+            public J.CompilationUnit visitCompilationUnit(J.CompilationUnit compilationUnit, ExecutionContext ctx) {
+                return JasyptVersions.isProjectPath(compilationUnit.getSourcePath()) ?
+                        super.visitCompilationUnit(compilationUnit, ctx) : compilationUnit;
+            }
+
             @Override
             public J.ClassDeclaration visitClassDeclaration(J.ClassDeclaration classDecl, ExecutionContext ctx) {
                 J.ClassDeclaration c = super.visitClassDeclaration(classDecl, ctx);
@@ -91,6 +104,18 @@ public final class FindJasyptJavaRisks extends Recipe {
                     return SearchResult.found(m,
                             "Manual PBE setting is part of one compatibility tuple; test algorithm, IV, salt, iterations, provider, pool, output encoding, and old ciphertext together");
                 }
+                if ((methodOn(m, GCM_CONFIG) || methodOn(m, ASYMMETRIC_CONFIG)) &&
+                    m.getSimpleName().startsWith("set")) {
+                    String name = m.getSimpleName();
+                    if (("setSecretKey".equals(name) || "setSecretKeyPassword".equals(name) ||
+                         "setPrivateKey".equals(name)) &&
+                        m.getArguments().stream().anyMatch(J.Literal.class::isInstance)) {
+                        return SearchResult.found(m,
+                                "Hardcoded GCM/asymmetric key material in Java source; move it to protected injected material and rotate exposed values");
+                    }
+                    return SearchResult.found(m,
+                            "Manual GCM/asymmetric configuration must be verified as one key/IV/salt/iterations/algorithm/format tuple with existing ciphertext");
+                }
                 if ("setProperty".equals(m.getSimpleName()) && m.getSelect() != null &&
                     "System".equals(m.getSelect().printTrimmed()) && !m.getArguments().isEmpty() &&
                     m.getArguments().get(0) instanceof J.Literal literal &&
@@ -134,6 +159,15 @@ public final class FindJasyptJavaRisks extends Recipe {
                             "Direct use of Jasypt property-source wrapper/cache internals is version-sensitive; use public extension points or verify refresh and proxy identity behavior");
                 }
                 return i;
+            }
+
+            @Override
+            public J.Literal visitLiteral(J.Literal literal, ExecutionContext ctx) {
+                J.Literal visited = super.visitLiteral(literal, ctx);
+                return visited.getValue() instanceof String value && MOVED_AUTO_CONFIGURATIONS.contains(value)
+                        ? SearchResult.found(visited,
+                        "Reflective Jasypt auto-configuration reference uses the pre-4.0 package; update the exact class name and test metadata loading")
+                        : visited;
             }
         };
     }

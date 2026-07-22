@@ -69,7 +69,7 @@ class JasyptDependencyPrecisionTest implements RewriteTest {
     }
 
     @Test
-    void isolatesStarterWhenTheMavenPropertyIsShared() {
+    void leavesSharedMavenPropertyAndConsumerUntouched() {
         rewriteRun(
                 pomXml(
                         """
@@ -82,24 +82,6 @@ class JasyptDependencyPrecisionTest implements RewriteTest {
                               <groupId>com.github.ulisesbocchio</groupId>
                               <artifactId>jasypt-spring-boot-starter</artifactId>
                               <version>${shared.version}</version>
-                            </dependency>
-                            <dependency>
-                              <groupId>com.github.ulisesbocchio</groupId><artifactId>jasypt-spring-boot</artifactId>
-                              <version>${shared.version}</version>
-                            </dependency>
-                          </dependencies>
-                        </project>
-                        """,
-                        """
-                        <project>
-                          <modelVersion>4.0.0</modelVersion>
-                          <groupId>example</groupId><artifactId>app</artifactId><version>1</version>
-                          <properties><shared.version>3.0.5</shared.version></properties>
-                          <dependencies>
-                            <dependency>
-                              <groupId>com.github.ulisesbocchio</groupId>
-                              <artifactId>jasypt-spring-boot-starter</artifactId>
-                              <version>4.0.3</version>
                             </dependency>
                             <dependency>
                               <groupId>com.github.ulisesbocchio</groupId><artifactId>jasypt-spring-boot</artifactId>
@@ -176,6 +158,195 @@ class JasyptDependencyPrecisionTest implements RewriteTest {
                         }
                         """)
         );
+    }
+
+    @Test
+    void leavesGroovyMapVersionAndClassifierVariablesToTheirOwner() {
+        rewriteRun(
+                buildGradle("""
+                        plugins { id 'java' }
+                        def jasyptVersion = '3.0.5'
+                        def variant = 'tests'
+                        dependencies {
+                            implementation group: 'com.github.ulisesbocchio', name: 'jasypt-spring-boot-starter', version: jasyptVersion
+                            testImplementation group: 'com.github.ulisesbocchio', name: 'jasypt-spring-boot-starter', version: '3.0.5', classifier: variant
+                        }
+                        """)
+        );
+    }
+
+    @Test
+    void ignoresStarterCoordinateInsideMavenPluginDependencies() {
+        rewriteRun(pomXml("""
+                <project>
+                  <modelVersion>4.0.0</modelVersion>
+                  <groupId>example</groupId><artifactId>plugin-host</artifactId><version>1</version>
+                  <build><plugins><plugin>
+                    <groupId>example</groupId><artifactId>codegen-plugin</artifactId><version>1</version>
+                    <dependencies><dependency>
+                      <groupId>com.github.ulisesbocchio</groupId>
+                      <artifactId>jasypt-spring-boot-starter</artifactId>
+                      <version>3.0.5</version>
+                    </dependency></dependencies>
+                    <configuration><profile><dependencies><dependency>
+                      <groupId>com.github.ulisesbocchio</groupId><artifactId>jasypt-spring-boot-starter</artifactId><version>3.0.5</version>
+                    </dependency></dependencies></profile></configuration>
+                  </plugin></plugins></build>
+                </project>
+                """),
+                pomXml("""
+                        <project><modelVersion>4.0.0</modelVersion><groupId>example</groupId><artifactId>shadow</artifactId><version>1</version>
+                          <properties><jasypt.version>2.1.2</jasypt.version></properties>
+                          <dependencies><dependency><groupId>com.github.ulisesbocchio</groupId><artifactId>jasypt-spring-boot-starter</artifactId><version>${jasypt.version}</version></dependency></dependencies>
+                          <profiles><profile><id>override</id><properties><jasypt.version>3.0.5</jasypt.version></properties></profile></profiles>
+                        </project>
+                        """, source -> source.path("shadow/pom.xml")),
+                pomXml("""
+                        <project><modelVersion>4.0.0</modelVersion><groupId>example</groupId><artifactId>duplicate</artifactId><version>1</version>
+                          <properties><jasypt.version>2.1.2</jasypt.version><jasypt.version>3.0.5</jasypt.version></properties>
+                          <dependencies><dependency><groupId>com.github.ulisesbocchio</groupId><artifactId>jasypt-spring-boot-starter</artifactId><version>${jasypt.version}</version></dependency></dependencies>
+                        </project>
+                        """, source -> source.path("duplicate/pom.xml"))
+        );
+    }
+
+    @Test
+    void ignoresGradleLookalikesOutsideDependenciesBlock() {
+        rewriteRun(buildGradle("""
+                plugins { id 'java' }
+                def documentation = 'com.github.ulisesbocchio:jasypt-spring-boot-starter:3.0.5'
+                migrationExamples {
+                    implementation 'com.github.ulisesbocchio:jasypt-spring-boot-starter:3.0.5'
+                }
+                dependencies {
+                    generatedFixture { implementation 'com.github.ulisesbocchio:jasypt-spring-boot-starter:3.0.5' }
+                }
+                """));
+    }
+
+    @Test
+    void leavesClassifierVariantsUntouchedInMavenAndGradle() {
+        rewriteRun(
+                pomXml("""
+                        <project>
+                          <modelVersion>4.0.0</modelVersion>
+                          <groupId>example</groupId><artifactId>classified</artifactId><version>1</version>
+                          <dependencies><dependency>
+                            <groupId>com.github.ulisesbocchio</groupId>
+                            <artifactId>jasypt-spring-boot-starter</artifactId>
+                            <version>3.0.4</version><classifier>tests</classifier>
+                          </dependency></dependencies>
+                        </project>
+                        """),
+                pomXml("""
+                        <project><modelVersion>4.0.0</modelVersion><groupId>example</groupId><artifactId>non-jar</artifactId><version>1</version><dependencies><dependency>
+                          <groupId>com.github.ulisesbocchio</groupId><artifactId>jasypt-spring-boot-starter</artifactId>
+                          <version>3.0.4</version><type>test-jar</type>
+                        </dependency></dependencies></project>
+                        """, source -> source.path("non-jar/pom.xml")),
+                buildGradle("""
+                        plugins { id 'java' }
+                        dependencies {
+                            implementation 'com.github.ulisesbocchio:jasypt-spring-boot-starter:3.0.4:tests'
+                            implementation group: 'com.github.ulisesbocchio', name: 'jasypt-spring-boot-starter', version: '3.0.4', classifier: 'tests'
+                            implementation group: 'com.github.ulisesbocchio', name: 'jasypt-spring-boot-starter', version: '3.0.4', ext: 'zip'
+                            implementation([group: 'com.github.ulisesbocchio', name: 'jasypt-spring-boot-starter', version: '3.0.4', type: 'test-jar'])
+                        }
+                        """)
+        );
+    }
+
+    @Test
+    void leavesPropertySharedWithPluginAttributeUntouched() {
+        rewriteRun(pomXml("""
+                <project>
+                  <modelVersion>4.0.0</modelVersion>
+                  <groupId>example</groupId><artifactId>shared-owner</artifactId><version>1</version>
+                  <properties><jasypt.version>3.0.3</jasypt.version></properties>
+                  <dependencies><dependency>
+                    <groupId>com.github.ulisesbocchio</groupId>
+                    <artifactId>jasypt-spring-boot-starter</artifactId>
+                    <version>${jasypt.version}</version>
+                  </dependency></dependencies>
+                  <build><plugins><plugin>
+                    <groupId>example</groupId><artifactId>metadata-plugin</artifactId><version>1</version>
+                    <configuration><option value="${jasypt.version}"/></configuration>
+                  </plugin></plugins></build>
+                </project>
+                """));
+    }
+
+    @Test
+    void upgradesOneRootPropertyUsedOnlyByMultipleStarterDeclarations() {
+        rewriteRun(pomXml(
+                """
+                <project>
+                  <modelVersion>4.0.0</modelVersion>
+                  <groupId>example</groupId><artifactId>profiles</artifactId><version>1</version>
+                  <properties><jasypt.version>2.1.2</jasypt.version></properties>
+                  <dependencies><dependency>
+                    <groupId>com.github.ulisesbocchio</groupId><artifactId>jasypt-spring-boot-starter</artifactId>
+                    <version>${jasypt.version}</version>
+                  </dependency></dependencies>
+                  <profiles><profile><id>integration</id><dependencies><dependency>
+                    <groupId>com.github.ulisesbocchio</groupId><artifactId>jasypt-spring-boot-starter</artifactId>
+                    <version>${jasypt.version}</version>
+                  </dependency></dependencies></profile></profiles>
+                </project>
+                """,
+                """
+                <project>
+                  <modelVersion>4.0.0</modelVersion>
+                  <groupId>example</groupId><artifactId>profiles</artifactId><version>1</version>
+                  <properties><jasypt.version>4.0.3</jasypt.version></properties>
+                  <dependencies><dependency>
+                    <groupId>com.github.ulisesbocchio</groupId><artifactId>jasypt-spring-boot-starter</artifactId>
+                    <version>${jasypt.version}</version>
+                  </dependency></dependencies>
+                  <profiles><profile><id>integration</id><dependencies><dependency>
+                    <groupId>com.github.ulisesbocchio</groupId><artifactId>jasypt-spring-boot-starter</artifactId>
+                    <version>${jasypt.version}</version>
+                  </dependency></dependencies></profile></profiles>
+                </project>
+                """));
+    }
+
+    @Test
+    void updatesOnlyTheRootPropertyNotNestedPluginConfiguration() {
+        rewriteRun(pomXml(
+                """
+                <project>
+                  <modelVersion>4.0.0</modelVersion>
+                  <groupId>example</groupId><artifactId>nested-properties</artifactId><version>1</version>
+                  <properties><jasypt.version>3.0.5</jasypt.version></properties>
+                  <dependencies><dependency>
+                    <groupId>com.github.ulisesbocchio</groupId><artifactId>jasypt-spring-boot-starter</artifactId>
+                    <version>${jasypt.version}</version>
+                  </dependency></dependencies>
+                  <build><plugins><plugin><groupId>example</groupId><artifactId>x</artifactId><version>1</version>
+                    <configuration><properties><jasypt.version>3.0.5</jasypt.version></properties></configuration>
+                  </plugin></plugins></build>
+                </project>
+                """,
+                """
+                <project>
+                  <modelVersion>4.0.0</modelVersion>
+                  <groupId>example</groupId><artifactId>nested-properties</artifactId><version>1</version>
+                  <properties><jasypt.version>4.0.3</jasypt.version></properties>
+                  <dependencies><dependency>
+                    <groupId>com.github.ulisesbocchio</groupId><artifactId>jasypt-spring-boot-starter</artifactId>
+                    <version>${jasypt.version}</version>
+                  </dependency></dependencies>
+                  <build><plugins><plugin><groupId>example</groupId><artifactId>x</artifactId><version>1</version>
+                    <configuration><properties><jasypt.version>3.0.5</jasypt.version></properties></configuration>
+                  </plugin></plugins></build>
+                </project>
+                """));
+    }
+
+    @Test
+    void ignoresGeneratedBuildFiles() {
+        rewriteRun(xml(pom("3.0.5"), source -> source.path("target/generated/pom.xml")));
     }
 
     private static String pom(String version) {

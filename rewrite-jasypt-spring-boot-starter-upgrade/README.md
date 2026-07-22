@@ -14,25 +14,31 @@ com.huawei.clouds.openrewrite.jasypt.MigrateJasyptSpringBootStarterTo4_0_3
 com.huawei.clouds.openrewrite.jasypt.UpgradeJasyptSpringBootStarterTo4_0_3
 ```
 
+只执行精确风险审计、不做自动修改时使用：
+
+```text
+com.huawei.clouds.openrewrite.jasypt.ReviewJasyptSpringBootStarter4_0_3Risks
+```
+
 ## 执行契约
 
 | 领域 | 处理方式 | 精确行为 |
 | --- | --- | --- |
 | Maven 直接版本和 `dependencyManagement` | AUTO | 只把目标 starter 的上述 5 个字面量版本改为 `4.0.3` |
-| Maven 本地版本属性 | AUTO | 属性只被目标 starter 使用时更新属性；属性被多个坐标共享时只在 starter 上内联 `4.0.3`，不改变属性及其他消费者 |
-| Gradle Groovy/Kotlin 字面量 | AUTO | 支持常用 dependency configuration 的字符串坐标；Groovy 还支持 `group/name/version` map 写法 |
-| Java 自动配置类包移动 | AUTO | 将两个可归因类型迁到 `com.ulisesbocchio.jasyptspringbootstarter`；同时改写 `spring.factories` 等 `.properties` 值中的同名类 |
+| Maven 本地版本属性 | AUTO/NO-OP | 根属性的所有语义引用都属于标准 JAR 目标 starter 时更新属性；重复定义、profile 遮蔽，或被插件、属性、其他坐标、classifier/type 与元数据共享时，属性和 starter 声明都保持不变 |
+| Gradle Groovy/Kotlin 字面量 | AUTO | 只处理 `dependencies {}` 内常用 dependency configuration 的三段字符串坐标；Groovy 还支持没有 classifier/ext/type 的 `group/name/version` map 写法 |
+| Java 自动配置类包移动 | AUTO | 将两个有类型归属的源码引用迁到 `com.ulisesbocchio.jasyptspringbootstarter`；同时改写 `spring.factories` 等 `.properties` 值中的完整类名 token |
 | 旧版 `.properties` camelCase 键 | AUTO | 只规范化官方可证明等价的键，如 `poolSize`→`pool-size`、`ivGeneratorClassname`→`iv-generator-classname`；相似键不改 |
 | Java 17、Spring Boot 3.5 基线 | MARK | 只标记当前 POM/Gradle 文件中可见且低于最低要求的值；不自动升级平台、JDK、容器或 CI |
 | 2.x 默认算法迁移 | MARK | 标记 `PBEWithMD5AndDES`/`NoIvGenerator` 兼容工作及没有同文件算法声明的 `ENC(...)`；不假定密文由哪个 profile/工具生成 |
-| 密码、私钥、GCM secret | MARK | 标记仓库内具体值、有明文默认值或空 fallback、classpath 私钥、Java 硬编码及脚本/工作流命令行暴露；精确 `${SECRET_NAME}` 引用不报明文 |
+| 密码、私钥、GCM secret | MARK | 标记仓库内具体值、有明文默认值或空 fallback、classpath 私钥、GCM/非对称 Java 硬编码及脚本/工作流命令行暴露；精确 `${SECRET_NAME}` 引用不报明文 |
 | 自定义 encryptor/detector/resolver/filter | MARK | 标记配置 bean、Java 实现和手工 `SimpleStringPBEConfig`，要求验证 bean 名、顺序、递归、线程安全和完整密码学参数元组 |
 | wrapper/proxy/filter/skip | MARK | 标记 proxy 模式和精确 Jasypt filter/skip 路径；不把 YAML 中无关的 `include-*`/`exclude-*` 当成 Jasypt 配置 |
 | 懒初始化、缓存和刷新 | MARK | 标记全局 lazy init、refresh event 配置及直接依赖 wrapper/cache 内部类型的 Java 代码 |
 | CLI、测试与运维脚本 | MARK | 标记 `-Djasypt.encryptor.password`、`--jasypt.encryptor.password`、具体环境变量赋值和 decrypt/reencrypt；提示进程列表、history、CI log、临时文件风险 |
-| 外部 parent/BOM、version catalog、Gradle 变量 | NO-OP/MARK | 不覆盖不可见版本；推荐配方会标记无版本 starter，要求到真正拥有版本的文件处理 |
+| 外部 parent/BOM、version catalog、Gradle 变量 | NO-OP/MARK | 不覆盖不可见版本；推荐/审计配方只在实际 Maven/Gradle dependency 节点标记无版本 starter，要求到真正拥有版本的文件处理 |
 | 非 starter artifact 和 Maven plugin | NO-OP | 不改 `jasypt-spring-boot`、`org.jasypt:jasypt`、`jasypt-maven-plugin`，也不把 starter 版本规则套到插件上 |
-| 未列版本、范围、动态版本、已达目标或更高版本 | NO-OP | `1.18`、`3.0.2`、`3.0.6`、版本范围、`LATEST`、`4.0.3+` 均不猜测、不降级 |
+| 未列版本、范围、动态版本、自定义 artifact、生成目录、已达目标或更高版本 | NO-OP/MARK | `1.18`、`3.0.2`、`3.0.6`、版本范围、`LATEST`、变量/插值、classifier/type/ext、`target/build/generated/install/.mvn`、`4.0.3+` 均不猜测、不降级；实际依赖节点给出精确待办标记 |
 
 `MARK` 使用 OpenRewrite `SearchResult`，不会偷偷选择密码学参数或安全策略。标记是待办，不代表迁移已安全完成。
 
@@ -42,7 +48,7 @@ com.huawei.clouds.openrewrite.jasypt.UpgradeJasyptSpringBootStarterTo4_0_3
 
 1. **历史密文与默认值。** 2.x 的默认 PBE 为 `PBEWithMD5AndDES`，没有随机 IV；[3.0.0 固定提交](https://github.com/ulisesbocchio/jasypt-spring-boot/tree/a82c45caf5d910d7e7684a50144b5127125b437c)起默认改为 `PBEWITHHMACSHA512ANDAES_256` 和 `RandomIvGenerator`。兼容旧密文时可在隔离迁移阶段显式恢复旧算法及 `org.jasypt.iv.NoIvGenerator`，解密成功后用组织批准的强方案重加密。算法、IV、salt、迭代次数、provider、pool 和输出编码必须作为一个元组验证，配方不会全局写入旧弱默认值。
 2. **密码来源。** 目标仍要求 password、非对称私钥或 GCM secret 三者之一。密码应来自受控 secret 注入；即便官方允许 system property、environment 或 command line，命令行仍可能出现在进程列表、shell history、CI 日志和诊断信息中。`${ENV:plaintext-default}` 不是安全外部引用；缺失 secret 应明确失败。
-3. **包名变化。** [固定提交 `6c958775...`](https://github.com/ulisesbocchio/jasypt-spring-boot/commit/6c958775b544e94be9b650723e6f6bd2f7467be3)为避免 Java 9+ split package，将 `JasyptSpringBootAutoConfiguration` 和 `JasyptSpringCloudBootstrapConfiguration` 移到 `com.ulisesbocchio.jasyptspringbootstarter`。配方自动处理可归因 Java 类型和 `.properties` 注册值，但生成代码、字符串反射、XML 或第三方元数据仍需搜索验证。
+3. **包名变化。** [固定提交 `6c958775...`](https://github.com/ulisesbocchio/jasypt-spring-boot/commit/6c958775b544e94be9b650723e6f6bd2f7467be3)为避免 Java 9+ split package，将 `JasyptSpringBootAutoConfiguration` 和 `JasyptSpringCloudBootstrapConfiguration` 移到 `com.ulisesbocchio.jasyptspringbootstarter`。配方自动处理非生成 Java 类型和 `.properties` 中的完整类名 token；精确 Java 反射字符串和 YAML 元数据会被标记，相似说明文本不会误报，生成代码保持不变。
 4. **自定义扩展。** 自定义 `StringEncryptor` 会绕过 starter 默认密码学配置；自定义 resolver 还会接管检测、filter 和解密全流程。必须覆盖正负匹配、循环依赖、bean 名、初始化顺序、多 context、并发和异常路径。
 5. **属性源代理。** wrapper 与 CGLIB proxy 对具体 `PropertySource` 类型、identity 和 `getSource()` 的行为不同。自定义 property source、Actuator environment 暴露和 Spring Cloud bootstrap 都要逐 profile 启动验证。
 6. **懒加载与早期启动。** `DefaultLazyEncryptor` 目标构造器使用 `ConfigurableEnvironment`；全局 lazy init 可能将缺失密码延迟到第一次属性访问。使用 `StandardEncryptableEnvironment` 处理 logging/bootstrap 时，要验证日志初始化、bootstrap context 清理和重复包装。
@@ -64,7 +70,7 @@ com.huawei.clouds.openrewrite.jasypt.UpgradeJasyptSpringBootStarterTo4_0_3
 - [dyc87112/SpringBoot-Learning `4212d163...`](https://github.com/dyc87112/SpringBoot-Learning/blob/4212d163da816c6fa5b28d59130318dac2379a73/2.x/chapter1-5/pom.xml)：同一 POM 中 starter 与 Maven plugin 都为 `3.0.3`，只升级 starter。
 - [Jasypt 官方固定目标 README](https://github.com/ulisesbocchio/jasypt-spring-boot/blob/e8d16bdcc92f3fd85f5d4ea05944bc0c46b9bd91/README.md)：依赖坐标、配置键、默认参数、CLI 和扩展点用例。
 
-此外覆盖 5 个表格源版本、未列/范围/动态/未来版本、共享 Maven 属性隔离、外部管理、Groovy map、Kotlin literal、Java 包迁移、POM/Gradle 基线、properties/YAML、CLI、custom detector 与手工 PBE 配置。测试中的 secret 均为占位符，不包含可用凭据。
+当前 **63 个执行场景**覆盖 5 个表格源版本、未列/范围/动态/未来版本、共享 Maven 属性严格 NO-OP、属性/attribute 所有权、profile、dependencyManagement、plugin dependency、无版本 BOM、classifier、Groovy map、Kotlin literal、DSL lookalike、生成目录、两周期幂等、Java 包迁移与反射 marker、POM/Gradle Java/Boot 基线、properties/YAML、CLI、custom detector、PBE/GCM/非对称配置。测试中的 secret 均为不可用占位符，不包含凭据。
 
 ## 使用与验收
 

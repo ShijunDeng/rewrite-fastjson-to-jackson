@@ -7,6 +7,8 @@ import org.openrewrite.properties.tree.Properties;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /** Canonicalizes deterministic Jasypt configuration and starter auto-configuration names. */
 public final class MigrateJasyptProperties extends Recipe {
@@ -46,6 +48,11 @@ public final class MigrateJasyptProperties extends Recipe {
     public PropertiesIsoVisitor<ExecutionContext> getVisitor() {
         return new PropertiesIsoVisitor<ExecutionContext>() {
             @Override
+            public Properties.File visitFile(Properties.File file, ExecutionContext ctx) {
+                return JasyptVersions.isProjectPath(file.getSourcePath()) ? super.visitFile(file, ctx) : file;
+            }
+
+            @Override
             public Properties.Entry visitEntry(Properties.Entry entry, ExecutionContext ctx) {
                 Properties.Entry e = super.visitEntry(entry, ctx);
                 String key = KEYS.get(e.getKey());
@@ -55,10 +62,15 @@ public final class MigrateJasyptProperties extends Recipe {
                 String value = e.getValue().getText();
                 String migrated = value;
                 for (Map.Entry<String, String> className : CLASS_NAMES.entrySet()) {
-                    migrated = migrated.replace(className.getKey(), className.getValue());
+                    migrated = replaceClassToken(migrated, className.getKey(), className.getValue());
                 }
                 return migrated.equals(value) ? e : e.withValue(e.getValue().withText(migrated));
             }
         };
+    }
+
+    private static String replaceClassToken(String source, String oldType, String newType) {
+        Pattern token = Pattern.compile("(?<![A-Za-z0-9_$])" + Pattern.quote(oldType) + "(?![A-Za-z0-9_$])");
+        return token.matcher(source).replaceAll(Matcher.quoteReplacement(newType));
     }
 }
