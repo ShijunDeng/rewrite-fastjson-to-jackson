@@ -2,20 +2,201 @@
 type: specs.openrewrite.org/v1beta/category
 name: com.huawei.clouds.openrewrite.slf4j
 packageName: com.huawei.clouds.openrewrite.slf4j
-description: Upgrade SLF4J with explicit provider compatibility guidance.
+description: Strictly upgrade SLF4J API and migrate deterministic SLF4J 2 provider compatibility changes.
 ---
 type: specs.openrewrite.org/v1beta/recipe
-name: com.huawei.clouds.openrewrite.slf4j.UpgradeSlf4jApiTo2_0_17
-displayName: Upgrade SLF4J API to 2.0.17
-description: Upgrade org.slf4j:slf4j-api declarations in Maven and Gradle builds to 2.0.17. The logging provider must be upgraded separately.
+name: com.huawei.clouds.openrewrite.slf4j.MigrateSlf4jTo2_0_17
+displayName: Migrate SLF4J applications to 2.0.17
+description: Strictly upgrade only visible spreadsheet source versions, migrate provider artifacts with proven replacements, and mark remaining provider, topology, Java, ServiceLoader, and fluent logging decisions.
 tags:
   - slf4j
   - logging
   - java
+  - migration
+recipeList:
+  - com.huawei.clouds.openrewrite.slf4j.UpgradeSlf4jApiTo2_0_17
+  - com.huawei.clouds.openrewrite.slf4j.MigrateSlf4jProviderArtifacts
+  - com.huawei.clouds.openrewrite.slf4j.FindSlf4jBuildRisks
+  - com.huawei.clouds.openrewrite.slf4j.FindSlf4jJavaRisks
+  - com.huawei.clouds.openrewrite.slf4j.FindSlf4jServiceProviderResourceRisks
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.slf4j.UpgradeSlf4jApiTo2_0_17
+displayName: Strictly upgrade listed SLF4J API versions to 2.0.17
+description: Upgrade only the ten source versions explicitly visible in the spreadsheet in local Maven declarations and semantically resolved Gradle dependencies; preserve shared Maven properties and external management.
+tags:
+  - slf4j
   - dependency-upgrade
+  - strict
+recipeList:
+  - com.huawei.clouds.openrewrite.slf4j.UpgradeStrictSlf4jMavenDependency
+  - com.huawei.clouds.openrewrite.slf4j.UpgradeSlf4j1_7_25To2_0_17
+  - com.huawei.clouds.openrewrite.slf4j.UpgradeSlf4j1_7_26To2_0_17
+  - com.huawei.clouds.openrewrite.slf4j.UpgradeSlf4j1_7_30To2_0_17
+  - com.huawei.clouds.openrewrite.slf4j.UpgradeSlf4j1_7_32To2_0_17
+  - com.huawei.clouds.openrewrite.slf4j.UpgradeSlf4j1_7_34To2_0_17
+  - com.huawei.clouds.openrewrite.slf4j.UpgradeSlf4j1_7_35To2_0_17
+  - com.huawei.clouds.openrewrite.slf4j.UpgradeSlf4j1_7_36To2_0_17
+  - com.huawei.clouds.openrewrite.slf4j.UpgradeSlf4j2_0_0To2_0_17
+  - com.huawei.clouds.openrewrite.slf4j.UpgradeSlf4j2_0_0Alpha1To2_0_17
+  - com.huawei.clouds.openrewrite.slf4j.UpgradeSlf4j2_0_6To2_0_17
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.slf4j.UpgradeSlf4j1_7_25To2_0_17
+displayName: Upgrade SLF4J API 1.7.25 to 2.0.17
+description: Upgrade only direct org.slf4j:slf4j-api 1.7.25 declarations.
+preconditions:
+  - org.openrewrite.java.dependencies.FindDependency:
+      groupId: org.slf4j
+      artifactId: slf4j-api
+      version: 1.7.25
 recipeList:
   - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
       groupId: org.slf4j
       artifactId: slf4j-api
       newVersion: 2.0.17
-      overrideManagedVersion: true
+      overrideManagedVersion: false
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.slf4j.UpgradeSlf4j1_7_26To2_0_17
+displayName: Upgrade SLF4J API 1.7.26 to 2.0.17
+description: Upgrade only direct org.slf4j:slf4j-api 1.7.26 declarations.
+preconditions:
+  - org.openrewrite.java.dependencies.FindDependency:
+      groupId: org.slf4j
+      artifactId: slf4j-api
+      version: 1.7.26
+recipeList:
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.slf4j
+      artifactId: slf4j-api
+      newVersion: 2.0.17
+      overrideManagedVersion: false
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.slf4j.UpgradeSlf4j1_7_30To2_0_17
+displayName: Upgrade SLF4J API 1.7.30 to 2.0.17
+description: Upgrade only direct org.slf4j:slf4j-api 1.7.30 declarations.
+preconditions:
+  - org.openrewrite.java.dependencies.FindDependency:
+      groupId: org.slf4j
+      artifactId: slf4j-api
+      version: 1.7.30
+recipeList:
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.slf4j
+      artifactId: slf4j-api
+      newVersion: 2.0.17
+      overrideManagedVersion: false
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.slf4j.UpgradeSlf4j1_7_32To2_0_17
+displayName: Upgrade SLF4J API 1.7.32 to 2.0.17
+description: Upgrade only direct org.slf4j:slf4j-api 1.7.32 declarations.
+preconditions:
+  - org.openrewrite.java.dependencies.FindDependency:
+      groupId: org.slf4j
+      artifactId: slf4j-api
+      version: 1.7.32
+recipeList:
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.slf4j
+      artifactId: slf4j-api
+      newVersion: 2.0.17
+      overrideManagedVersion: false
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.slf4j.UpgradeSlf4j1_7_34To2_0_17
+displayName: Upgrade SLF4J API 1.7.34 to 2.0.17
+description: Upgrade only direct org.slf4j:slf4j-api 1.7.34 declarations.
+preconditions:
+  - org.openrewrite.java.dependencies.FindDependency:
+      groupId: org.slf4j
+      artifactId: slf4j-api
+      version: 1.7.34
+recipeList:
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.slf4j
+      artifactId: slf4j-api
+      newVersion: 2.0.17
+      overrideManagedVersion: false
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.slf4j.UpgradeSlf4j1_7_35To2_0_17
+displayName: Upgrade SLF4J API 1.7.35 to 2.0.17
+description: Upgrade only direct org.slf4j:slf4j-api 1.7.35 declarations.
+preconditions:
+  - org.openrewrite.java.dependencies.FindDependency:
+      groupId: org.slf4j
+      artifactId: slf4j-api
+      version: 1.7.35
+recipeList:
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.slf4j
+      artifactId: slf4j-api
+      newVersion: 2.0.17
+      overrideManagedVersion: false
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.slf4j.UpgradeSlf4j1_7_36To2_0_17
+displayName: Upgrade SLF4J API 1.7.36 to 2.0.17
+description: Upgrade only direct org.slf4j:slf4j-api 1.7.36 declarations.
+preconditions:
+  - org.openrewrite.java.dependencies.FindDependency:
+      groupId: org.slf4j
+      artifactId: slf4j-api
+      version: 1.7.36
+recipeList:
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.slf4j
+      artifactId: slf4j-api
+      newVersion: 2.0.17
+      overrideManagedVersion: false
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.slf4j.UpgradeSlf4j2_0_0To2_0_17
+displayName: Upgrade SLF4J API 2.0.0 to 2.0.17
+description: Upgrade only direct org.slf4j:slf4j-api 2.0.0 declarations.
+preconditions:
+  - org.openrewrite.java.dependencies.FindDependency:
+      groupId: org.slf4j
+      artifactId: slf4j-api
+      version: 2.0.0
+recipeList:
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.slf4j
+      artifactId: slf4j-api
+      newVersion: 2.0.17
+      overrideManagedVersion: false
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.slf4j.UpgradeSlf4j2_0_0Alpha1To2_0_17
+displayName: Upgrade SLF4J API 2.0.0-alpha1 to 2.0.17
+description: Upgrade only direct org.slf4j:slf4j-api 2.0.0-alpha1 declarations.
+preconditions:
+  - org.openrewrite.java.dependencies.FindDependency:
+      groupId: org.slf4j
+      artifactId: slf4j-api
+      version: 2.0.0-alpha1
+recipeList:
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.slf4j
+      artifactId: slf4j-api
+      newVersion: 2.0.17
+      overrideManagedVersion: false
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.slf4j.UpgradeSlf4j2_0_6To2_0_17
+displayName: Upgrade SLF4J API 2.0.6 to 2.0.17
+description: Upgrade only direct org.slf4j:slf4j-api 2.0.6 declarations.
+preconditions:
+  - org.openrewrite.java.dependencies.FindDependency:
+      groupId: org.slf4j
+      artifactId: slf4j-api
+      version: 2.0.6
+recipeList:
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.slf4j
+      artifactId: slf4j-api
+      newVersion: 2.0.17
+      overrideManagedVersion: false

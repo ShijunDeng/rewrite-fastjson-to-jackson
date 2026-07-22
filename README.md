@@ -20,7 +20,7 @@
 | [`rewrite-ngx-translate-http-loader-upgrade`](rewrite-ngx-translate-http-loader-upgrade) | `com.huawei.clouds.openrewrite.ngxtranslate.MigrateNgxTranslateHttpLoaderTo17` | 严格升级 HTTP loader，迁移可确定的旧 factory/provider，并标记路径、HTTP、缓存和配套版本风险 |
 | [`rewrite-jedis-upgrade`](rewrite-jedis-upgrade) | `com.huawei.clouds.openrewrite.jedis.MigrateJedisTo7_2_1` | 严格升级 Jedis，迁移确定性 Java API，并标记 sharding、Cluster、pool、命令返回值和连接行为风险 |
 | [`rewrite-mybatis-spring-boot-starter-upgrade`](rewrite-mybatis-spring-boot-starter-upgrade) | `com.huawei.clouds.openrewrite.mybatisspringboot.MigrateMyBatisSpringBootStarterTo4_0_0` | 将 MyBatis Spring Boot Starter 升级到 4.0.0，并迁移 Boot 4 类型、配置键、测试注解与 MyBatis XML XSD；高风险项生成迁移标记 |
-| [`rewrite-slf4j-upgrade`](rewrite-slf4j-upgrade) | `com.huawei.clouds.openrewrite.slf4j.UpgradeSlf4jApiTo2_0_17` | 将 Maven/Gradle SLF4J API 依赖升级到 2.0.17 |
+| [`rewrite-slf4j-upgrade`](rewrite-slf4j-upgrade) | `com.huawei.clouds.openrewrite.slf4j.MigrateSlf4jTo2_0_17` | 严格升级 SLF4J API 到 2.0.17，迁移确定性 provider 坐标，并标记旧 binding、ServiceLoader、bridge 环、shade 与 fluent logging 风险 |
 | [`rewrite-angular-common-upgrade`](rewrite-angular-common-upgrade) | `com.huawei.clouds.openrewrite.angular.UpgradeAngularCommonTo20_3_26` | 将 `@angular/common` 升级到 20.3.26 |
 | [`rewrite-angular-platform-browser-upgrade`](rewrite-angular-platform-browser-upgrade) | `com.huawei.clouds.openrewrite.angular.UpgradeAngularPlatformBrowserTo20_3_26` | 将 `@angular/platform-browser` 升级到 20.3.26 |
 | [`rewrite-angular-platform-browser-dynamic-upgrade`](rewrite-angular-platform-browser-dynamic-upgrade) | `com.huawei.clouds.openrewrite.angular.UpgradeAngularPlatformBrowserDynamicTo20_3_26` | 将 `@angular/platform-browser-dynamic` 升级到 20.3.26，并指导迁离已废弃 JIT 平台 |
