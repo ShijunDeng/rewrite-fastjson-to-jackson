@@ -1,0 +1,19 @@
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.ng2fileupload.UpgradeNg2FileUploadTo10_0_0
+displayName: Upgrade workbook-selected ng2-file-upload dependencies to 10.0.0
+description: >-
+  Upgrades only exact, caret, or tilde direct owners at 2.0.0-3, 3.0.0, or 4.0.0.
+recipeList:
+  - com.huawei.clouds.openrewrite.ng2fileupload.UpgradeSelectedNg2FileUploadDependency
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.ng2fileupload.MigrateNg2FileUploadTo10_0_0
+displayName: Migrate ng2-file-upload 2.0.0-3, 3.0.0, or 4.0.0 to 10.0.0
+description: Upgrade strict workbook owners, normalize only proven static named deep imports, then report precise manifest, source, and template risks.
+recipeList:
+  - com.huawei.clouds.openrewrite.ng2fileupload.UpgradeNg2FileUploadTo10_0_0
+  - com.huawei.clouds.openrewrite.ng2fileupload.NormalizeNg2FileUploadPublicImports
+  - com.huawei.clouds.openrewrite.ng2fileupload.FindNg2FileUploadManifestRisks
+  - com.huawei.clouds.openrewrite.ng2fileupload.FindNg2FileUploadTypeScriptRisks
+  - com.huawei.clouds.openrewrite.ng2fileupload.FindNg2FileUploadTemplateRisks
