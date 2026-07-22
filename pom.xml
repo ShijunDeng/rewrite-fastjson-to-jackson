@@ -120,6 +120,7 @@
     <module>rewrite-ng2-file-upload-upgrade</module>
     <module>rewrite-react-redux-upgrade</module>
     <module>rewrite-ngx-color-picker-upgrade</module>
+    <module>rewrite-feign-core-upgrade</module>
   </modules>
 
   <dependencyManagement>

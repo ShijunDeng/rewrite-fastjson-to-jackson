@@ -1,0 +1,21 @@
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.feigncore.UpgradeFeignCoreTo13_6
+displayName: Upgrade workbook-selected Feign Core dependencies to 13.6
+description: >-
+  Upgrade only io.github.openfeign:feign-core versions explicitly listed in the migration workbook,
+  preserving external version owners, unsupported ranges, variants, and unrelated declarations.
+recipeList:
+  - com.huawei.clouds.openrewrite.feigncore.UpgradeSelectedFeignCoreDependency
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.feigncore.MigrateFeignCoreTo13_6
+displayName: Migrate Feign Core 10/11/12 to 13.6
+description: >-
+  Strictly upgrade selected Feign Core declarations, perform type-attributed behavior-preserving API
+  rewrites, and mark exact build and source boundaries that require an application decision.
+recipeList:
+  - com.huawei.clouds.openrewrite.feigncore.UpgradeFeignCoreTo13_6
+  - com.huawei.clouds.openrewrite.feigncore.MigrateFeign13DeterministicApis
+  - com.huawei.clouds.openrewrite.feigncore.FindFeign13SourceRisks
+  - com.huawei.clouds.openrewrite.feigncore.FindFeign13BuildRisks
