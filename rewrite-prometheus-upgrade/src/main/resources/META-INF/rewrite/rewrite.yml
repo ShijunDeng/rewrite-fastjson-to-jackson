@@ -1,0 +1,33 @@
+---
+type: specs.openrewrite.org/v1beta/category
+name: com.huawei.clouds.openrewrite.prometheus
+packageName: com.huawei.clouds.openrewrite.prometheus
+description: Strict Prometheus Go module upgrades with Go API, configuration, PromQL, TSDB, image, and deployment guidance.
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.prometheus.MigratePrometheusTo0_311_3
+displayName: Migrate Prometheus Go module consumers to v0.311.3
+description: Upgrade workbook-selected go.mod requirements, apply documented deterministic package/config/flag relocations, and mark exact Go API, PromQL, storage, protocol, and deployment risks.
+tags:
+  - prometheus
+  - go
+  - monitoring
+  - migration
+recipeList:
+  - com.huawei.clouds.openrewrite.prometheus.UpgradePrometheusTo0_311_3
+  - com.huawei.clouds.openrewrite.prometheus.MigratePrometheusGoImports
+  - com.huawei.clouds.openrewrite.prometheus.MigratePrometheusConfiguration
+  - com.huawei.clouds.openrewrite.prometheus.MigratePrometheusCommandFlags
+  - com.huawei.clouds.openrewrite.prometheus.FindPrometheusTextMigrationRisks
+  - com.huawei.clouds.openrewrite.prometheus.FindPrometheusYamlMigrationRisks
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.prometheus.UpgradePrometheusTo0_311_3
+displayName: Upgrade Prometheus Go module to v0.311.3
+description: Upgrade only the eight github.com/prometheus/prometheus versions explicitly visible in the workbook to v0.311.3 in maintained go.mod require directives.
+tags:
+  - prometheus
+  - go
+  - dependency-upgrade
+recipeList:
+  - com.huawei.clouds.openrewrite.prometheus.UpgradeSelectedPrometheusDependency

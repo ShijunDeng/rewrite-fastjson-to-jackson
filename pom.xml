@@ -106,6 +106,7 @@
     <module>rewrite-react-resizable-upgrade</module>
     <module>rewrite-pbr-upgrade</module>
     <module>rewrite-chalk-upgrade</module>
+    <module>rewrite-prometheus-upgrade</module>
   </modules>
 
   <dependencyManagement>
