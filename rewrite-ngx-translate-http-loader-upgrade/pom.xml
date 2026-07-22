@@ -13,7 +13,7 @@
 
   <artifactId>rewrite-ngx-translate-http-loader-upgrade</artifactId>
   <name>OpenRewrite ngx-translate HTTP Loader Upgrade</name>
-  <description>Configuration-based OpenRewrite recipe for upgrading @ngx-translate/http-loader to 17.0.0.</description>
+  <description>OpenRewrite recipes for strictly upgrading selected @ngx-translate/http-loader declarations, migrating deterministic factories, and locating compatibility risks.</description>
   <url>https://github.com/ShijunDeng/openrewrite-migration-recipes/tree/main/rewrite-ngx-translate-http-loader-upgrade</url>
 
   <dependencies>
