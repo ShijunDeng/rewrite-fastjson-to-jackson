@@ -5,29 +5,547 @@ packageName: com.huawei.clouds.openrewrite.hibernatevalidator
 description: Upgrade Hibernate Validator and Jakarta Validation together.
 ---
 type: specs.openrewrite.org/v1beta/recipe
-name: com.huawei.clouds.openrewrite.hibernatevalidator.UpgradeHibernateValidatorTo8
-displayName: Upgrade Hibernate Validator to 8.0.3.Final
-description: Upgrade Hibernate Validator, replace the Bean Validation API dependency, and migrate javax.validation source references to jakarta.validation.
+name: com.huawei.clouds.openrewrite.hibernatevalidator.UpgradeHibernateValidatorDependencyTo8_0_3
+displayName: Strictly upgrade listed Hibernate Validator dependencies to 8.0.3.Final
+description: Upgrade only the eight Hibernate Validator source versions listed in the spreadsheet, including local dependencyManagement entries, without overriding an external BOM-managed version.
 tags:
   - hibernate-validator
   - jakarta-validation
   - java
   - dependency-upgrade
 recipeList:
-  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
-      groupId: org.hibernate.validator
-      artifactId: hibernate-validator
-      newVersion: 8.0.3.Final
-      overrideManagedVersion: true
-  - org.openrewrite.java.dependencies.ChangeDependency:
-      oldGroupId: javax.validation
-      oldArtifactId: validation-api
-      newGroupId: jakarta.validation
-      newArtifactId: jakarta.validation-api
-      newVersion: 3.0.2
-      overrideManagedVersion: true
-      changeManagedDependency: true
+  - com.huawei.clouds.openrewrite.hibernatevalidator.UpgradeHibernateValidator6_0_23To8_0_3
+  - com.huawei.clouds.openrewrite.hibernatevalidator.UpgradeHibernateValidator6_1_6To8_0_3
+  - com.huawei.clouds.openrewrite.hibernatevalidator.UpgradeHibernateValidator6_1_7To8_0_3
+  - com.huawei.clouds.openrewrite.hibernatevalidator.UpgradeHibernateValidator6_2_0To8_0_3
+  - com.huawei.clouds.openrewrite.hibernatevalidator.UpgradeHibernateValidator6_2_1To8_0_3
+  - com.huawei.clouds.openrewrite.hibernatevalidator.UpgradeHibernateValidator6_2_3To8_0_3
+  - com.huawei.clouds.openrewrite.hibernatevalidator.UpgradeHibernateValidator6_2_4To8_0_3
+  - com.huawei.clouds.openrewrite.hibernatevalidator.UpgradeHibernateValidator6_2_5To8_0_3
+  - com.huawei.clouds.openrewrite.hibernatevalidator.UpgradeManagedHibernateValidator6_0_23To8_0_3
+  - com.huawei.clouds.openrewrite.hibernatevalidator.UpgradeManagedHibernateValidator6_1_6To8_0_3
+  - com.huawei.clouds.openrewrite.hibernatevalidator.UpgradeManagedHibernateValidator6_1_7To8_0_3
+  - com.huawei.clouds.openrewrite.hibernatevalidator.UpgradeManagedHibernateValidator6_2_0To8_0_3
+  - com.huawei.clouds.openrewrite.hibernatevalidator.UpgradeManagedHibernateValidator6_2_1To8_0_3
+  - com.huawei.clouds.openrewrite.hibernatevalidator.UpgradeManagedHibernateValidator6_2_3To8_0_3
+  - com.huawei.clouds.openrewrite.hibernatevalidator.UpgradeManagedHibernateValidator6_2_4To8_0_3
+  - com.huawei.clouds.openrewrite.hibernatevalidator.UpgradeManagedHibernateValidator6_2_5To8_0_3
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.hibernatevalidator.MigrateHibernateValidatorTo8_0_3
+displayName: Migrate Hibernate Validator applications to 8.0.3.Final
+description: Strictly upgrade listed dependencies, migrate Jakarta Validation and EL source/build references, update Bean Validation 3.0 XML and service-loader files, and mark removed constraints, changed SPI contracts, and expression-language risks.
+tags:
+  - hibernate-validator
+  - jakarta-validation
+  - jakarta-ee-10
+  - java
+  - migration
+recipeList:
+  - com.huawei.clouds.openrewrite.hibernatevalidator.UpgradeHibernateValidatorDependencyTo8_0_3
+  - com.huawei.clouds.openrewrite.hibernatevalidator.MigrateValidationAndExpressionLanguageDependencies
   - org.openrewrite.java.ChangePackage:
       oldPackageName: javax.validation
       newPackageName: jakarta.validation
       recursive: true
+  - org.openrewrite.java.ChangePackage:
+      oldPackageName: javax.el
+      newPackageName: jakarta.el
+      recursive: true
+  - com.huawei.clouds.openrewrite.hibernatevalidator.MigrateBeanValidationXmlTo3_0
+  - com.huawei.clouds.openrewrite.hibernatevalidator.MigrateValidationServiceLoaderFiles
+  - com.huawei.clouds.openrewrite.hibernatevalidator.AuditRemovedAndChangedHibernateValidatorApis
+  - com.huawei.clouds.openrewrite.hibernatevalidator.AuditCustomViolationExpressionLanguage
+  - com.huawei.clouds.openrewrite.hibernatevalidator.AuditValidationMessageBundlesForExpressionLanguage
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.hibernatevalidator.UpgradeHibernateValidatorTo8
+displayName: Migrate Hibernate Validator to 8.0.3.Final
+description: Backwards-compatible alias for the recommended MigrateHibernateValidatorTo8_0_3 recipe.
+tags:
+  - hibernate-validator
+  - jakarta-validation
+  - migration
+recipeList:
+  - com.huawei.clouds.openrewrite.hibernatevalidator.MigrateHibernateValidatorTo8_0_3
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.hibernatevalidator.MigrateBeanValidationXmlTo3_0
+displayName: Migrate Bean Validation XML descriptors to Jakarta Validation 3.0
+description: Update only Bean Validation configuration and constraint-mapping root namespaces, schema locations, versions, and javax.validation constraint annotation attributes to their Jakarta 3.0 equivalents.
+tags:
+  - hibernate-validator
+  - jakarta-validation
+  - xml
+recipeList:
+  - org.openrewrite.xml.ChangeTagAttribute:
+      elementName: /validation-config
+      attributeName: xmlns
+      oldValue: http://xmlns.jcp.org/xml/ns/validation/configuration
+      newValue: https://jakarta.ee/xml/ns/validation/configuration
+  - org.openrewrite.xml.ChangeTagAttribute:
+      elementName: /validation-config
+      attributeName: xsi:schemaLocation
+      oldValue: 'http://xmlns\.jcp\.org/xml/ns/validation/configuration\s+(?:http://xmlns\.jcp\.org/xml/ns/validation/)?validation-configuration-2\.0\.xsd'
+      newValue: https://jakarta.ee/xml/ns/validation/configuration https://jakarta.ee/xml/ns/validation/validation-configuration-3.0.xsd
+      regex: true
+  - org.openrewrite.xml.ChangeTagAttribute:
+      elementName: /validation-config
+      attributeName: version
+      oldValue: '2.0'
+      newValue: '3.0'
+  - org.openrewrite.xml.ChangeTagAttribute:
+      elementName: /constraint-mappings
+      attributeName: xmlns
+      oldValue: http://xmlns.jcp.org/xml/ns/validation/mapping
+      newValue: https://jakarta.ee/xml/ns/validation/mapping
+  - org.openrewrite.xml.ChangeTagAttribute:
+      elementName: /constraint-mappings
+      attributeName: xsi:schemaLocation
+      oldValue: 'http://xmlns\.jcp\.org/xml/ns/validation/mapping\s+(?:http://xmlns\.jcp\.org/xml/ns/validation/)?validation-mapping-2\.0\.xsd'
+      newValue: https://jakarta.ee/xml/ns/validation/mapping https://jakarta.ee/xml/ns/validation/validation-mapping-3.0.xsd
+      regex: true
+  - org.openrewrite.xml.ChangeTagAttribute:
+      elementName: /constraint-mappings
+      attributeName: version
+      oldValue: '2.0'
+      newValue: '3.0'
+  - org.openrewrite.xml.ChangeTagAttribute:
+      elementName: //constraint
+      attributeName: annotation
+      oldValue: 'javax\.validation\.(.*)'
+      newValue: 'jakarta.validation.$1'
+      regex: true
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.hibernatevalidator.MigrateValidationServiceLoaderFiles
+displayName: Rename Jakarta Validation service-loader descriptors
+description: Rename standard ValidationProvider, ConstraintValidator, and ValueExtractor service descriptors from javax.validation to jakarta.validation while preserving provider implementation entries.
+tags:
+  - hibernate-validator
+  - jakarta-validation
+  - service-loader
+recipeList:
+  - org.openrewrite.RenameFile:
+      fileMatcher: '**/META-INF/services/javax.validation.spi.ValidationProvider'
+      fileName: jakarta.validation.spi.ValidationProvider
+  - org.openrewrite.RenameFile:
+      fileMatcher: '**/META-INF/services/javax.validation.ConstraintValidator'
+      fileName: jakarta.validation.ConstraintValidator
+  - org.openrewrite.RenameFile:
+      fileMatcher: '**/META-INF/services/javax.validation.valueextraction.ValueExtractor'
+      fileName: jakarta.validation.valueextraction.ValueExtractor
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.hibernatevalidator.AuditRemovedAndChangedHibernateValidatorApis
+displayName: Locate removed constraints and changed Hibernate Validator SPIs
+description: Mark SafeHtml, script constraints, and GetterPropertySelectionStrategy implementations whose contracts or runtime dependencies changed across Hibernate Validator 6, 7, and 8.
+tags:
+  - hibernate-validator
+  - constraints
+  - spi
+  - search
+recipeList:
+  - org.openrewrite.java.search.FindTypes:
+      fullyQualifiedTypeName: org.hibernate.validator.constraints.SafeHtml
+      checkAssignability: false
+  - org.openrewrite.java.search.FindTypes:
+      fullyQualifiedTypeName: org.hibernate.validator.cfg.defs.SafeHtmlDef
+      checkAssignability: true
+  - org.openrewrite.java.search.FindTypes:
+      fullyQualifiedTypeName: org.hibernate.validator.constraints.ScriptAssert
+      checkAssignability: false
+  - org.openrewrite.java.search.FindTypes:
+      fullyQualifiedTypeName: org.hibernate.validator.constraints.ParameterScriptAssert
+      checkAssignability: false
+  - com.huawei.clouds.openrewrite.hibernatevalidator.FindLegacyGetterPropertySelectionStrategy
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.hibernatevalidator.AuditCustomViolationExpressionLanguage
+displayName: Locate custom constraint violations that rely on Expression Language
+description: In Java code using HibernateConstraintValidatorContext, mark expression-variable calls and message literals containing ${...} because custom-violation EL is disabled by default since Hibernate Validator 6.2.
+tags:
+  - hibernate-validator
+  - expression-language
+  - security
+  - search
+preconditions:
+  - org.openrewrite.java.search.FindTypes:
+      fullyQualifiedTypeName: org.hibernate.validator.constraintvalidation.HibernateConstraintValidatorContext
+      checkAssignability: false
+recipeList:
+  - org.openrewrite.java.search.FindMethods:
+      methodPattern: org.hibernate.validator.constraintvalidation.HibernateConstraintValidatorContext addExpressionVariable(java.lang.String,java.lang.Object)
+      matchOverrides: false
+  - org.openrewrite.java.search.FindLiterals:
+      pattern: '.*\$\{.+\}.*'
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.hibernatevalidator.AuditValidationMessageBundlesForExpressionLanguage
+displayName: Locate Expression Language in validation message bundles
+description: Mark ${...} expressions in ValidationMessages properties bundles for explicit feature-level and injection review.
+tags:
+  - hibernate-validator
+  - expression-language
+  - configuration
+  - search
+recipeList:
+  - org.openrewrite.text.Find:
+      find: '\$\{[^}\r\n]+\}'
+      regex: true
+      caseSensitive: true
+      filePattern: '**/ValidationMessages*.properties'
+      description: true
+      contextSize: 120
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.hibernatevalidator.UpgradeHibernateValidator6_0_23To8_0_3
+displayName: Upgrade Hibernate Validator 6.0.23.Final to 8.0.3.Final
+description: Upgrade only direct org.hibernate.validator:hibernate-validator 6.0.23.Final declarations and align present companion artifacts.
+preconditions:
+  - org.openrewrite.java.dependencies.FindDependency:
+      groupId: org.hibernate.validator
+      artifactId: hibernate-validator
+      version: 6.0.23.Final
+  - com.huawei.clouds.openrewrite.hibernatevalidator.FindSafeHibernateValidatorDependencyUpgrade
+recipeList:
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.hibernate.validator
+      artifactId: hibernate-validator
+      newVersion: 8.0.3.Final
+      overrideManagedVersion: false
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.hibernate.validator
+      artifactId: hibernate-validator-cdi
+      newVersion: 8.0.3.Final
+      overrideManagedVersion: false
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.hibernate.validator
+      artifactId: hibernate-validator-annotation-processor
+      newVersion: 8.0.3.Final
+      overrideManagedVersion: false
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.hibernatevalidator.UpgradeHibernateValidator6_1_6To8_0_3
+displayName: Upgrade Hibernate Validator 6.1.6.Final to 8.0.3.Final
+description: Upgrade only direct org.hibernate.validator:hibernate-validator 6.1.6.Final declarations and align present companion artifacts.
+preconditions:
+  - org.openrewrite.java.dependencies.FindDependency:
+      groupId: org.hibernate.validator
+      artifactId: hibernate-validator
+      version: 6.1.6.Final
+  - com.huawei.clouds.openrewrite.hibernatevalidator.FindSafeHibernateValidatorDependencyUpgrade
+recipeList:
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.hibernate.validator
+      artifactId: hibernate-validator
+      newVersion: 8.0.3.Final
+      overrideManagedVersion: false
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.hibernate.validator
+      artifactId: hibernate-validator-cdi
+      newVersion: 8.0.3.Final
+      overrideManagedVersion: false
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.hibernate.validator
+      artifactId: hibernate-validator-annotation-processor
+      newVersion: 8.0.3.Final
+      overrideManagedVersion: false
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.hibernatevalidator.UpgradeHibernateValidator6_1_7To8_0_3
+displayName: Upgrade Hibernate Validator 6.1.7.Final to 8.0.3.Final
+description: Upgrade only direct org.hibernate.validator:hibernate-validator 6.1.7.Final declarations and align present companion artifacts.
+preconditions:
+  - org.openrewrite.java.dependencies.FindDependency:
+      groupId: org.hibernate.validator
+      artifactId: hibernate-validator
+      version: 6.1.7.Final
+  - com.huawei.clouds.openrewrite.hibernatevalidator.FindSafeHibernateValidatorDependencyUpgrade
+recipeList:
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.hibernate.validator
+      artifactId: hibernate-validator
+      newVersion: 8.0.3.Final
+      overrideManagedVersion: false
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.hibernate.validator
+      artifactId: hibernate-validator-cdi
+      newVersion: 8.0.3.Final
+      overrideManagedVersion: false
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.hibernate.validator
+      artifactId: hibernate-validator-annotation-processor
+      newVersion: 8.0.3.Final
+      overrideManagedVersion: false
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.hibernatevalidator.UpgradeHibernateValidator6_2_0To8_0_3
+displayName: Upgrade Hibernate Validator 6.2.0.Final to 8.0.3.Final
+description: Upgrade only direct org.hibernate.validator:hibernate-validator 6.2.0.Final declarations and align present companion artifacts.
+preconditions:
+  - org.openrewrite.java.dependencies.FindDependency:
+      groupId: org.hibernate.validator
+      artifactId: hibernate-validator
+      version: 6.2.0.Final
+  - com.huawei.clouds.openrewrite.hibernatevalidator.FindSafeHibernateValidatorDependencyUpgrade
+recipeList:
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.hibernate.validator
+      artifactId: hibernate-validator
+      newVersion: 8.0.3.Final
+      overrideManagedVersion: false
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.hibernate.validator
+      artifactId: hibernate-validator-cdi
+      newVersion: 8.0.3.Final
+      overrideManagedVersion: false
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.hibernate.validator
+      artifactId: hibernate-validator-annotation-processor
+      newVersion: 8.0.3.Final
+      overrideManagedVersion: false
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.hibernatevalidator.UpgradeHibernateValidator6_2_1To8_0_3
+displayName: Upgrade Hibernate Validator 6.2.1.Final to 8.0.3.Final
+description: Upgrade only direct org.hibernate.validator:hibernate-validator 6.2.1.Final declarations and align present companion artifacts.
+preconditions:
+  - org.openrewrite.java.dependencies.FindDependency:
+      groupId: org.hibernate.validator
+      artifactId: hibernate-validator
+      version: 6.2.1.Final
+  - com.huawei.clouds.openrewrite.hibernatevalidator.FindSafeHibernateValidatorDependencyUpgrade
+recipeList:
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.hibernate.validator
+      artifactId: hibernate-validator
+      newVersion: 8.0.3.Final
+      overrideManagedVersion: false
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.hibernate.validator
+      artifactId: hibernate-validator-cdi
+      newVersion: 8.0.3.Final
+      overrideManagedVersion: false
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.hibernate.validator
+      artifactId: hibernate-validator-annotation-processor
+      newVersion: 8.0.3.Final
+      overrideManagedVersion: false
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.hibernatevalidator.UpgradeHibernateValidator6_2_3To8_0_3
+displayName: Upgrade Hibernate Validator 6.2.3.Final to 8.0.3.Final
+description: Upgrade only direct org.hibernate.validator:hibernate-validator 6.2.3.Final declarations and align present companion artifacts.
+preconditions:
+  - org.openrewrite.java.dependencies.FindDependency:
+      groupId: org.hibernate.validator
+      artifactId: hibernate-validator
+      version: 6.2.3.Final
+  - com.huawei.clouds.openrewrite.hibernatevalidator.FindSafeHibernateValidatorDependencyUpgrade
+recipeList:
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.hibernate.validator
+      artifactId: hibernate-validator
+      newVersion: 8.0.3.Final
+      overrideManagedVersion: false
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.hibernate.validator
+      artifactId: hibernate-validator-cdi
+      newVersion: 8.0.3.Final
+      overrideManagedVersion: false
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.hibernate.validator
+      artifactId: hibernate-validator-annotation-processor
+      newVersion: 8.0.3.Final
+      overrideManagedVersion: false
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.hibernatevalidator.UpgradeHibernateValidator6_2_4To8_0_3
+displayName: Upgrade Hibernate Validator 6.2.4.Final to 8.0.3.Final
+description: Upgrade only direct org.hibernate.validator:hibernate-validator 6.2.4.Final declarations and align present companion artifacts.
+preconditions:
+  - org.openrewrite.java.dependencies.FindDependency:
+      groupId: org.hibernate.validator
+      artifactId: hibernate-validator
+      version: 6.2.4.Final
+  - com.huawei.clouds.openrewrite.hibernatevalidator.FindSafeHibernateValidatorDependencyUpgrade
+recipeList:
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.hibernate.validator
+      artifactId: hibernate-validator
+      newVersion: 8.0.3.Final
+      overrideManagedVersion: false
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.hibernate.validator
+      artifactId: hibernate-validator-cdi
+      newVersion: 8.0.3.Final
+      overrideManagedVersion: false
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.hibernate.validator
+      artifactId: hibernate-validator-annotation-processor
+      newVersion: 8.0.3.Final
+      overrideManagedVersion: false
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.hibernatevalidator.UpgradeHibernateValidator6_2_5To8_0_3
+displayName: Upgrade Hibernate Validator 6.2.5.Final to 8.0.3.Final
+description: Upgrade only direct org.hibernate.validator:hibernate-validator 6.2.5.Final declarations and align present companion artifacts.
+preconditions:
+  - org.openrewrite.java.dependencies.FindDependency:
+      groupId: org.hibernate.validator
+      artifactId: hibernate-validator
+      version: 6.2.5.Final
+  - com.huawei.clouds.openrewrite.hibernatevalidator.FindSafeHibernateValidatorDependencyUpgrade
+recipeList:
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.hibernate.validator
+      artifactId: hibernate-validator
+      newVersion: 8.0.3.Final
+      overrideManagedVersion: false
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.hibernate.validator
+      artifactId: hibernate-validator-cdi
+      newVersion: 8.0.3.Final
+      overrideManagedVersion: false
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.hibernate.validator
+      artifactId: hibernate-validator-annotation-processor
+      newVersion: 8.0.3.Final
+      overrideManagedVersion: false
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.hibernatevalidator.UpgradeManagedHibernateValidator6_0_23To8_0_3
+displayName: Upgrade managed Hibernate Validator 6.0.23.Final to 8.0.3.Final
+description: Upgrade only local Maven dependencyManagement entries for Hibernate Validator 6.0.23.Final.
+preconditions:
+  - org.openrewrite.maven.search.FindManagedDependency:
+      groupId: org.hibernate.validator
+      artifactId: hibernate-validator
+      version: 6.0.23.Final
+  - com.huawei.clouds.openrewrite.hibernatevalidator.FindSafeHibernateValidatorDependencyUpgrade
+recipeList:
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.hibernate.validator
+      artifactId: hibernate-validator
+      newVersion: 8.0.3.Final
+      overrideManagedVersion: false
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.hibernatevalidator.UpgradeManagedHibernateValidator6_1_6To8_0_3
+displayName: Upgrade managed Hibernate Validator 6.1.6.Final to 8.0.3.Final
+description: Upgrade only local Maven dependencyManagement entries for Hibernate Validator 6.1.6.Final.
+preconditions:
+  - org.openrewrite.maven.search.FindManagedDependency:
+      groupId: org.hibernate.validator
+      artifactId: hibernate-validator
+      version: 6.1.6.Final
+  - com.huawei.clouds.openrewrite.hibernatevalidator.FindSafeHibernateValidatorDependencyUpgrade
+recipeList:
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.hibernate.validator
+      artifactId: hibernate-validator
+      newVersion: 8.0.3.Final
+      overrideManagedVersion: false
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.hibernatevalidator.UpgradeManagedHibernateValidator6_1_7To8_0_3
+displayName: Upgrade managed Hibernate Validator 6.1.7.Final to 8.0.3.Final
+description: Upgrade only local Maven dependencyManagement entries for Hibernate Validator 6.1.7.Final.
+preconditions:
+  - org.openrewrite.maven.search.FindManagedDependency:
+      groupId: org.hibernate.validator
+      artifactId: hibernate-validator
+      version: 6.1.7.Final
+  - com.huawei.clouds.openrewrite.hibernatevalidator.FindSafeHibernateValidatorDependencyUpgrade
+recipeList:
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.hibernate.validator
+      artifactId: hibernate-validator
+      newVersion: 8.0.3.Final
+      overrideManagedVersion: false
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.hibernatevalidator.UpgradeManagedHibernateValidator6_2_0To8_0_3
+displayName: Upgrade managed Hibernate Validator 6.2.0.Final to 8.0.3.Final
+description: Upgrade only local Maven dependencyManagement entries for Hibernate Validator 6.2.0.Final.
+preconditions:
+  - org.openrewrite.maven.search.FindManagedDependency:
+      groupId: org.hibernate.validator
+      artifactId: hibernate-validator
+      version: 6.2.0.Final
+  - com.huawei.clouds.openrewrite.hibernatevalidator.FindSafeHibernateValidatorDependencyUpgrade
+recipeList:
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.hibernate.validator
+      artifactId: hibernate-validator
+      newVersion: 8.0.3.Final
+      overrideManagedVersion: false
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.hibernatevalidator.UpgradeManagedHibernateValidator6_2_1To8_0_3
+displayName: Upgrade managed Hibernate Validator 6.2.1.Final to 8.0.3.Final
+description: Upgrade only local Maven dependencyManagement entries for Hibernate Validator 6.2.1.Final.
+preconditions:
+  - org.openrewrite.maven.search.FindManagedDependency:
+      groupId: org.hibernate.validator
+      artifactId: hibernate-validator
+      version: 6.2.1.Final
+  - com.huawei.clouds.openrewrite.hibernatevalidator.FindSafeHibernateValidatorDependencyUpgrade
+recipeList:
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.hibernate.validator
+      artifactId: hibernate-validator
+      newVersion: 8.0.3.Final
+      overrideManagedVersion: false
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.hibernatevalidator.UpgradeManagedHibernateValidator6_2_3To8_0_3
+displayName: Upgrade managed Hibernate Validator 6.2.3.Final to 8.0.3.Final
+description: Upgrade only local Maven dependencyManagement entries for Hibernate Validator 6.2.3.Final.
+preconditions:
+  - org.openrewrite.maven.search.FindManagedDependency:
+      groupId: org.hibernate.validator
+      artifactId: hibernate-validator
+      version: 6.2.3.Final
+  - com.huawei.clouds.openrewrite.hibernatevalidator.FindSafeHibernateValidatorDependencyUpgrade
+recipeList:
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.hibernate.validator
+      artifactId: hibernate-validator
+      newVersion: 8.0.3.Final
+      overrideManagedVersion: false
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.hibernatevalidator.UpgradeManagedHibernateValidator6_2_4To8_0_3
+displayName: Upgrade managed Hibernate Validator 6.2.4.Final to 8.0.3.Final
+description: Upgrade only local Maven dependencyManagement entries for Hibernate Validator 6.2.4.Final.
+preconditions:
+  - org.openrewrite.maven.search.FindManagedDependency:
+      groupId: org.hibernate.validator
+      artifactId: hibernate-validator
+      version: 6.2.4.Final
+  - com.huawei.clouds.openrewrite.hibernatevalidator.FindSafeHibernateValidatorDependencyUpgrade
+recipeList:
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.hibernate.validator
+      artifactId: hibernate-validator
+      newVersion: 8.0.3.Final
+      overrideManagedVersion: false
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.hibernatevalidator.UpgradeManagedHibernateValidator6_2_5To8_0_3
+displayName: Upgrade managed Hibernate Validator 6.2.5.Final to 8.0.3.Final
+description: Upgrade only local Maven dependencyManagement entries for Hibernate Validator 6.2.5.Final.
+preconditions:
+  - org.openrewrite.maven.search.FindManagedDependency:
+      groupId: org.hibernate.validator
+      artifactId: hibernate-validator
+      version: 6.2.5.Final
+  - com.huawei.clouds.openrewrite.hibernatevalidator.FindSafeHibernateValidatorDependencyUpgrade
+recipeList:
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.hibernate.validator
+      artifactId: hibernate-validator
+      newVersion: 8.0.3.Final
+      overrideManagedVersion: false
