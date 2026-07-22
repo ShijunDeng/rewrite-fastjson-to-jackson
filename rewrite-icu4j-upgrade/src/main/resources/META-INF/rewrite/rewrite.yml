@@ -1,0 +1,33 @@
+---
+type: specs.openrewrite.org/v1beta/category
+name: com.huawei.clouds.openrewrite.icu4j
+packageName: com.huawei.clouds.openrewrite.icu4j
+description: Upgrade ICU4J with strict workbook version ownership and review guidance for Java APIs, Unicode/CLDR/tzdata behavior, Java runtime, companions, and shading.
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.icu4j.UpgradeIcu4jTo77_1
+displayName: Upgrade ICU4J to 77.1
+description: Upgrade only direct standard com.ibm.icu:icu4j Maven and Gradle declarations at workbook-visible versions 67.1, 73.1, or 73.2 to 77.1.
+tags:
+  - icu4j
+  - unicode
+  - java
+  - dependency-upgrade
+recipeList:
+  - com.huawei.clouds.openrewrite.icu4j.UpgradeSelectedIcu4jDependency
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.icu4j.MigrateIcu4jTo77_1
+displayName: Migrate ICU4J applications to 77.1
+description: Strictly upgrade selected ICU4J dependencies, preserve deterministic legacy behavior, and mark exact source/build boundaries that require application decisions or regression testing.
+tags:
+  - icu4j
+  - unicode
+  - cldr
+  - java
+  - migration
+recipeList:
+  - com.huawei.clouds.openrewrite.icu4j.UpgradeIcu4jTo77_1
+  - com.huawei.clouds.openrewrite.icu4j.MigrateDeterministicIcu4jJava
+  - com.huawei.clouds.openrewrite.icu4j.FindIcu4jJavaMigrationRisks
+  - com.huawei.clouds.openrewrite.icu4j.FindIcu4jBuildMigrationRisks

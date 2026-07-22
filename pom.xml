@@ -97,6 +97,7 @@
     <module>rewrite-typescript-upgrade</module>
     <module>rewrite-bootstrap-upgrade</module>
     <module>rewrite-jetty-proxy-upgrade</module>
+    <module>rewrite-icu4j-upgrade</module>
   </modules>
 
   <dependencyManagement>
