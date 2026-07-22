@@ -66,6 +66,7 @@
     <module>rewrite-ngx-echarts-upgrade</module>
     <module>rewrite-flyway-core-upgrade</module>
     <module>rewrite-date-fns-upgrade</module>
+    <module>rewrite-uuid-upgrade</module>
   </modules>
 
   <dependencyManagement>

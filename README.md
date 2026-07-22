@@ -43,6 +43,7 @@
 | [`rewrite-ngx-echarts-upgrade`](rewrite-ngx-echarts-upgrade) | `com.huawei.clouds.openrewrite.ngxecharts.UpgradeNgxEchartsTo20_0_2` | 将 ngx-echarts 5.x–20.0.1 声明升级到 20.0.2，并说明 Angular/ECharts 配套迁移边界 |
 | [`rewrite-flyway-core-upgrade`](rewrite-flyway-core-upgrade) | `com.huawei.clouds.openrewrite.flyway.MigrateFlywayTo11_14_1` | 将 Flyway Core/构建插件升级到 11.14.1，迁移删除的配置键并说明数据库模块拆分边界 |
 | [`rewrite-date-fns-upgrade`](rewrite-date-fns-upgrade) | `com.huawei.clouds.openrewrite.datefns.UpgradeDateFnsTo4_1_0` | 将表格指定的 date-fns 2.x 声明升级到 4.1.0，保留未列版本和外部引用 |
+| [`rewrite-uuid-upgrade`](rewrite-uuid-upgrade) | `com.huawei.clouds.openrewrite.uuid.UpgradeUuidTo13_0_2` | 将表格指定的 uuid 8.x–11.x 声明升级到 13.0.2，保留协议引用和未列版本 |
 
 后续迁移应新增独立模块，例如：
 

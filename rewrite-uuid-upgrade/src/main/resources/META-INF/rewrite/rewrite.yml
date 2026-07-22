@@ -1,0 +1,37 @@
+---
+type: specs.openrewrite.org/v1beta/category
+name: com.huawei.clouds.openrewrite.uuid
+packageName: com.huawei.clouds.openrewrite.uuid
+description: Upgrade selected uuid declarations with explicit ESM, runtime, browser, TypeScript, and timestamp UUID migration guidance.
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.uuid.UpgradeUuidTo13_0_2
+displayName: Upgrade uuid to 13.0.2
+description: Update the spreadsheet-selected direct uuid declarations in package.json to 13.0.2 without changing aliases, workspace references, lockfiles, overrides, source code, or newer versions.
+tags:
+  - uuid
+  - rfc9562
+  - javascript
+  - typescript
+  - nodejs
+  - dependency-upgrade
+preconditions:
+  - org.openrewrite.FindSourceFiles:
+      filePattern: package.json;**/package.json
+recipeList:
+  - org.openrewrite.json.ChangeValue:
+      oldKeyPath: >-
+        $.dependencies[?(@.uuid =~ '^[<>=~^ ]*v?(?:8\.3\.2|9\.0\.[01]|10\.0\.0|11\.(?:0\.3|1\.0))(?:[-+ <>=~^|].*)?$')].uuid
+      value: '"13.0.2"'
+  - org.openrewrite.json.ChangeValue:
+      oldKeyPath: >-
+        $.devDependencies[?(@.uuid =~ '^[<>=~^ ]*v?(?:8\.3\.2|9\.0\.[01]|10\.0\.0|11\.(?:0\.3|1\.0))(?:[-+ <>=~^|].*)?$')].uuid
+      value: '"13.0.2"'
+  - org.openrewrite.json.ChangeValue:
+      oldKeyPath: >-
+        $.peerDependencies[?(@.uuid =~ '^[<>=~^ ]*v?(?:8\.3\.2|9\.0\.[01]|10\.0\.0|11\.(?:0\.3|1\.0))(?:[-+ <>=~^|].*)?$')].uuid
+      value: '"13.0.2"'
+  - org.openrewrite.json.ChangeValue:
+      oldKeyPath: >-
+        $.optionalDependencies[?(@.uuid =~ '^[<>=~^ ]*v?(?:8\.3\.2|9\.0\.[01]|10\.0\.0|11\.(?:0\.3|1\.0))(?:[-+ <>=~^|].*)?$')].uuid
+      value: '"13.0.2"'
