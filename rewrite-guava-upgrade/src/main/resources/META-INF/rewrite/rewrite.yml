@@ -1,0 +1,20 @@
+---
+type: specs.openrewrite.org/v1beta/category
+name: com.huawei.clouds.openrewrite.guava
+packageName: com.huawei.clouds.openrewrite.guava
+description: Upgrade Google Guava with explicit compatibility guidance.
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.guava.UpgradeGuavaTo33_5_0Jre
+displayName: Upgrade Guava to 33.5.0-jre
+description: Upgrade com.google.guava:guava declarations in Maven and Gradle builds to 33.5.0-jre.
+tags:
+  - guava
+  - java
+  - dependency-upgrade
+recipeList:
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: com.google.guava
+      artifactId: guava
+      newVersion: 33.5.0-jre
+      overrideManagedVersion: true
