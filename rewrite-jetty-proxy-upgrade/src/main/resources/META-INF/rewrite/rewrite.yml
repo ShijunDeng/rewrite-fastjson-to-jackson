@@ -1,0 +1,48 @@
+---
+type: specs.openrewrite.org/v1beta/category
+name: com.huawei.clouds.openrewrite.jettyproxy
+packageName: com.huawei.clouds.openrewrite.jettyproxy
+description: Strictly upgrade Jetty Proxy to 12.1.8, migrate deterministic type moves, and locate behavior-sensitive Jetty 12 changes.
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.jettyproxy.UpgradeJettyProxyTo12_1_8
+displayName: Upgrade selected Jetty Proxy declarations to 12.1.8
+description: Upgrade only exact spreadsheet source versions of org.eclipse.jetty:jetty-proxy when Maven or Gradle version ownership is local and unambiguous.
+tags: [jetty, proxy, java, dependency-upgrade]
+recipeList:
+  - com.huawei.clouds.openrewrite.jettyproxy.UpgradeSelectedJettyProxyDependency
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.jettyproxy.MigrateDeterministicJetty12Types
+displayName: Migrate deterministic Jetty 12 type moves
+description: Move ConnectHandler and unchanged-name Jetty client interfaces and helpers to their documented Jetty 12 packages in maintained Java and structured configuration.
+tags: [jetty, java, source-migration]
+recipeList:
+  - com.huawei.clouds.openrewrite.jettyproxy.MigrateJetty12DeterministicTypes
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.jettyproxy.FindJettyProxy12BuildMigrationRisks
+displayName: Find Jetty Proxy 12.1 build migration risks
+description: Mark Java 17 baselines, external version owners, mixed Jetty lines, and explicit servlet/EE proxy choices.
+tags: [jetty, build, search]
+recipeList:
+  - com.huawei.clouds.openrewrite.jettyproxy.FindJettyProxy12BuildRisks
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.jettyproxy.FindJettyProxy12SourceAndConfigRisks
+displayName: Find Jetty Proxy 12.1 source and configuration risks
+description: Mark servlet proxy classes, redesigned handlers/listeners/content APIs, proxy modules, XML wiring, and behavior-sensitive proxy configuration.
+tags: [jetty, proxy, configuration, search]
+recipeList:
+  - com.huawei.clouds.openrewrite.jettyproxy.FindJettyProxy12MigrationRisks
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.jettyproxy.MigrateJettyProxyTo12_1_8
+displayName: Migrate Jetty Proxy applications to 12.1.8
+description: Strictly upgrade the selected dependency, apply proven Jetty 12 package moves, and mark build, Servlet/Core proxy, handler, client-content, timeout, routing, and lifecycle decisions.
+tags: [jetty, proxy, migration]
+recipeList:
+  - com.huawei.clouds.openrewrite.jettyproxy.UpgradeJettyProxyTo12_1_8
+  - com.huawei.clouds.openrewrite.jettyproxy.MigrateDeterministicJetty12Types
+  - com.huawei.clouds.openrewrite.jettyproxy.FindJettyProxy12BuildMigrationRisks
+  - com.huawei.clouds.openrewrite.jettyproxy.FindJettyProxy12SourceAndConfigRisks

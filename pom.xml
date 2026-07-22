@@ -96,6 +96,7 @@
     <module>rewrite-spring-context-support-upgrade</module>
     <module>rewrite-typescript-upgrade</module>
     <module>rewrite-bootstrap-upgrade</module>
+    <module>rewrite-jetty-proxy-upgrade</module>
   </modules>
 
   <dependencyManagement>
