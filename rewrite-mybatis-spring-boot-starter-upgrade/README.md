@@ -11,11 +11,14 @@
 | 目标版本 | `4.0.0`，不会追随更新的 `4.1.x` |
 | 推荐迁移 | `com.huawei.clouds.openrewrite.mybatisspringboot.MigrateMyBatisSpringBootStarterTo4_0_0` |
 | 仅严格升级依赖 | `com.huawei.clouds.openrewrite.mybatisspringboot.UpgradeMyBatisSpringBootStarterTo4_0_0` |
+| 只做构建兼容性审计 | `com.huawei.clouds.openrewrite.mybatisspringboot.AuditMyBatisSpringBootStarter4Build` |
 | 兼容别名 | `com.huawei.clouds.openrewrite.mybatisspringboot.UpgradeMyBatisSpringBootStarterTo4` |
 
-工作簿单元格在前十个版本后以“共 12 个版本”折叠尾项，未提供另外两个精确值。本模块不根据公开版本历史猜测隐藏值；严格配方目前只接受上表十个可审计的精确值，待获得完整清单后再补齐。它支持 Maven 直接依赖、本地 `dependencyManagement` 和 Gradle 显式版本；本地 Maven 属性仅在全部引用都属于 Starter family 时升级，被项目元数据或其他组件共享时整文件 no-op。外部 BOM 管理的无版本依赖不被强行覆盖，未列出的 `2.3.2`、`3.0.4`、目标版本和更新版本均不降级。
+工作簿单元格在前十个版本后以“共 12 个版本”折叠尾项，未提供另外两个精确值。本模块不根据公开版本历史猜测隐藏值；严格配方目前只接受上表十个可审计的精确值，待获得完整清单后再补齐。依赖升级由单一确定性 Java recipe 实现，支持 Maven 直接依赖、profile、本地 `dependencyManagement`，以及 Gradle Groovy 字符串/map notation 和 Kotlin DSL 的字面量坐标。本地 Maven 属性仅在全部引用都属于 Starter family、没有 profile 同名覆盖时升级；被项目元数据或其他组件共享时保持不变。外部 BOM 管理的无版本依赖、插件自身的 `<dependencies>`、classifier/非 JAR 变体、Gradle 变量/插值/范围、未列出的 `2.3.2`、`3.0.4`、目标版本和更新版本均不强改，`target`、`build` 等生成目录也不处理。
 
-当同一构建文件显式声明以下配套模块时，严格配方将它们一并对齐到 `4.0.0`，避免 Starter 与自动配置测试组件混用不同代际：
+推荐配方先执行严格 AUTO，再执行迁移与审计。因此受支持的白名单声明会稳定到 `4.0.0`；共享属性、外部 BOM、动态表达式、custom artifact 和未对齐 companion 则保留原文，并在所属 `dependency` 或 Gradle configuration invocation 上给出具体原因。构建审计只有在同一 POM/Gradle 文件直接拥有核心 Starter 时才标记 Java、Boot 或 companion 风险，不会因聚合仓库中无关模块使用 Java 8/11 而产生全局噪声。
+
+当同一构建文件存在命中白名单的核心 Starter，并且以下配套模块也显式使用表格白名单版本或安全的 family-owned 属性时，严格配方将它们一并对齐到 `4.0.0`，避免不同代际混用。仅出现配套模块而没有命中核心 Starter 时整文件 no-op；配套模块的未列出/更新版本不会被降级：
 
 - `mybatis-spring-boot-autoconfigure`
 - `mybatis-spring-boot-test-autoconfigure`
@@ -38,7 +41,7 @@
 
 | 不兼容点 / 目标行为 | 状态 | 配方行为 | 覆盖测试 |
 | --- | --- | --- | --- |
-| Java 17+、Spring Boot 4.0+ 基线 | 标记 | Maven Java 版本、Boot parent/BOM 低于目标时标记；不擅自改平台 | `marksMavenJavaAndSpringBootPlatformBlockersPrecisely`，含 Boot 4 / Java 17 负例 |
+| Java 17+、Spring Boot 4.0+ 基线 | 标记 | 在同一构建文件存在核心 Starter 所有权证明后，标记 Maven property/compiler plugin、Boot parent/BOM 和 Gradle source/target/toolchain 的明确阻塞；属性可解析时按解析值判断，不擅自改平台 | `marksMavenJavaAndSpringBootPlatformBlockersPrecisely`、`marksUnsupportedMavenCompilerPluginBaselines`、`marksUnsupportedGradleJavaBaselines`，均含无所有权和 Java 17 / Boot 4 负例 |
 | Boot 3/4 的 Jakarta 迁移 | 标记 | 标记 `javax.persistence`、`validation`、`servlet`、非 XA `transaction` 类型；保留 Java SE 的 `javax.sql` 与 `javax.transaction.xa` | `marksJakartaEeRemnantsButNotJavaSeXa` |
 | Boot 4 JDBC/Flyway/Liquibase 自动配置包移动 | 自动 | 对目标源码中实际发生的类移动执行类型安全 `ChangeType` | `movesBoot4JdbcAutoConfigurationType` |
 | 自动配置只接受单一候选 `DataSource` | 标记 | 同一配置类存在多个 `@Bean DataSource` 时标记，要求显式绑定 mapper/session/transaction manager | `marksMultiDataSourceManualFactoryAndChangedPropertiesAccess` |
@@ -58,7 +61,8 @@
 | Boot 4 移除 `@MockBean` | 自动 + 标记 | 无参数 `@MockBean` 自动迁为 `@MockitoBean`；带属性形式因契约不同保留并标记 | 固定仓用例 `migratesSpringbootMybatisMockBeansFromFixedCommitAndMarksJUnit4`、属性负例 |
 | JUnit 4 runner 不属于 Boot 4 默认测试栈 | 标记 | 精确标记 `@RunWith`，不在未见 rules/lifecycle 时猜测迁法 | 固定仓用例同上 |
 | Boot 4 `TestRestTemplate` 包与显式测试自动配置 | 自动 | 移到 `resttestclient` 包，并给使用它的 `@SpringBootTest` 添加 `@AutoConfigureTestRestTemplate` | `movesTestRestTemplateAndAddsBoot4AutoConfiguration` |
-| 依赖版本必须严格命中工作簿 | 自动 / no-op | 十个可见精确版本逐项 precondition；两个被折叠版本不猜测；本地 managed、Gradle 和 family-owned 属性升级；共享属性、外部 BOM、未列出/目标/更新版本保持；配套模块和两周期幂等均验证 | `UpgradeMyBatisSpringBootStarterTest` 全部 10 个测试方法 |
+| 依赖版本必须严格命中工作簿 | 自动 / no-op | 单一严格 recipe 只接受十个可见精确版本；两个被折叠版本不猜测；Maven direct/profile/managed、Groovy 字符串/map、Kotlin DSL 和 family-owned 属性升级；共享/覆盖属性、插件依赖、classifier/非 JAR、变量/范围、生成目录、外部 BOM、未列出/目标/更新版本保持；配套模块门控和两周期幂等均验证 | `UpgradeMyBatisSpringBootStarterTest` 的 22 个方法（白名单循环展开后超过 30 个依赖场景） |
+| 无法确定的构建声明必须可操作 | 标记 / no-op | 无版本外部管理、共享属性、范围/动态值、未列版本、custom artifact 和未对齐的三个 companion 分别使用不同 marker；只有 companion、相似坐标或无关 Java baseline 时不标记 | `MyBatisStarterBuildRiskTest` 的 76 个 Maven/Groovy/Kotlin 场景 |
 
 ## 真实公开仓回归样本
 
@@ -70,6 +74,9 @@
 | [`632team/EasyHousing@5362a94`](https://github.com/632team/EasyHousing/blob/5362a94acc5d792ece4e4b3afdb827e415b98cc9/config/bean.xml) | `mybatis-spring-1.2.xsd` | XML before → stable schema after |
 | [`hiwattc/springboot-mybatis@7035eb2`](https://github.com/hiwattc/springboot-mybatis/blob/7035eb257fbfce7f063a5041d8ee14c2a4a98c1c/src/test/java/com/staroot/mybatis/controller/ApiUserControllerWebMvcTest.java) | mapper 的无参数 `@MockBean` 与 JUnit 4 runner | `@MockitoBean` after + `@RunWith` marker |
 | [MyBatis 官方 Starter 4.0.0 Web sample](https://github.com/mybatis/spring-boot-starter/blob/756259338c8753228641de3a789fafb4a8b82e8d/mybatis-spring-boot-samples/mybatis-spring-boot-sample-web/src/test/java/sample/mybatis/web/SampleMybatisApplicationTest.java) | Boot 4 TestRestTemplate 方式 | 包移动和显式 auto-config after |
+| [`gothinkster/spring-boot-realworld-example-app@ee17e31`](https://github.com/gothinkster/spring-boot-realworld-example-app/blob/ee17e31aafe733d98c4853c8b9a74d7f2f6c924a/build.gradle#L38-L56) | Gradle 中 Starter 与 Starter Test 同时显式声明 `2.2.2` | 两个 family 坐标共同升级 |
+| [`bansh2eBreak/SpringVulnBoot-backend@7b21c49`](https://github.com/bansh2eBreak/SpringVulnBoot-backend/blob/7b21c495eb5b39e803d3cf4a40f1ac31b12b979f/pom.xml#L53-L109) | Maven 中 Starter 与 Starter Test 同时显式声明 `2.3.1` | 两个 family 依赖共同升级 |
+| [`scalad/LayIM@c6affbb`](https://github.com/scalad/LayIM/blob/c6affbbaccfd0afd4f8dda54d9b196c226463ac2/build.gradle#L66-L69) | 旧 Gradle `compile(...)` 的 `1.1.1` 字面量坐标 | 保持 configuration，只升级精确版本 |
 
 测试写法还对齐 OpenRewrite 自身固定版本用例：[`UpgradeDependencyVersionTest`](https://github.com/openrewrite/rewrite-java-dependencies/blob/decb8dbb2b5b726f8815efc51c85c34a60268bb0/src/test/java/org/openrewrite/java/dependencies/UpgradeDependencyVersionTest.java)、[`ChangePackageTest`](https://github.com/openrewrite/rewrite/blob/1b1804a5af7692612398fcce034a846b48b5b8cf/rewrite-java-test/src/test/java/org/openrewrite/java/ChangePackageTest.java) 和 [`ChangePropertyKeyTest`](https://github.com/openrewrite/rewrite/blob/1b1804a5af7692612398fcce034a846b48b5b8cf/rewrite-properties/src/test/java/org/openrewrite/properties/ChangePropertyKeyTest.java)。
 

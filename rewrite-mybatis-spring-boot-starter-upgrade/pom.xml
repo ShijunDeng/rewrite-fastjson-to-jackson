@@ -61,7 +61,6 @@
     <dependency>
       <groupId>org.openrewrite</groupId>
       <artifactId>rewrite-gradle</artifactId>
-      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.openrewrite.gradle.tooling</groupId>
