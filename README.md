@@ -18,7 +18,7 @@
 | [`rewrite-echarts-upgrade`](rewrite-echarts-upgrade) | `com.huawei.clouds.openrewrite.echarts.MigrateEChartsTo6_1_0` | 将 ECharts 4/5 升级到 6.1.0，自动迁移公开入口和旧 option 类型，并标记 deprecated option、主题/布局、data index、地图与 wrapper 风险 |
 | [`rewrite-fastjson-upgrade`](rewrite-fastjson-upgrade) | `com.huawei.clouds.openrewrite.fastjson.UpgradeFastjsonTo2_0_62` | 将 Fastjson 1.x/2.x 兼容模块升级到 2.0.62，并提供可选的新 API 包名迁移 |
 | [`rewrite-ngx-translate-http-loader-upgrade`](rewrite-ngx-translate-http-loader-upgrade) | `com.huawei.clouds.openrewrite.ngxtranslate.MigrateNgxTranslateHttpLoaderTo17` | 严格升级 HTTP loader，迁移可确定的旧 factory/provider，并标记路径、HTTP、缓存和配套版本风险 |
-| [`rewrite-jedis-upgrade`](rewrite-jedis-upgrade) | `com.huawei.clouds.openrewrite.jedis.UpgradeJedisTo7_2_1` | 将 Maven/Gradle Jedis 依赖升级到 7.2.1 |
+| [`rewrite-jedis-upgrade`](rewrite-jedis-upgrade) | `com.huawei.clouds.openrewrite.jedis.MigrateJedisTo7_2_1` | 严格升级 Jedis，迁移确定性 Java API，并标记 sharding、Cluster、pool、命令返回值和连接行为风险 |
 | [`rewrite-mybatis-spring-boot-starter-upgrade`](rewrite-mybatis-spring-boot-starter-upgrade) | `com.huawei.clouds.openrewrite.mybatisspringboot.UpgradeMyBatisSpringBootStarterTo4` | 将 MyBatis Spring Boot Starter 升级到 4.0.0 |
 | [`rewrite-slf4j-upgrade`](rewrite-slf4j-upgrade) | `com.huawei.clouds.openrewrite.slf4j.UpgradeSlf4jApiTo2_0_17` | 将 Maven/Gradle SLF4J API 依赖升级到 2.0.17 |
 | [`rewrite-angular-common-upgrade`](rewrite-angular-common-upgrade) | `com.huawei.clouds.openrewrite.angular.UpgradeAngularCommonTo20_3_26` | 将 `@angular/common` 升级到 20.3.26 |
