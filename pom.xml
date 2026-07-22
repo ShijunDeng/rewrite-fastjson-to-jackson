@@ -50,6 +50,7 @@
     <module>rewrite-angular-animations-upgrade</module>
     <module>rewrite-angular-router-upgrade</module>
     <module>rewrite-angular-core-upgrade</module>
+    <module>rewrite-angular-forms-upgrade</module>
   </modules>
 
   <dependencyManagement>
