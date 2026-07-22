@@ -1,0 +1,21 @@
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.feignjackson.UpgradeFeignJacksonTo13_6
+displayName: Upgrade workbook-selected Feign Jackson dependencies to 13.6
+description: >-
+  Upgrade only io.github.openfeign:feign-jackson source versions explicitly listed in the migration
+  workbook, preserving external version owners, unsupported ranges, variants, and unrelated declarations.
+recipeList:
+  - com.huawei.clouds.openrewrite.feignjackson.UpgradeSelectedFeignJacksonDependency
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.feignjackson.MigrateFeignJacksonTo13_6
+displayName: Migrate Feign Jackson 10/11/12 to 13.6
+description: >-
+  Strictly upgrade selected Feign Jackson declarations, perform the type-attributed Feign 13 API rename,
+  and mark exact Jackson codec, empty-response, iterator, classpath, and version-ownership review points.
+recipeList:
+  - com.huawei.clouds.openrewrite.feignjackson.UpgradeFeignJacksonTo13_6
+  - com.huawei.clouds.openrewrite.feignjackson.MigrateFeignJackson13Apis
+  - com.huawei.clouds.openrewrite.feignjackson.FindFeignJackson13SourceRisks
+  - com.huawei.clouds.openrewrite.feignjackson.FindFeignJackson13BuildRisks

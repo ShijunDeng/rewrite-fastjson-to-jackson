@@ -122,6 +122,7 @@
     <module>rewrite-ngx-color-picker-upgrade</module>
     <module>rewrite-feign-core-upgrade</module>
     <module>rewrite-graalvm-js-upgrade</module>
+    <module>rewrite-feign-jackson-upgrade</module>
   </modules>
 
   <dependencyManagement>
