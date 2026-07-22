@@ -35,6 +35,12 @@ public final class FindRemainingStaticBinderReferences extends Recipe {
     public JavaIsoVisitor<ExecutionContext> getVisitor() {
         return new JavaIsoVisitor<ExecutionContext>() {
             @Override
+            public J.CompilationUnit visitCompilationUnit(J.CompilationUnit compilationUnit, ExecutionContext ctx) {
+                return AbstractSelectedSlf4jDependencyRecipe.isProjectPath(compilationUnit.getSourcePath())
+                        ? super.visitCompilationUnit(compilationUnit, ctx) : compilationUnit;
+            }
+
+            @Override
             public J.Identifier visitIdentifier(J.Identifier identifier, ExecutionContext ctx) {
                 J.Identifier id = super.visitIdentifier(identifier, ctx);
                 if (getCursor().firstEnclosing(J.Import.class) != null) {
@@ -51,7 +57,7 @@ public final class FindRemainingStaticBinderReferences extends Recipe {
                 if (!(l.getValue() instanceof String value)) {
                     return l;
                 }
-                return REMOVED_BINDERS.stream().anyMatch(value::contains) ? SearchResult.found(l, MESSAGE) : l;
+                return REMOVED_BINDERS.contains(value) ? SearchResult.found(l, MESSAGE) : l;
             }
         };
     }

@@ -17,6 +17,7 @@ import org.openrewrite.test.TypeValidation;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.openrewrite.gradle.Assertions.buildGradle;
 import static org.openrewrite.gradle.Assertions.buildGradleKts;
@@ -30,6 +31,8 @@ class UpgradeJulToSlf4jTest implements RewriteTest {
             "com.huawei.clouds.openrewrite.jultoslf4j.MigrateJulToSlf4jTo2_0_17";
     private static final String DEPENDENCY_RECIPE =
             "com.huawei.clouds.openrewrite.jultoslf4j.UpgradeJulToSlf4jDependencyTo2_0_17";
+    private static final String ALIGN_RECIPE =
+            "com.huawei.clouds.openrewrite.jultoslf4j.AlignSlf4jCompanionsTo2_0_17";
 
     @Override
     public void defaults(RecipeSpec spec) {
@@ -109,6 +112,14 @@ class UpgradeJulToSlf4jTest implements RewriteTest {
     @ValueSource(strings = {"1.7.30", "1.7.32", "1.7.36"})
     void upgradesEverySpreadsheetVersionInMaven(String oldVersion) {
         rewriteRun(pomXml(directPom(oldVersion), directPom("2.0.17")));
+    }
+
+    @Test
+    void strictUpgradeIsIdempotent() {
+        rewriteRun(
+                spec -> spec.cycles(2).expectedCyclesThatMakeChanges(1),
+                pomXml(directPom("1.7.36"), directPom("2.0.17"))
+        );
     }
 
     @ParameterizedTest(name = "Gradle Groovy upgrades spreadsheet version {0}")
@@ -198,9 +209,49 @@ class UpgradeJulToSlf4jTest implements RewriteTest {
         ));
     }
 
+    @Test
+    void recommendedRecipeAlignsGradleMapAndKotlinFamilyLiterals() {
+        rewriteRun(
+                buildGradle(
+                        """
+                        plugins { id 'java-library' }
+                        dependencies {
+                            runtimeOnly group: 'org.slf4j', name: 'jul-to-slf4j', version: '1.7.36'
+                            implementation group: 'org.slf4j', name: 'slf4j-api', version: '2.0.0'
+                        }
+                        """,
+                        """
+                        plugins { id 'java-library' }
+                        dependencies {
+                            runtimeOnly group: 'org.slf4j', name: 'jul-to-slf4j', version: '2.0.17'
+                            implementation group: 'org.slf4j', name: 'slf4j-api', version: '2.0.17'
+                        }
+                        """,
+                        source -> source.path("map/build.gradle")
+                ),
+                buildGradleKts(
+                        """
+                        plugins { java }
+                        dependencies {
+                            runtimeOnly("org.slf4j:jul-to-slf4j:1.7.32")
+                            implementation("org.slf4j:jcl-over-slf4j:1.7.32")
+                        }
+                        """,
+                        """
+                        plugins { java }
+                        dependencies {
+                            runtimeOnly("org.slf4j:jul-to-slf4j:2.0.17")
+                            implementation("org.slf4j:jcl-over-slf4j:2.0.17")
+                        }
+                        """,
+                        source -> source.path("kotlin/build.gradle.kts")
+                )
+        );
+    }
+
     @ParameterizedTest(name = "preserves Gradle variable {0} for strict fail-safe semantics")
     @ValueSource(strings = {"1.7.30", "1.7.32", "1.7.36"})
-    void preservesGradleVersionVariableForManualReview(String oldVersion) {
+    void marksGradleVersionVariableForManualReview(String oldVersion) {
         rewriteRun(
                 spec -> spec.beforeRecipe(withToolingApi()).typeValidationOptions(TypeValidation.none()),
                 buildGradle(
@@ -211,7 +262,10 @@ class UpgradeJulToSlf4jTest implements RewriteTest {
                         dependencies {
                             runtimeOnly "org.slf4j:jul-to-slf4j:$julToSlf4jVersion"
                         }
-                        """.formatted(oldVersion)
+                        """.formatted(oldVersion),
+                        source -> source.after(actual -> actual).afterRecipe(after -> assertTrue(
+                                after.printAll().contains(FindUnsafeJulToSlf4jTopology.BRIDGE_AUTHORITY_MESSAGE),
+                                after.printAll()))
                 )
         );
     }
@@ -261,7 +315,7 @@ class UpgradeJulToSlf4jTest implements RewriteTest {
                 repositories { mavenCentral() }
                 dependencies {
                     implementation 'org.apache.logging.log4j:log4j-core:2.17.1'
-                    /*~~>*/implementation 'org.apache.logging.log4j:log4j-slf4j-impl:2.17.1'
+                    /*~~(log4j-slf4j-impl targets SLF4J 1.x; upgrade Log4j and use log4j-slf4j2-impl)~~>*/implementation 'org.apache.logging.log4j:log4j-slf4j-impl:2.17.1'
                     implementation 'org.slf4j:jul-to-slf4j:2.0.17'
                 }
                 """
@@ -316,6 +370,28 @@ class UpgradeJulToSlf4jTest implements RewriteTest {
     }
 
     @Test
+    void selectsLog4jProviderAtThe219Boundary() {
+        rewriteRun(buildGradle(
+                "plugins { id 'java' }\ndependencies { runtimeOnly 'org.slf4j:jul-to-slf4j:1.7.36'; runtimeOnly 'org.apache.logging.log4j:log4j-slf4j-impl:2.19.0' }",
+                "plugins { id 'java' }\ndependencies { runtimeOnly 'org.slf4j:jul-to-slf4j:2.0.17'; runtimeOnly 'org.apache.logging.log4j:log4j-slf4j2-impl:2.19.0' }"
+        ));
+    }
+
+    @ParameterizedTest(name = "marks unsupported Log4j provider version {0}")
+    @ValueSource(strings = {"2.18.0", "2.19.+"})
+    void marksButDoesNotRenameUnsupportedLog4jProvider(String version) {
+        rewriteRun(buildGradle(
+                "plugins { id 'java' }\ndependencies { runtimeOnly 'org.slf4j:jul-to-slf4j:1.7.36'; runtimeOnly 'org.apache.logging.log4j:log4j-slf4j-impl:%s' }".formatted(version),
+                source -> source.after(actual -> actual).afterRecipe(after -> {
+                    String printed = after.printAll();
+                    assertTrue(printed.contains("jul-to-slf4j:2.0.17"), printed);
+                    assertTrue(printed.contains("log4j-slf4j-impl:" + version), printed);
+                    assertTrue(printed.contains(FindUnsafeJulToSlf4jTopology.LOG4J_MESSAGE), printed);
+                })
+        ));
+    }
+
+    @Test
     void changesOnlyGradleDependencyCallsAndLeavesCoordinateDocumentationUntouched() {
         rewriteRun(buildGradle(
                 """
@@ -335,6 +411,130 @@ class UpgradeJulToSlf4jTest implements RewriteTest {
                     runtimeOnly 'org.slf4j:jul-to-slf4j:2.0.17'
                     runtimeOnly 'org.apache.logging.log4j:log4j-slf4j2-impl:2.20.0'
                 }
+                """
+        ));
+    }
+
+    @Test
+    void documentationAndDslLookalikesCannotOwnGradleDependencies() {
+        rewriteRun(buildGradle(
+                """
+                plugins { id 'java' }
+                def bridgeDocumentation = 'org.slf4j:jul-to-slf4j:1.7.36'
+                def implementation(String coordinate) { coordinate }
+                implementation 'org.slf4j:jul-to-slf4j:1.7.36'
+                dependencies {
+                    generatedFixture {
+                        runtimeOnly 'org.slf4j:jul-to-slf4j:1.7.36'
+                    }
+                    runtimeOnly 'org.apache.logging.log4j:log4j-slf4j-impl:2.20.0'
+                }
+                """
+        ));
+    }
+
+    @Test
+    void mavenPluginDependenciesCannotOwnApplicationLoggingMigration() {
+        rewriteRun(pomXml(
+                """
+                <project><modelVersion>4.0.0</modelVersion><groupId>example</groupId><artifactId>plugin-owner</artifactId><version>1</version>
+                  <build><plugins><plugin><groupId>example</groupId><artifactId>generator</artifactId><version>1</version>
+                    <dependencies><dependency><groupId>org.slf4j</groupId><artifactId>jul-to-slf4j</artifactId><version>1.7.36</version></dependency></dependencies>
+                  </plugin></plugins></build>
+                  <dependencies><dependency><groupId>org.apache.logging.log4j</groupId><artifactId>log4j-slf4j-impl</artifactId><version>2.20.0</version></dependency></dependencies>
+                </project>
+                """
+        ));
+    }
+
+    @Test
+    void migratesLog4jProviderWithOwnedMavenProperties() {
+        rewriteRun(pomXml(
+                """
+                <project><modelVersion>4.0.0</modelVersion><groupId>example</groupId><artifactId>property-provider</artifactId><version>1</version>
+                  <properties><slf4j.version>1.7.36</slf4j.version><log4j.version>2.20.0</log4j.version></properties>
+                  <dependencies>
+                    <dependency><groupId>org.slf4j</groupId><artifactId>jul-to-slf4j</artifactId><version>${slf4j.version}</version></dependency>
+                    <dependency><groupId>org.slf4j</groupId><artifactId>slf4j-api</artifactId><version>${slf4j.version}</version></dependency>
+                    <dependency><groupId>org.apache.logging.log4j</groupId><artifactId>log4j-slf4j-impl</artifactId><version>${log4j.version}</version></dependency>
+                  </dependencies>
+                </project>
+                """,
+                """
+                <project><modelVersion>4.0.0</modelVersion><groupId>example</groupId><artifactId>property-provider</artifactId><version>1</version>
+                  <properties><slf4j.version>2.0.17</slf4j.version><log4j.version>2.20.0</log4j.version></properties>
+                  <dependencies>
+                    <dependency><groupId>org.slf4j</groupId><artifactId>jul-to-slf4j</artifactId><version>${slf4j.version}</version></dependency>
+                    <dependency><groupId>org.slf4j</groupId><artifactId>slf4j-api</artifactId><version>${slf4j.version}</version></dependency>
+                    <dependency><groupId>org.apache.logging.log4j</groupId><artifactId>log4j-slf4j2-impl</artifactId><version>${log4j.version}</version></dependency>
+                  </dependencies>
+                </project>
+                """
+        ));
+    }
+
+    @Test
+    void doesNotRenameLog4jArtifactOwnedByDependencyManagement() {
+        rewriteRun(pomXml(
+                """
+                <project><modelVersion>4.0.0</modelVersion><groupId>example</groupId><artifactId>managed-log4j-artifact</artifactId><version>1</version>
+                  <dependencyManagement><dependencies><dependency>
+                    <groupId>org.apache.logging.log4j</groupId><artifactId>log4j-slf4j-impl</artifactId><version>2.20.0</version>
+                  </dependency></dependencies></dependencyManagement>
+                  <dependencies>
+                    <dependency><groupId>org.slf4j</groupId><artifactId>jul-to-slf4j</artifactId><version>2.0.17</version></dependency>
+                    <dependency><groupId>org.apache.logging.log4j</groupId><artifactId>log4j-slf4j-impl</artifactId></dependency>
+                  </dependencies>
+                </project>
+                """,
+                source -> source.after(actual -> actual).afterRecipe(after -> {
+                    String printed = after.printAll();
+                    assertFalse(printed.contains("<artifactId>log4j-slf4j2-impl</artifactId>"), printed);
+                    assertTrue(printed.contains(FindUnsafeJulToSlf4jTopology.LOG4J_MESSAGE), printed);
+                })
+        ));
+    }
+
+    @Test
+    void migratesGroovyMapLog4jProviderOnlyInsideDependenciesBlock() {
+        rewriteRun(buildGradle(
+                """
+                plugins { id 'java' }
+                dependencies {
+                    runtimeOnly group: 'org.slf4j', name: 'jul-to-slf4j', version: '1.7.36'
+                    runtimeOnly group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl', version: '2.20.0'
+                }
+                """,
+                """
+                plugins { id 'java' }
+                dependencies {
+                    runtimeOnly group: 'org.slf4j', name: 'jul-to-slf4j', version: '2.0.17'
+                    runtimeOnly group: 'org.apache.logging.log4j', name: 'log4j-slf4j2-impl', version: '2.20.0'
+                }
+                """
+        ));
+    }
+
+    @Test
+    void nestedMavenPropertiesWithSameNameAreNotVersionAuthorities() {
+        rewriteRun(pomXml(
+                """
+                <project><modelVersion>4.0.0</modelVersion><groupId>example</groupId><artifactId>nested-properties</artifactId><version>1</version>
+                  <properties><bridge.version>1.7.36</bridge.version></properties>
+                  <dependencies><dependency><groupId>org.slf4j</groupId><artifactId>jul-to-slf4j</artifactId><version>${bridge.version}</version></dependency></dependencies>
+                  <build><plugins><plugin><groupId>example</groupId><artifactId>generator</artifactId><version>1</version>
+                    <configuration><properties><bridge.version>fixture-value</bridge.version></properties></configuration>
+                  </plugin></plugins></build>
+                </project>
+                """,
+                """
+                <project><modelVersion>4.0.0</modelVersion><groupId>example</groupId><artifactId>nested-properties</artifactId><version>1</version>
+                  <properties><bridge.version>2.0.17</bridge.version></properties>
+                  <dependencies><dependency><groupId>org.slf4j</groupId><artifactId>jul-to-slf4j</artifactId><version>${bridge.version}</version></dependency></dependencies>
+                  <build><plugins><plugin><groupId>example</groupId><artifactId>generator</artifactId><version>1</version>
+                    <configuration><properties><bridge.version>fixture-value</bridge.version></properties></configuration>
+                  </plugin></plugins></build>
+                </project>
                 """
         ));
     }
@@ -372,7 +572,7 @@ class UpgradeJulToSlf4jTest implements RewriteTest {
                         plugins { java }
                         repositories { mavenCentral() }
                         dependencies {
-                            /*~~>*/implementation("ch.qos.logback:logback-classic:1.2.11")
+                            /*~~(Logback 1.2 is an SLF4J 1.7 provider; choose a provider compatible with SLF4J 2)~~>*/implementation("ch.qos.logback:logback-classic:1.2.11")
                             implementation("org.slf4j:jul-to-slf4j:2.0.17")
                         }
                         """
@@ -404,8 +604,9 @@ class UpgradeJulToSlf4jTest implements RewriteTest {
     }
 
     @Test
-    void preservesMavenDependencyMetadata() {
-        rewriteRun(pomXml(
+    void leavesCustomMavenAndGradleArtifactsForExplicitReview() {
+        rewriteRun(
+                pomXml(
                 """
                 <project><modelVersion>4.0.0</modelVersion><groupId>example</groupId><artifactId>metadata</artifactId><version>1</version>
                   <dependencies><dependency>
@@ -417,14 +618,23 @@ class UpgradeJulToSlf4jTest implements RewriteTest {
                 """,
                 """
                 <project><modelVersion>4.0.0</modelVersion><groupId>example</groupId><artifactId>metadata</artifactId><version>1</version>
-                  <dependencies><dependency>
-                    <groupId>org.slf4j</groupId><artifactId>jul-to-slf4j</artifactId><version>2.0.17</version>
+                  <dependencies><!--~~(This JUL-to-SLF4J declaration selects a custom classifier or artifact type; verify and migrate that variant explicitly)~~>--><dependency>
+                    <groupId>org.slf4j</groupId><artifactId>jul-to-slf4j</artifactId><version>1.7.32</version>
                     <type>jar</type><classifier>sources</classifier><scope>runtime</scope><optional>true</optional>
                     <exclusions><exclusion><groupId>org.slf4j</groupId><artifactId>slf4j-api</artifactId></exclusion></exclusions>
                   </dependency></dependencies>
                 </project>
                 """
-        ));
+                ),
+                buildGradle(
+                        "plugins { id 'java' }\ndependencies { runtimeOnly group: 'org.slf4j', name: 'jul-to-slf4j', version: '1.7.32', classifier: 'tests' }",
+                        source -> source.after(actual -> actual).afterRecipe(after -> {
+                            String printed = after.printAll();
+                            assertTrue(printed.contains(FindUnsafeJulToSlf4jTopology.CUSTOM_ARTIFACT_MESSAGE), printed);
+                            assertTrue(printed.contains("version: '1.7.32'"), printed);
+                        })
+                )
+        );
     }
 
     @Test
@@ -465,19 +675,12 @@ class UpgradeJulToSlf4jTest implements RewriteTest {
                   </dependencies>
                 </project>
                 """,
-                """
-                <project><modelVersion>4.0.0</modelVersion><groupId>example</groupId><artifactId>aligned-logging</artifactId><version>1</version>
-                  <dependencies>
-                    <dependency><groupId>org.slf4j</groupId><artifactId>jul-to-slf4j</artifactId><version>2.0.17</version></dependency>
-                    <dependency><groupId>org.slf4j</groupId><artifactId>slf4j-api</artifactId><version>2.0.17</version></dependency>
-                    <dependency><groupId>org.slf4j</groupId><artifactId>slf4j-simple</artifactId><version>2.0.17</version><scope>runtime</scope></dependency>
-                    <dependency><groupId>org.slf4j</groupId><artifactId>slf4j-nop</artifactId><version>2.0.17</version><scope>test</scope></dependency>
-                    <dependency><groupId>org.slf4j</groupId><artifactId>slf4j-reload4j</artifactId><version>2.0.17</version><scope>test</scope></dependency>
-                    <dependency><groupId>org.slf4j</groupId><artifactId>jcl-over-slf4j</artifactId><version>2.0.17</version></dependency>
-                    <dependency><groupId>org.slf4j</groupId><artifactId>log4j-over-slf4j</artifactId><version>2.0.17</version></dependency>
-                  </dependencies>
-                </project>
-                """
+                source -> source.after(actual -> actual).afterRecipe(after -> {
+                    String printed = after.printAll();
+                    assertFalse(printed.contains("<version>1.7."), printed);
+                    assertTrue(printed.contains("Multiple SLF4J providers are declared"), printed);
+                    assertTrue(printed.contains("SLF4J-to-Log4j/reload4j provider form a recursion loop"), printed);
+                })
         ));
     }
 
@@ -501,6 +704,76 @@ class UpgradeJulToSlf4jTest implements RewriteTest {
                             <dependency><groupId>org.slf4j</groupId><artifactId>slf4j-api</artifactId><version>1.7.30</version></dependency>
                           </dependencies>
                         </project>
+                        """
+                )
+        );
+    }
+
+    @Test
+    void dependencyOnlyRecipeDoesNotRepurposeFamilySharedProperty() {
+        rewriteRun(
+                spec -> spec.recipe(environment().activateRecipes(DEPENDENCY_RECIPE)),
+                pomXml(sharedSlf4jPropertyPom("1.7.36", "dependency-only-shared"))
+        );
+    }
+
+    @Test
+    void recommendedRecipeMarksPropertySharedOutsideSlf4jFamily() {
+        rewriteRun(pomXml("""
+                <project><modelVersion>4.0.0</modelVersion><groupId>example</groupId><artifactId>shared-outside-family</artifactId><version>1</version>
+                  <name>${logging.version}</name>
+                  <properties><logging.version>1.7.36</logging.version></properties>
+                  <dependencies><dependency>
+                    <groupId>org.slf4j</groupId><artifactId>jul-to-slf4j</artifactId><version>${logging.version}</version>
+                  </dependency></dependencies>
+                </project>
+                """, source -> source.after(actual -> actual).afterRecipe(after -> assertTrue(
+                after.printAll().contains(FindUnsafeJulToSlf4jTopology.BRIDGE_AUTHORITY_MESSAGE),
+                after.printAll()))));
+    }
+
+    @Test
+    void selectedBridgeDoesNotDowngradeNewerOrUnlistedCompanions() {
+        rewriteRun(pomXml(
+                """
+                <project><modelVersion>4.0.0</modelVersion><groupId>example</groupId><artifactId>newer-companions</artifactId><version>1</version>
+                  <dependencies>
+                    <dependency><groupId>org.slf4j</groupId><artifactId>jul-to-slf4j</artifactId><version>1.7.36</version></dependency>
+                    <dependency><groupId>org.slf4j</groupId><artifactId>slf4j-api</artifactId><version>2.0.18</version></dependency>
+                    <dependency><groupId>org.slf4j</groupId><artifactId>slf4j-simple</artifactId><version>1.7.35</version></dependency>
+                  </dependencies>
+                </project>
+                """,
+                """
+                <project><modelVersion>4.0.0</modelVersion><groupId>example</groupId><artifactId>newer-companions</artifactId><version>1</version>
+                  <dependencies>
+                    <dependency><groupId>org.slf4j</groupId><artifactId>jul-to-slf4j</artifactId><version>2.0.17</version></dependency>
+                    <dependency><groupId>org.slf4j</groupId><artifactId>slf4j-api</artifactId><version>2.0.18</version></dependency>
+                    <!--~~(This SLF4J 1.x API/provider is incompatible with the SLF4J 2 bridge; align its version authority)~~>--><dependency><groupId>org.slf4j</groupId><artifactId>slf4j-simple</artifactId><version>1.7.35</version></dependency>
+                  </dependencies>
+                </project>
+                """
+        ));
+    }
+
+    @Test
+    void companionAlignmentRecipeRequiresTargetBridgeAndNeverDowngrades() {
+        rewriteRun(
+                spec -> spec.recipe(environment().activateRecipes(ALIGN_RECIPE)),
+                pomXml(
+                        """
+                        <project><modelVersion>4.0.0</modelVersion><groupId>example</groupId><artifactId>target-align</artifactId><version>1</version><dependencies>
+                          <dependency><groupId>org.slf4j</groupId><artifactId>jul-to-slf4j</artifactId><version>2.0.17</version></dependency>
+                          <dependency><groupId>org.slf4j</groupId><artifactId>slf4j-api</artifactId><version>2.0.16</version></dependency>
+                          <dependency><groupId>org.slf4j</groupId><artifactId>slf4j-simple</artifactId><version>2.0.18</version></dependency>
+                        </dependencies></project>
+                        """,
+                        """
+                        <project><modelVersion>4.0.0</modelVersion><groupId>example</groupId><artifactId>target-align</artifactId><version>1</version><dependencies>
+                          <dependency><groupId>org.slf4j</groupId><artifactId>jul-to-slf4j</artifactId><version>2.0.17</version></dependency>
+                          <dependency><groupId>org.slf4j</groupId><artifactId>slf4j-api</artifactId><version>2.0.17</version></dependency>
+                          <dependency><groupId>org.slf4j</groupId><artifactId>slf4j-simple</artifactId><version>2.0.18</version></dependency>
+                        </dependencies></project>
                         """
                 )
         );
@@ -617,11 +890,125 @@ class UpgradeJulToSlf4jTest implements RewriteTest {
                 <project><modelVersion>4.0.0</modelVersion><groupId>example</groupId><artifactId>logging-loop</artifactId><version>1</version>
                   <dependencies>
                     <dependency><groupId>org.slf4j</groupId><artifactId>jul-to-slf4j</artifactId><version>2.0.17</version></dependency>
-                    <!--~~>--><dependency><groupId>org.slf4j</groupId><artifactId>slf4j-jdk14</artifactId><version>1.7.36</version></dependency>
+                    <!--~~(JUL-to-SLF4J and slf4j-jdk14 create a recursive logging route; remove one direction)~~>--><dependency><groupId>org.slf4j</groupId><artifactId>slf4j-jdk14</artifactId><version>1.7.36</version></dependency>
                   </dependencies>
                 </project>
                 """
         ));
+    }
+
+    @Test
+    void marksLog4jJclAndReload4jBidirectionalLoops() {
+        rewriteRun(pomXml(
+                """
+                <project><modelVersion>4.0.0</modelVersion><groupId>example</groupId><artifactId>all-loops</artifactId><version>1</version>
+                  <dependencies>
+                    <dependency><groupId>org.slf4j</groupId><artifactId>jul-to-slf4j</artifactId><version>2.0.17</version></dependency>
+                    <dependency><groupId>org.apache.logging.log4j</groupId><artifactId>log4j-to-slf4j</artifactId><version>2.24.3</version></dependency>
+                    <dependency><groupId>org.apache.logging.log4j</groupId><artifactId>log4j-slf4j2-impl</artifactId><version>2.24.3</version></dependency>
+                    <dependency><groupId>org.slf4j</groupId><artifactId>jcl-over-slf4j</artifactId><version>2.0.17</version></dependency>
+                    <dependency><groupId>org.slf4j</groupId><artifactId>slf4j-jcl</artifactId><version>1.7.36</version></dependency>
+                    <dependency><groupId>org.slf4j</groupId><artifactId>log4j-over-slf4j</artifactId><version>2.0.17</version></dependency>
+                    <dependency><groupId>org.slf4j</groupId><artifactId>slf4j-reload4j</artifactId><version>2.0.17</version></dependency>
+                  </dependencies>
+                </project>
+                """,
+                source -> source.after(actual -> actual).afterRecipe(after -> {
+                    String printed = after.printAll();
+                    assertTrue(printed.contains(FindUnsafeJulToSlf4jTopology.LOG4J_LOOP_MESSAGE), printed);
+                    assertTrue(printed.contains(FindUnsafeJulToSlf4jTopology.JCL_LOOP_MESSAGE), printed);
+                    assertTrue(printed.contains(FindUnsafeJulToSlf4jTopology.RELOAD4J_LOOP_MESSAGE), printed);
+                })
+        ));
+    }
+
+    @Test
+    void marksMultipleGradleProvidersAtTheirDependencyCalls() {
+        rewriteRun(buildGradle(
+                """
+                plugins { id 'java' }
+                dependencies {
+                    runtimeOnly 'org.slf4j:jul-to-slf4j:2.0.17'
+                    runtimeOnly 'org.slf4j:slf4j-simple:2.0.17'
+                    runtimeOnly 'ch.qos.logback:logback-classic:1.5.18'
+                }
+                """,
+                source -> source.after(actual -> actual).afterRecipe(after -> assertTrue(
+                        after.printAll().contains(FindUnsafeJulToSlf4jTopology.MULTIPLE_PROVIDERS_MESSAGE),
+                        after.printAll()))
+        ));
+    }
+
+    @Test
+    void marksDynamicGradleProviderUnderTargetBridge() {
+        rewriteRun(buildGradle(
+                """
+                plugins { id 'java' }
+                def providerVersion = '2.0.17'
+                dependencies {
+                    runtimeOnly 'org.slf4j:jul-to-slf4j:2.0.17'
+                    runtimeOnly "org.slf4j:slf4j-simple:$providerVersion"
+                }
+                """,
+                source -> source.after(actual -> actual).afterRecipe(after -> assertTrue(
+                        after.printAll().contains(FindUnsafeJulToSlf4jTopology.MANAGED_PROVIDER_MESSAGE),
+                        after.printAll()))
+        ));
+    }
+
+    @Test
+    void marksManagedLogbackProviderVersion() {
+        rewriteRun(pomXml(
+                """
+                <project><modelVersion>4.0.0</modelVersion><groupId>example</groupId><artifactId>managed-logback</artifactId><version>1</version>
+                  <dependencyManagement><dependencies><dependency><groupId>ch.qos.logback</groupId><artifactId>logback-classic</artifactId><version>1.5.18</version></dependency></dependencies></dependencyManagement>
+                  <dependencies>
+                    <dependency><groupId>org.slf4j</groupId><artifactId>jul-to-slf4j</artifactId><version>2.0.17</version></dependency>
+                    <dependency><groupId>ch.qos.logback</groupId><artifactId>logback-classic</artifactId></dependency>
+                  </dependencies>
+                </project>
+                """,
+                source -> source.after(actual -> actual).afterRecipe(after -> assertTrue(
+                        after.printAll().contains(FindUnsafeJulToSlf4jTopology.MANAGED_PROVIDER_MESSAGE),
+                        after.printAll()))
+        ));
+    }
+
+    @Test
+    void dependencyManagementAloneDoesNotCreateRuntimeProviderTopology() {
+        rewriteRun(
+                spec -> spec.recipe(new FindUnsafeJulToSlf4jTopology()),
+                pomXml(
+                        """
+                        <project><modelVersion>4.0.0</modelVersion><groupId>example</groupId><artifactId>managed-only</artifactId><version>1</version>
+                          <dependencyManagement><dependencies>
+                            <dependency><groupId>org.slf4j</groupId><artifactId>jul-to-slf4j</artifactId><version>2.0.17</version></dependency>
+                            <dependency><groupId>org.slf4j</groupId><artifactId>slf4j-simple</artifactId><version>2.0.17</version></dependency>
+                            <dependency><groupId>org.slf4j</groupId><artifactId>slf4j-nop</artifactId><version>2.0.17</version></dependency>
+                          </dependencies></dependencyManagement>
+                        </project>
+                        """
+                )
+        );
+    }
+
+    @Test
+    void topologyMarkersAreIdempotent() {
+        rewriteRun(
+                spec -> spec.recipe(new FindUnsafeJulToSlf4jTopology())
+                        .cycles(2).expectedCyclesThatMakeChanges(1),
+                pomXml(
+                        """
+                        <project><modelVersion>4.0.0</modelVersion><groupId>example</groupId><artifactId>idempotent-risk</artifactId><version>1</version>
+                          <dependencies>
+                            <dependency><groupId>org.slf4j</groupId><artifactId>jul-to-slf4j</artifactId><version>2.0.17</version></dependency>
+                            <dependency><groupId>org.slf4j</groupId><artifactId>slf4j-jdk14</artifactId><version>2.0.17</version></dependency>
+                          </dependencies>
+                        </project>
+                        """,
+                        source -> source.after(actual -> actual)
+                )
+        );
     }
 
     @Test
@@ -645,7 +1032,7 @@ class UpgradeJulToSlf4jTest implements RewriteTest {
                   </dependency></dependencies></dependencyManagement>
                   <dependencies>
                     <dependency><groupId>org.slf4j</groupId><artifactId>jul-to-slf4j</artifactId><version>2.0.17</version></dependency>
-                    <!--~~>--><dependency><groupId>org.slf4j</groupId><artifactId>slf4j-api</artifactId></dependency>
+                    <!--~~(This managed or dynamic logging component has no proven SLF4J 2 version; verify its BOM, catalog, or property authority)~~>--><dependency><groupId>org.slf4j</groupId><artifactId>slf4j-api</artifactId></dependency>
                   </dependencies>
                 </project>
                 """
@@ -674,6 +1061,67 @@ class UpgradeJulToSlf4jTest implements RewriteTest {
         ));
     }
 
+    @Test
+    void reflectiveMarkerRequiresTheExactBinderClassName() {
+        rewriteRun(java(
+                """
+                class BinderDocumentation {
+                    String exact = "org.slf4j.impl.StaticLoggerBinder";
+                    String prose = "Do not use org.slf4j.impl.StaticLoggerBinder directly";
+                }
+                """,
+                """
+                class BinderDocumentation {
+                    String exact = /*~~(SLF4J 2.0 removed the Static*Binder contract; migrate this provider-internal reference manually)~~>*/"org.slf4j.impl.StaticLoggerBinder";
+                    String prose = "Do not use org.slf4j.impl.StaticLoggerBinder directly";
+                }
+                """
+        ));
+    }
+
+    @Test
+    void safeAndUnsafeBinderUsesCanCoexistWithoutDroppingRequiredImport() {
+        rewriteRun(java(
+                """
+                import org.slf4j.impl.StaticLoggerBinder;
+
+                class MixedBinderAccess {
+                    org.slf4j.ILoggerFactory factory() {
+                        return StaticLoggerBinder.getSingleton().getLoggerFactory();
+                    }
+                    String requested = StaticLoggerBinder.REQUESTED_API_VERSION;
+                }
+                """,
+                """
+                import org.slf4j.LoggerFactory;
+                import org.slf4j.impl.StaticLoggerBinder;
+
+                class MixedBinderAccess {
+                    org.slf4j.ILoggerFactory factory() {
+                        return LoggerFactory.getILoggerFactory();
+                    }
+                    String requested = /*~~(SLF4J 2.0 removed the Static*Binder contract; migrate this provider-internal reference manually)~~>*/StaticLoggerBinder.REQUESTED_API_VERSION;
+                }
+                """
+        ));
+    }
+
+    @Test
+    void generatedJavaSourcesAreNotMigratedOrMarked() {
+        rewriteRun(java(
+                """
+                import org.slf4j.impl.StaticLoggerBinder;
+                class GeneratedBinderAccess {
+                    org.slf4j.ILoggerFactory factory() {
+                        return StaticLoggerBinder.getSingleton().getLoggerFactory();
+                    }
+                    String binder = "org.slf4j.impl.StaticLoggerBinder";
+                }
+                """,
+                source -> source.path("target/generated-sources/GeneratedBinderAccess.java")
+        ));
+    }
+
     @ParameterizedTest(name = "unlisted version {0} is a strict no-op")
     @ValueSource(strings = {"1.7.25", "1.7.31", "1.7.35", "2.0.0", "2.0.16"})
     void preservesUnlistedVersions(String version) {
@@ -681,7 +1129,7 @@ class UpgradeJulToSlf4jTest implements RewriteTest {
     }
 
     @Test
-    void preservesUnlistedGradleVariableWhenListedLiteralIsUnrelated() {
+    void marksUnresolvedGradleVariableWithoutUsingUnrelatedListedLiteral() {
         rewriteRun(
                 spec -> spec.beforeRecipe(withToolingApi()).typeValidationOptions(TypeValidation.none()),
                 buildGradle(
@@ -694,7 +1142,12 @@ class UpgradeJulToSlf4jTest implements RewriteTest {
                             runtimeOnly "org.slf4j:jul-to-slf4j:$julBridgeVersion"
                             implementation "example:protocol:$unrelatedProtocolVersion"
                         }
-                        """
+                        """,
+                        source -> source.after(actual -> actual).afterRecipe(after -> {
+                            String printed = after.printAll();
+                            assertTrue(printed.contains(FindUnsafeJulToSlf4jTopology.BRIDGE_AUTHORITY_MESSAGE), printed);
+                            assertTrue(printed.contains("implementation \"example:protocol:$unrelatedProtocolVersion\""), printed);
+                        })
                 )
         );
     }
@@ -710,7 +1163,7 @@ class UpgradeJulToSlf4jTest implements RewriteTest {
     }
 
     @Test
-    void preservesMavenBomManagedVersionlessDependency() {
+    void marksMavenBomManagedVersionlessDependency() {
         rewriteRun(pomXml(
                 """
                 <project><modelVersion>4.0.0</modelVersion><groupId>example</groupId><artifactId>bom-managed</artifactId><version>1</version>
@@ -721,12 +1174,15 @@ class UpgradeJulToSlf4jTest implements RewriteTest {
                     <groupId>org.slf4j</groupId><artifactId>jul-to-slf4j</artifactId><scope>runtime</scope>
                   </dependency></dependencies>
                 </project>
-                """
+                """,
+                source -> source.after(actual -> actual).afterRecipe(after -> assertTrue(
+                        after.printAll().contains(FindUnsafeJulToSlf4jTopology.BRIDGE_AUTHORITY_MESSAGE),
+                        after.printAll()))
         ));
     }
 
     @Test
-    void preservesGradlePlatformManagedVersionlessDependency() {
+    void marksGradlePlatformManagedVersionlessDependency() {
         rewriteRun(buildGradle(
                 """
                 plugins { id 'java' }
@@ -735,8 +1191,32 @@ class UpgradeJulToSlf4jTest implements RewriteTest {
                     implementation platform('org.springframework.boot:spring-boot-dependencies:2.7.10')
                     runtimeOnly 'org.slf4j:jul-to-slf4j'
                 }
-                """
+                """,
+                source -> source.after(actual -> actual).afterRecipe(after -> assertTrue(
+                        after.printAll().contains(FindUnsafeJulToSlf4jTopology.BRIDGE_AUTHORITY_MESSAGE),
+                        after.printAll()))
         ));
+    }
+
+    @Test
+    void marksRangesAndDynamicVersionsButSkipsGeneratedBuildDescriptors() {
+        rewriteRun(
+                buildGradle("""
+                        plugins { id 'java' }
+                        dependencies {
+                            runtimeOnly 'org.slf4j:jul-to-slf4j:[1.7,2.0)'
+                            runtimeOnly 'org.slf4j:jul-to-slf4j:1.+'
+                            runtimeOnly 'org.slf4j:jul-to-slf4j:1.7.36:tests'
+                        }
+                        """, source -> source.after(actual -> actual).afterRecipe(after -> assertTrue(
+                        after.printAll().contains(FindUnsafeJulToSlf4jTopology.BRIDGE_AUTHORITY_MESSAGE),
+                        after.printAll()))),
+                pomXml(directPom("1.7.36"), source -> source.path("target/pom.xml")),
+                buildGradle(
+                        "plugins { id 'java' }\ndependencies { runtimeOnly 'org.slf4j:jul-to-slf4j:1.7.36' }",
+                        source -> source.path("build/generated/build.gradle")
+                )
+        );
     }
 
     @Test
@@ -799,10 +1279,15 @@ class UpgradeJulToSlf4jTest implements RewriteTest {
     @Test
     void discoversAndValidatesRecipe() {
         Environment environment = environment();
-        Recipe recipe = environment.activateRecipes(RECIPE_NAME);
-        assertTrue(environment.listRecipes().stream().anyMatch(candidate -> RECIPE_NAME.equals(candidate.getName())));
-        assertTrue(recipe.validate().isValid(), () -> recipe.validate().failures().toString());
-        assertEquals(6, recipe.getRecipeList().size());
+        assertEquals(3, AbstractSelectedSlf4jDependencyRecipe.SOURCE_VERSIONS.size());
+        for (String name : new String[]{RECIPE_NAME, DEPENDENCY_RECIPE, ALIGN_RECIPE,
+                "com.huawei.clouds.openrewrite.jultoslf4j.ReviewUnsafeJulToSlf4jTopology"}) {
+            Recipe recipe = environment.activateRecipes(name);
+            assertTrue(environment.listRecipes().stream().anyMatch(candidate -> name.equals(candidate.getName())));
+            assertTrue(recipe.validateAll().stream().allMatch(validation -> validation.isValid()),
+                    () -> recipe.validateAll().toString());
+        }
+        assertEquals(5, environment.activateRecipes(RECIPE_NAME).getRecipeList().size());
     }
 
     private static String directPom(String version) {

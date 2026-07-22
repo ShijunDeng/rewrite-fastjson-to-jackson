@@ -14,26 +14,32 @@ com.huawei.clouds.openrewrite.jultoslf4j.MigrateJulToSlf4jTo2_0_17
 com.huawei.clouds.openrewrite.jultoslf4j.UpgradeJulToSlf4jDependencyTo2_0_17
 ```
 
+已有 `jul-to-slf4j:2.0.17` 工程的保守 companion 对齐入口：
+
+```text
+com.huawei.clouds.openrewrite.jultoslf4j.AlignSlf4jCompanionsTo2_0_17
+```
+
 推荐先执行完整配方的 `dryRun`。只有明确需要自行制定 provider/bridge 策略时，才使用仅依赖版本配方。
 
 ## Spec 与配方能力映射
 
 | 不兼容点 | 配方行为 | 测试证据 |
 | --- | --- | --- |
-| `jul-to-slf4j` 1.7.30/1.7.32/1.7.36 | **自动修复**：显式和本地 managed 版本升级到 2.0.17 | Maven/Gradle、属性、profile、managed、真实仓库 before→after 与未列版本负例 |
-| SLF4J API/自有 bridge/provider 代际不一致 | **自动修复**：显式 companion 对齐到 2.0.17，外部 BOM 仍保留版本权威 | 多组件 POM before→after、versionless managed marker 测试 |
-| Log4j 的 SLF4J 1 binding artifact | **条件自动修复**：仅显式 Log4j 2.19+ 依赖改为 `log4j-slf4j2-impl`；旧版只标记 | Maven、Gradle Groovy/Kotlin、旧版 marker、普通坐标字符串负例 |
+| `jul-to-slf4j` 1.7.30/1.7.32/1.7.36 | **自动修复**：单一确定性 recipe 只升级三个精确字面量或安全自有属性到 2.0.17 | Maven/Gradle、属性、profile、managed、两周期幂等、真实仓库 before→after 与未列版本负例 |
+| SLF4J API/自有 bridge/provider 代际不一致 | **自动修复 + 标记**：推荐配方只对齐已审计旧 companion；未列出的 1.7 或更新版本不降级；BOM、共享属性、动态版本保留版本权威并精确标记 | family 属性、Groovy map/Kotlin、更新 companion no-op、BOM/动态/共享 owner marker 测试 |
+| Log4j 的 SLF4J 1 binding artifact | **条件自动修复**：bridge 已安全到达 2.0.17 且显式 Log4j 2.19+ 时改为 `log4j-slf4j2-impl`；旧版、BOM 和动态值只标记 | Maven literal/property、Gradle Groovy map/Kotlin、2.18/2.19 边界、普通字符串及 DSL 外调用负例 |
 | `StaticLoggerBinder`/`StaticMDCBinder`/`StaticMarkerBinder` 公共 accessor | **自动修复**：四种有类型归属的调用迁移到 SLF4J 公共 API | Java AST 四模式和构建+源码组合 before→after |
-| binder 内部/反射、JUL 双向环、Logback 1.2、旧 provider/API | **精准检测**：在具体源码或依赖节点添加 SearchResult | Java marker、Maven/Gradle topology marker 测试 |
+| binder 内部/反射、双向 bridge、多 provider、Logback 1.2、旧 provider/API | **精准检测**：在具体源码或依赖节点添加带原因的 SearchResult | Java 精确字符串/类型 marker、JUL/Log4j/JCL/reload4j 环、多 provider、marker 幂等测试 |
 | provider 选择、root JUL handler、容器 classloader、日志语义与性能 | **人工处理**：运行时所有权不足，通用配方不能安全决策 | 本文启动、依赖收敛、日志快照与压测清单 |
 
 ## 自动处理范围
 
 完整配方按以下顺序处理构建文件和 Java 源码：
 
-1. 在同一 Maven/Gradle 构建文件明确声明待迁移的 JUL bridge 时，把 Log4j `log4j-slf4j-impl` 改为 `log4j-slf4j2-impl`。该转换只接受显式的 Log4j `2.19+` 版本，因为 SLF4J 2 provider artifact 从 Log4j 2.19.0 才开始提供；版本、scope/configuration 和其余元数据保持不变。
-2. 只把 `org.slf4j:jul-to-slf4j` 的 `1.7.30`、`1.7.32`、`1.7.36` 改为 `2.0.17`，支持 Maven 直接依赖、属性、profile、`dependencyManagement`，以及 Gradle Groovy/Kotlin 的直接字符串和 Groovy Map notation。
-3. 当构建中已经解析到 `jul-to-slf4j:2.0.17` 时，把显式声明的 `slf4j-api`、`slf4j-simple`、`slf4j-nop`、`slf4j-reload4j`、`jcl-over-slf4j`、`log4j-over-slf4j` 对齐到 `2.0.17`。受 BOM/platform 管理的无版本依赖不被强行覆盖。
+1. 只把标准 `org.slf4j:jul-to-slf4j` JAR 的 `1.7.30`、`1.7.32`、`1.7.36` 改为 `2.0.17`，支持 Maven 项目依赖、profile、`dependencyManagement`，以及 Gradle `dependencies {}` 内 Groovy/Kotlin 的直接字符串和 Groovy Map notation。带 Maven classifier/非 JAR type 或 Gradle `classifier`/`ext`/`type` 的自定义制品不会被当成标准运行桥升级，而会在准确声明上标记。插件依赖、同名普通 DSL 调用和文档字符串没有所有权，不会触发迁移。仅依赖配方只会修改引用全部属于 core 的 Maven 根属性；被 companion、项目元数据或其他组件共享的属性保持不变。
+2. 推荐配方在同一构建文件明确命中上述 bridge 白名单时，把 `slf4j-api`、`slf4j-simple`、`slf4j-nop`、`slf4j-reload4j`、`jcl-over-slf4j`、`log4j-over-slf4j` 中精确为 `1.7.30`、`1.7.32`、`1.7.36` 或 `2.0.0`–`2.0.16` 的声明对齐到 `2.0.17`。共享属性只有在全部引用属于该 SLF4J family 时才更新；无核心 bridge、未列出的 `1.7.x`、`2.0.17+`、BOM/platform 无版本声明均不自动修改。
+3. 只有上一步已让当前构建文件的 active owned bridge 到达 `2.0.17` 后，才把 active Log4j `log4j-slf4j-impl` 改为 `log4j-slf4j2-impl`。该转换接受显式 Log4j `2.19+` 字面量、Groovy Map 或可由当前 Maven 根属性精确解析的版本；版本、scope/configuration 和其余元数据保持不变。`dependencyManagement` 只管理坐标版本，直接把其中的 artifactId 改名会让原消费者失去管理，因此保持 MARK 而不自动改名。这样共享但不能安全升级的 bridge 属性也不会诱发错误的 provider 换代。
 4. 对有类型归属、且语义等价的旧 binder 调用执行 Java 源码迁移：
 
 | SLF4J 1.x 内部调用 | SLF4J 2 公共 API |
@@ -43,13 +49,14 @@ com.huawei.clouds.openrewrite.jultoslf4j.UpgradeJulToSlf4jDependencyTo2_0_17
 | `StaticMDCBinder.getSingleton().getMDCA()` | `MDC.getMDCAdapter()` |
 | `StaticMarkerBinder.getSingleton().getMarkerFactory()` | `MarkerFactory.getIMarkerFactory()` |
 
-5. 对无法安全自动决策的风险添加 OpenRewrite `SearchResult` 标记，包括剩余的 `Static*Binder` 内部/反射访问、`jul-to-slf4j + slf4j-jdk14` 递归环、Logback 1.2、旧 Log4j SLF4J 1 binding、`slf4j-log4j12` 和仍停留在 1.x 的 SLF4J API/provider。
+5. 对无法安全自动决策的风险添加带具体原因的 OpenRewrite `SearchResult` 标记，包括剩余的精确 `Static*Binder` 内部/反射访问、JUL/Log4j/JCL/reload4j 双向环、多个 provider、Logback 1.2、旧 Log4j SLF4J 1 binding、`slf4j-log4j12`、仍停留在 1.x 的 SLF4J API/provider，以及版本权威仍在共享属性、BOM/platform、范围、动态值或插值表达式的组件。该检查只读取 Maven 项目依赖和 Gradle `dependencies {}` AST，不依赖升级前可能过期的解析 marker。
 
-依赖升级严格以表格来源版本为白名单：未列出的旧版本、目标版本和更高版本均保持不变，不会把 `2.0.18` 等版本降级。配方也不会因为文件中存在一个无关的 `1.7.36` 字面量，就猜测 Gradle 变量一定属于 JUL bridge。
+依赖升级严格以表格来源版本为 core 白名单：未列出的旧版本、目标版本和更高版本均保持不变，不会把 `2.0.18` 等版本降级。配方也不会因为文件中存在一个无关的 `1.7.36` 字面量，就猜测 Gradle 变量一定属于 JUL bridge；版本范围、动态版本、BOM/platform 和共享 owner 保持 NOOP，但完整/审计配方会在实际依赖节点产生 MARK。version catalog 文件本身仍保持 NOOP，必须单独审计其版本 owner。`target`、`build`、`out`、`dist`、`generated`、`.gradle`、`.idea`、`node_modules` 等目录中的构建文件和 Java 源码不会被处理。
 
 配方有意不自动修改：
 
-- Maven BOM 或 Gradle platform 管理的无版本依赖；
+- Maven BOM 或 Gradle platform 管理的无版本依赖，以及引用域超出 core/family 的共享 Maven 属性；这些 owner 会被标记而不会被强改；
+- Maven classifier/非 JAR type 和 Gradle `classifier`/`ext`/`type` 自定义制品；这些变体需要按实际产物单独验证并会被标记；
 - Gradle version catalog、变量/函数计算版本、插件生成的依赖和锁文件；
 - `logging.properties`、Logback/Log4j 配置、容器日志配置和应用启动生命周期；
 - Java 模块描述符、OSGi manifest、shade/relocation、native-image 配置；
@@ -86,8 +93,10 @@ com.huawei.clouds.openrewrite.jultoslf4j.UpgradeJulToSlf4jDependencyTo2_0_17
 `dryRun` patch 中出现 `/*~~>*/` 或 XML 搜索注释表示“已发现风险，未自动猜测修复”，不是配方失败。逐项处理后再次运行：
 
 - `slf4j-jdk14`：删除一个方向的桥，确认日志只沿单向流动；
+- `log4j-to-slf4j + log4j-slf4j(2)-impl`、`jcl-over-slf4j + slf4j-jcl`、`log4j-over-slf4j + slf4j-reload4j/slf4j-log4j12`：删除其中一个方向，不能用依赖顺序掩盖递归环；
 - `logback-classic:1.2.x`、`slf4j-log4j12`、`log4j-slf4j-impl`：选定兼容 SLF4J 2 的 backend/provider；
 - SLF4J 1.x API/provider：升级其版本权威（直接版本、BOM 或框架依赖管理）；
+- 多 provider：按 main/test 实际 classpath 各保留一个，并检查打包、容器和测试运行器是否额外注入 provider；
 - `Static*Binder`：替换为公共 API/SPI，升级产生引用的第三方库，或删除仅用于探测 binding 的逻辑。
 
 标记消失之后，还应确认最终运行依赖图中只有一个 SLF4J 2 provider。
@@ -102,7 +111,7 @@ com.huawei.clouds.openrewrite.jultoslf4j.UpgradeJulToSlf4jDependencyTo2_0_17
 - [apache/shardingsphere @ 1668c93](https://github.com/apache/shardingsphere/blob/1668c9378b84b2ad8b27c7535daaf99cff120b34/pom.xml)：多模块 Maven 工程由共享 `slf4j.version` 管理 `1.7.36`，验证属性更新；
 - [pmd/pmd @ 2214f34](https://github.com/pmd/pmd/blob/2214f3405b8ed00c1c8db714977aa5d4e8fcb703/pom.xml)：真实 Dependabot 升级前的共享属性样本；对照其随后把 SLF4J 更新到 2.0.17 的 [提交 b45cd39](https://github.com/pmd/pmd/commit/b45cd3919e2613afc363f67eb58271c433db10b7)。
 
-测试结构参考 OpenRewrite 官方固定提交中的 [UpgradeDependencyVersionTest](https://github.com/openrewrite/rewrite-java-dependencies/blob/decb8dbb2b5b726f8815efc51c85c34a60268bb0/src/test/java/org/openrewrite/java/dependencies/UpgradeDependencyVersionTest.java)，覆盖 Maven/Gradle Groovy/Gradle Kotlin、直接/属性/受管/profile/Map 声明、完整三种来源版本、companion 对齐、Log4j provider、安全 binder 源码变换、风险标记以及目标/更新/未列/相似坐标/变量/catalog/平台管理/config/source no-op。
+测试结构参考 OpenRewrite 官方固定提交中的 [UpgradeDependencyVersionTest](https://github.com/openrewrite/rewrite-java-dependencies/blob/decb8dbb2b5b726f8815efc51c85c34a60268bb0/src/test/java/org/openrewrite/java/dependencies/UpgradeDependencyVersionTest.java)。当前测试覆盖 **88** 个执行场景：Maven/Gradle Groovy/Gradle Kotlin、直接/安全属性/共享属性/BOM/profile/Map 声明、完整三种来源版本、两周期幂等、companion 门控与不降级、Log4j 2.18/2.19/动态边界和 Maven property/management ownership、四类双向环、多 provider、安全 binder 源码变换、精确 marker，以及目标/更新/未列/范围/动态/相似坐标/变量/catalog/平台管理-only/自定义 classifier/type/插件依赖/DSL lookalike/生成目录/config/source 反例。
 
 ## 官方依据
 

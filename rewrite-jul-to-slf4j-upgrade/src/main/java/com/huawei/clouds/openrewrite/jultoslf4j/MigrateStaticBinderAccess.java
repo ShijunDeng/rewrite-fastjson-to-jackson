@@ -34,6 +34,12 @@ public final class MigrateStaticBinderAccess extends Recipe {
     public JavaIsoVisitor<ExecutionContext> getVisitor() {
         return new JavaIsoVisitor<ExecutionContext>() {
             @Override
+            public J.CompilationUnit visitCompilationUnit(J.CompilationUnit compilationUnit, ExecutionContext ctx) {
+                return AbstractSelectedSlf4jDependencyRecipe.isProjectPath(compilationUnit.getSourcePath())
+                        ? super.visitCompilationUnit(compilationUnit, ctx) : compilationUnit;
+            }
+
+            @Override
             public J.MethodInvocation visitMethodInvocation(J.MethodInvocation method, ExecutionContext ctx) {
                 J.MethodInvocation m = super.visitMethodInvocation(method, ctx);
                 JavaType.Method methodType = m.getMethodType();
