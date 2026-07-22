@@ -79,6 +79,7 @@
     <module>rewrite-jaxb-runtime-upgrade</module>
     <module>rewrite-i18next-upgrade</module>
     <module>rewrite-diagram-js-minimap-upgrade</module>
+    <module>rewrite-jetbrains-annotations-upgrade</module>
   </modules>
 
   <dependencyManagement>
