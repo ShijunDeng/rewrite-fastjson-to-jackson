@@ -28,6 +28,8 @@ class UpgradeSpringDataElasticsearchTest implements RewriteTest {
             "com.huawei.clouds.openrewrite.springdataelasticsearch.UpgradeSpringDataElasticsearchDependencyTo6_0_5";
     private static final String MIGRATION_RECIPE =
             "com.huawei.clouds.openrewrite.springdataelasticsearch.MigrateSpringDataElasticsearchTo6_0_5";
+    private static final String AUDIT_RECIPE =
+            "com.huawei.clouds.openrewrite.springdataelasticsearch.AuditSpringDataElasticsearch6Compatibility";
 
     @Override
     public void defaults(RecipeSpec spec) {
@@ -198,15 +200,12 @@ class UpgradeSpringDataElasticsearchTest implements RewriteTest {
                             implementation("org.elasticsearch.client:elasticsearch-rest-high-level-client:7.17.1")
                         }
                         """,
-                        """
-                        plugins { java }
-                        repositories { mavenCentral() }
-                        dependencies {
-                            implementation("org.springframework.boot:spring-boot-starter-data-elasticsearch:3.2.0")
-                            implementation("org.springframework.data:spring-data-elasticsearch:6.0.5")
-                            implementation("org.elasticsearch.client:elasticsearch-rest-high-level-client:7.17.1")
-                        }
-                        """
+                        source -> source.after(actual -> actual).afterRecipe(after -> {
+                            String actual = after.printAll();
+                            assertContains(actual, "spring-data-elasticsearch:6.0.5");
+                            assertContains(actual, "Align this Spring Boot dependency/platform to 4.x");
+                            assertContains(actual, "uses Elasticsearch 9 Rest5Client");
+                        })
                 ),
                 java(
                         """
@@ -256,22 +255,14 @@ class UpgradeSpringDataElasticsearchTest implements RewriteTest {
                             }
                         }
                         """,
-                        """
-                        package com.practical.restful.training.common;
-
-                        import org.elasticsearch.client.RestHighLevelClient;
-                        import org.springframework.data.elasticsearch.client.ClientConfiguration;
-                        import org.springframework.data.elasticsearch.client.RestClients;
-                        import org.springframework.data.elasticsearch.config.AbstractElasticsearchConfiguration;
-
-                        public class /*~~>*/ElasticsearchConfig extends /*~~>*/AbstractElasticsearchConfiguration {
-                            public /*~~>*/RestHighLevelClient elasticsearchClient() {
-                                ClientConfiguration configuration = ClientConfiguration.builder().connectedTo("localhost:9200").build();
-                                return /*~~>*/RestClients.create(configuration).rest();
-                            }
-                        }
-                        """,
-                        source -> source.path("src/main/java/com/practical/restful/training/common/ElasticsearchConfig.java")
+                        source -> source
+                                .path("src/main/java/com/practical/restful/training/common/ElasticsearchConfig.java")
+                                .after(actual -> actual)
+                                .afterRecipe(after -> {
+                                    assertContains(after.printAll(), "RHLC was removed");
+                                    assertContains(after.printAll(), "RestClients/RHLC configuration is absent");
+                                    assertContains(after.printAll(), "old RHLC-oriented AbstractElasticsearchConfiguration");
+                                })
                 )
         );
     }
@@ -295,14 +286,10 @@ class UpgradeSpringDataElasticsearchTest implements RewriteTest {
                             implementation 'org.springframework.data:spring-data-elasticsearch:4.2.12'
                         }
                         """,
-                        """
-                        plugins { id 'java' }
-                        repositories { mavenCentral() }
-                        dependencies {
-                            implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch:2.4.13'
-                            implementation 'org.springframework.data:spring-data-elasticsearch:6.0.5'
-                        }
-                        """
+                        source -> source.after(actual -> actual).afterRecipe(after -> {
+                            assertContains(after.printAll(), "spring-data-elasticsearch:6.0.5");
+                            assertContains(after.printAll(), "Align this Spring Boot dependency/platform to 4.x");
+                        })
                 ),
                 java(
                         """
@@ -344,32 +331,13 @@ class UpgradeSpringDataElasticsearchTest implements RewriteTest {
                             }
                         }
                         """,
-                        """
-                        package com.example.demo.repository;
-
-                        import com.example.demo.entity.Board;
-                        import org.elasticsearch.index.query.QueryBuilders;
-                        import org.springframework.data.elasticsearch.client.elc.NativeQueryBuilder;
-                        import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
-                        import org.springframework.data.elasticsearch.core.SearchHits;
-                        import org.springframework.data.elasticsearch.core.query.Query;
-
-                        public class BoardRepositoryOperations {
-                            private final ElasticsearchOperations operations;
-
-                            public BoardRepositoryOperations(ElasticsearchOperations operations) {
-                                this.operations = operations;
-                            }
-
-                            SearchHits<Board> searchAll() {
-                                Query query = new NativeQueryBuilder()
-                                        .withQuery(/*~~>*/QueryBuilders.matchAllQuery())
-                                        .build();
-                                return operations.search(query, Board.class);
-                            }
-                        }
-                        """,
-                        source -> source.path("src/main/java/com/example/demo/repository/BoardRepositoryOperations.java")
+                        source -> source
+                                .path("src/main/java/com/example/demo/repository/BoardRepositoryOperations.java")
+                                .after(actual -> actual)
+                                .afterRecipe(after -> {
+                                    assertContains(after.printAll(), "NativeQueryBuilder");
+                                    assertContains(after.printAll(), "Elasticsearch 7 QueryBuilders cannot populate");
+                                })
                 )
         );
     }
@@ -393,14 +361,10 @@ class UpgradeSpringDataElasticsearchTest implements RewriteTest {
                             implementation 'org.springframework.data:spring-data-elasticsearch:4.4.12'
                         }
                         """,
-                        """
-                        plugins { id 'java' }
-                        repositories { mavenCentral() }
-                        dependencies {
-                            implementation 'org.springframework.boot:spring-boot-starter-data-jpa:2.7.3'
-                            implementation 'org.springframework.data:spring-data-elasticsearch:6.0.5'
-                        }
-                        """
+                        source -> source.after(actual -> actual).afterRecipe(after -> {
+                            assertContains(after.printAll(), "spring-data-elasticsearch:6.0.5");
+                            assertContains(after.printAll(), "Align this Spring Boot dependency/platform to 4.x");
+                        })
                 ),
                 java(
                         """
@@ -446,22 +410,13 @@ class UpgradeSpringDataElasticsearchTest implements RewriteTest {
                             }
                         }
                         """,
-                        """
-                        package com.haebang.haebang.configuration;
-
-                        import org.elasticsearch.client.RestHighLevelClient;
-                        import org.springframework.data.elasticsearch.client.ClientConfiguration;
-                        import org.springframework.data.elasticsearch.client.RestClients;
-
-                        public class ElasticSearchConfig {
-                            /*~~>*/RestHighLevelClient elasticsearchClient(String host, int port) {
-                                ClientConfiguration configuration = ClientConfiguration.builder()
-                                        .connectedTo(host + ":" + port).build();
-                                return /*~~>*/RestClients.create(configuration).rest();
-                            }
-                        }
-                        """,
-                        source -> source.path("src/main/java/com/haebang/haebang/configuration/ElasticSearchConfig.java")
+                        source -> source
+                                .path("src/main/java/com/haebang/haebang/configuration/ElasticSearchConfig.java")
+                                .after(actual -> actual)
+                                .afterRecipe(after -> {
+                                    assertContains(after.printAll(), "RHLC was removed");
+                                    assertContains(after.printAll(), "RestClients/RHLC configuration is absent");
+                                })
                 )
         );
     }
@@ -519,31 +474,14 @@ class UpgradeSpringDataElasticsearchTest implements RewriteTest {
                             }
                         }
                         """,
-                        """
-                        package com.netflix.conductor.elasticsearch.dao.index;
-
-                        import org.elasticsearch.action.search.SearchRequest;
-                        import org.elasticsearch.action.search.SearchResponse;
-                        import org.elasticsearch.client.RequestOptions;
-                        import org.elasticsearch.client.RestHighLevelClient;
-                        import org.elasticsearch.search.SearchHits;
-                        import java.io.IOException;
-
-                        public class ElasticSearchRestDAOV7 {
-                            private final /*~~>*/RestHighLevelClient elasticSearchClient;
-
-                            public ElasticSearchRestDAOV7(/*~~>*/RestHighLevelClient elasticSearchClient) {
-                                /*~~>*/this.elasticSearchClient = elasticSearchClient;
-                            }
-
-                            long count(String index) throws IOException {
-                                /*~~>*/SearchResponse response = elasticSearchClient.search(new /*~~>*/SearchRequest(index), RequestOptions.DEFAULT);
-                                /*~~>*/SearchHits searchHits = response.getHits();
-                                return searchHits.getTotalHits().value;
-                            }
-                        }
-                        """,
-                        source -> source.path("elasticsearch-persistence/src/main/java/com/netflix/conductor/elasticsearch/dao/index/ElasticSearchRestDAOV7.java")
+                        source -> source
+                                .path("elasticsearch-persistence/src/main/java/com/netflix/conductor/elasticsearch/dao/index/ElasticSearchRestDAOV7.java")
+                                .after(actual -> actual)
+                                .afterRecipe(after -> {
+                                    assertContains(after.printAll(), "RHLC was removed");
+                                    assertContains(after.printAll(), "Direct Elasticsearch 7 request/response type detected");
+                                    assertContains(after.printAll(), "Direct Elasticsearch 7 search response type detected");
+                                })
                 )
         );
     }
@@ -638,6 +576,251 @@ class UpgradeSpringDataElasticsearchTest implements RewriteTest {
     }
 
     @Test
+    void upgradesOnlyListedEntryWhenMavenContainsMixedVersions() {
+        rewriteRun(pomXml(
+                """
+                <project><modelVersion>4.0.0</modelVersion><groupId>example</groupId><artifactId>mixed</artifactId><version>1</version>
+                  <dependencies>
+                    <dependency><groupId>org.springframework.data</groupId><artifactId>spring-data-elasticsearch</artifactId><version>4.2.4</version></dependency>
+                    <dependency><groupId>org.springframework.data</groupId><artifactId>spring-data-elasticsearch</artifactId><version>4.4.13</version></dependency>
+                  </dependencies>
+                </project>
+                """,
+                """
+                <project><modelVersion>4.0.0</modelVersion><groupId>example</groupId><artifactId>mixed</artifactId><version>1</version>
+                  <dependencies>
+                    <dependency><groupId>org.springframework.data</groupId><artifactId>spring-data-elasticsearch</artifactId><version>6.0.5</version></dependency>
+                    <dependency><groupId>org.springframework.data</groupId><artifactId>spring-data-elasticsearch</artifactId><version>4.4.13</version></dependency>
+                  </dependencies>
+                </project>
+                """
+        ));
+    }
+
+    @Test
+    void leavesSharedMavenPropertyUntouched() {
+        rewriteRun(pomXml(
+                """
+                <project><modelVersion>4.0.0</modelVersion><groupId>example</groupId><artifactId>shared-property</artifactId><version>1</version>
+                  <properties><shared.version>4.4.8</shared.version></properties>
+                  <description>Release train ${shared.version}</description>
+                  <dependencies>
+                    <dependency><groupId>org.springframework.data</groupId><artifactId>spring-data-elasticsearch</artifactId><version>${shared.version}</version></dependency>
+                  </dependencies>
+                </project>
+                """
+        ));
+    }
+
+    @Test
+    void upgradesPropertyReferencedByMultipleTargetDependencies() {
+        rewriteRun(pomXml(
+                """
+                <project><modelVersion>4.0.0</modelVersion><groupId>example</groupId><artifactId>multi-reference</artifactId><version>1</version>
+                  <properties><spring-data-elasticsearch.version>4.4.8</spring-data-elasticsearch.version></properties>
+                  <dependencyManagement><dependencies><dependency>
+                    <groupId>org.springframework.data</groupId><artifactId>spring-data-elasticsearch</artifactId><version>${spring-data-elasticsearch.version}</version>
+                  </dependency></dependencies></dependencyManagement>
+                  <dependencies><dependency>
+                    <groupId>org.springframework.data</groupId><artifactId>spring-data-elasticsearch</artifactId><version>${spring-data-elasticsearch.version}</version>
+                  </dependency></dependencies>
+                </project>
+                """,
+                """
+                <project><modelVersion>4.0.0</modelVersion><groupId>example</groupId><artifactId>multi-reference</artifactId><version>1</version>
+                  <properties><spring-data-elasticsearch.version>6.0.5</spring-data-elasticsearch.version></properties>
+                  <dependencyManagement><dependencies><dependency>
+                    <groupId>org.springframework.data</groupId><artifactId>spring-data-elasticsearch</artifactId><version>${spring-data-elasticsearch.version}</version>
+                  </dependency></dependencies></dependencyManagement>
+                  <dependencies><dependency>
+                    <groupId>org.springframework.data</groupId><artifactId>spring-data-elasticsearch</artifactId><version>${spring-data-elasticsearch.version}</version>
+                  </dependency></dependencies>
+                </project>
+                """
+        ));
+    }
+
+    @Test
+    void leavesProfileShadowedMavenPropertyUntouched() {
+        rewriteRun(pomXml(
+                """
+                <project><modelVersion>4.0.0</modelVersion><groupId>example</groupId><artifactId>shadowed</artifactId><version>1</version>
+                  <properties><search.version>4.2.8</search.version></properties>
+                  <dependencies><dependency>
+                    <groupId>org.springframework.data</groupId><artifactId>spring-data-elasticsearch</artifactId><version>${search.version}</version>
+                  </dependency></dependencies>
+                  <profiles><profile><id>shadow</id><properties><search.version>4.4.13</search.version></properties></profile></profiles>
+                </project>
+                """
+        ));
+    }
+
+    @Test
+    void leavesDependenciesNestedInMavenPluginsUntouched() {
+        rewriteRun(
+                spec -> spec.recipe(environment().activateRecipes(MIGRATION_RECIPE)),
+                pomXml(
+                        """
+                        <project><modelVersion>4.0.0</modelVersion><groupId>example</groupId><artifactId>plugin-dependency</artifactId><version>1</version>
+                          <properties><java.version>11</java.version></properties>
+                          <build><plugins><plugin>
+                            <groupId>com.example</groupId><artifactId>generator</artifactId><version>1</version>
+                            <dependencies><dependency>
+                              <groupId>org.springframework.data</groupId><artifactId>spring-data-elasticsearch</artifactId><version>4.2.4</version>
+                            </dependency></dependencies>
+                          </plugin></plugins></build>
+                        </project>
+                        """
+                )
+        );
+    }
+
+    @Test
+    void treatsEmptyMavenTypeAndClassifierAsStandardJar() {
+        rewriteRun(pomXml(
+                """
+                <project><modelVersion>4.0.0</modelVersion><groupId>example</groupId><artifactId>empty-shape</artifactId><version>1</version>
+                  <dependencies><dependency>
+                    <groupId>org.springframework.data</groupId><artifactId>spring-data-elasticsearch</artifactId><version>4.4.12</version><type/><classifier/>
+                  </dependency></dependencies>
+                </project>
+                """,
+                """
+                <project><modelVersion>4.0.0</modelVersion><groupId>example</groupId><artifactId>empty-shape</artifactId><version>1</version>
+                  <dependencies><dependency>
+                    <groupId>org.springframework.data</groupId><artifactId>spring-data-elasticsearch</artifactId><version>6.0.5</version><type/><classifier/>
+                  </dependency></dependencies>
+                </project>
+                """
+        ));
+    }
+
+    @Test
+    void leavesClassifierAndNonJarMavenArtifactsUntouched() {
+        rewriteRun(pomXml(
+                """
+                <project><modelVersion>4.0.0</modelVersion><groupId>example</groupId><artifactId>special-artifacts</artifactId><version>1</version>
+                  <dependencies>
+                    <dependency><groupId>org.springframework.data</groupId><artifactId>spring-data-elasticsearch</artifactId><version>4.2.8</version><classifier>tests</classifier></dependency>
+                    <dependency><groupId>org.springframework.data</groupId><artifactId>spring-data-elasticsearch</artifactId><version>4.4.12</version><type>test-jar</type></dependency>
+                  </dependencies>
+                </project>
+                """
+        ));
+    }
+
+    @Test
+    void upgradesOnlyListedGradleLiteralInMixedFile() {
+        rewriteRun(buildGradle(
+                """
+                plugins { id 'java-library' }
+                repositories { mavenCentral() }
+                dependencies {
+                    implementation 'org.springframework.data:spring-data-elasticsearch:4.4.14'
+                    testImplementation 'org.springframework.data:spring-data-elasticsearch:4.4.13'
+                }
+                """,
+                """
+                plugins { id 'java-library' }
+                repositories { mavenCentral() }
+                dependencies {
+                    implementation 'org.springframework.data:spring-data-elasticsearch:6.0.5'
+                    testImplementation 'org.springframework.data:spring-data-elasticsearch:4.4.13'
+                }
+                """
+        ));
+    }
+
+    @Test
+    void leavesGradleCallsOutsideDependenciesAndCustomVariantsUntouched() {
+        rewriteRun(buildGradle(
+                """
+                plugins { id 'java-library' }
+                repositories { mavenCentral() }
+                implementation 'org.springframework.data:spring-data-elasticsearch:4.2.4'
+                dependencies {
+                    generatedFixture { implementation 'org.springframework.data:spring-data-elasticsearch:4.2.4' }
+                    implementation group: 'org.springframework.data', name: 'spring-data-elasticsearch', version: '4.2.8', classifier: 'tests'
+                    implementation 'org.springframework.data:spring-data-elasticsearch:4.4.12:tests'
+                }
+                """
+        ));
+    }
+
+    @Test
+    void upgradesOnlyListedKotlinGradleLiteralInMixedFile() {
+        rewriteRun(
+                spec -> spec.beforeRecipe(withToolingApi()).typeValidationOptions(TypeValidation.none()),
+                buildGradleKts(
+                        """
+                        plugins { java }
+                        repositories { mavenCentral() }
+                        dependencies {
+                            implementation("org.springframework.data:spring-data-elasticsearch:4.2.12")
+                            testImplementation("org.springframework.data:spring-data-elasticsearch:4.3.0")
+                        }
+                        """,
+                        """
+                        plugins { java }
+                        repositories { mavenCentral() }
+                        dependencies {
+                            implementation("org.springframework.data:spring-data-elasticsearch:6.0.5")
+                            testImplementation("org.springframework.data:spring-data-elasticsearch:4.3.0")
+                        }
+                        """
+                )
+        );
+    }
+
+    @Test
+    void leavesKotlinDslUntouchedWithoutToolingModel() {
+        rewriteRun(buildGradleKts(
+                """
+                plugins { java }
+                repositories { mavenCentral() }
+                dependencies {
+                    implementation("org.springframework.data:spring-data-elasticsearch:4.2.12")
+                }
+                """
+        ));
+    }
+
+    @Test
+    void ignoresGeneratedBuildDescriptors() {
+        rewriteRun(pomXml(
+                directPom("4.2.4"),
+                source -> source.path("target/generated/pom.xml")
+        ));
+    }
+
+    @Test
+    void ignoresGenericGeneratedBuildDescriptors() {
+        rewriteRun(pomXml(
+                directPom("4.2.8"),
+                source -> source.path("generated/fixture/pom.xml")
+        ));
+    }
+
+    @Test
+    void ignoresGeneratedJavaSourcesForAutoAndMarkRecipes() {
+        rewriteRun(
+                spec -> spec.recipe(environment().activateRecipes(MIGRATION_RECIPE)).parser(migrationApiParser()),
+                java(
+                        """
+                        package example;
+                        import org.elasticsearch.client.RestHighLevelClient;
+                        import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
+                        class GeneratedSearchClient {
+                            NativeSearchQuery query;
+                            RestHighLevelClient client;
+                        }
+                        """,
+                        source -> source.path("build/generated/sources/example/GeneratedSearchClient.java")
+                )
+        );
+    }
+
+    @Test
     void migratesOfficiallyRenamedSpringDataTypes() {
         rewriteRun(
                 spec -> spec
@@ -721,21 +904,10 @@ class UpgradeSpringDataElasticsearchTest implements RewriteTest {
                             }
                         }
                         """,
-                        """
-                        package example;
-
-                        import org.elasticsearch.index.query.QueryBuilders;
-                        import org.springframework.data.elasticsearch.client.elc.NativeQueryBuilder;
-                        import org.springframework.data.elasticsearch.core.query.Query;
-
-                        class SearchService {
-                            Query all() {
-                                return new NativeQueryBuilder()
-                                        .withQuery(/*~~>*/QueryBuilders.matchAllQuery())
-                                        .build();
-                            }
-                        }
-                        """
+                        source -> source.after(actual -> actual).afterRecipe(after -> {
+                            assertContains(after.printAll(), "NativeQueryBuilder");
+                            assertContains(after.printAll(), "Elasticsearch 7 QueryBuilders cannot populate");
+                        })
                 )
         );
     }
@@ -773,32 +945,13 @@ class UpgradeSpringDataElasticsearchTest implements RewriteTest {
                             }
                         }
                         """,
-                        """
-                        package example;
-
-                        import org.springframework.data.elasticsearch.core.DocumentOperations;
-                        import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
-                        import org.springframework.data.elasticsearch.core.ReactiveDocumentOperations;
-                        import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
-                        import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
-                        import org.springframework.data.elasticsearch.core.query.IndexQuery;
-                        import org.springframework.data.elasticsearch.core.query.Query;
-
-                        class RemovedCalls {
-                            void use(ElasticsearchOperations operations,
-                                     ReactiveElasticsearchOperations reactive,
-                                     DocumentOperations documents,
-                                     ReactiveDocumentOperations reactiveDocuments,
-                                     Query query, IndexCoordinates index, IndexQuery indexQuery) {
-                                /*~~>*/operations.stringIdRepresentation(42L);
-                                /*~~>*/reactive.execute(callback -> null);
-                                /*~~>*/documents.delete(query, Object.class, index);
-                                /*~~>*/reactiveDocuments.delete(query, Object.class);
-                                /*~~>*/indexQuery.getParentId();
-                                /*~~>*/indexQuery.setParentId("parent");
-                            }
-                        }
-                        """
+                        source -> source.after(actual -> actual).afterRecipe(after -> {
+                            String actual = after.printAll();
+                            assertContains(actual, "stringIdRepresentation was replaced by convertId");
+                            assertContains(actual, "public reactive execute callback was removed");
+                            assertContains(actual, "delete(Query,...) overload was removed");
+                            assertContains(actual, "IndexQuery.parentId was removed");
+                        })
                 )
         );
     }
@@ -823,19 +976,13 @@ class UpgradeSpringDataElasticsearchTest implements RewriteTest {
                             DateFormat second = DateFormat.custom;
                         }
                         """,
-                        """
-                        package example;
-
-                        import org.springframework.data.elasticsearch.annotations.DateFormat;
-                        import org.springframework.data.elasticsearch.annotations.DynamicMapping;
-                        import org.springframework.data.elasticsearch.annotations.DynamicMappingValue;
-
-                        @/*~~>*/DynamicMapping(/*~~>*/DynamicMappingValue.Strict)
-                        class LegacyMapping {
-                            DateFormat first = /*~~>*/DateFormat.none;
-                            DateFormat second = /*~~>*/DateFormat.custom;
-                        }
-                        """
+                        source -> source.after(actual -> actual).afterRecipe(after -> {
+                            String actual = after.printAll();
+                            assertContains(actual, "@DynamicMapping was removed");
+                            assertContains(actual, "DynamicMappingValue belonged to removed @DynamicMapping");
+                            assertContains(actual, "DateFormat.none was removed");
+                            assertContains(actual, "DateFormat.custom was removed");
+                        })
                 )
         );
     }
@@ -861,20 +1008,11 @@ class UpgradeSpringDataElasticsearchTest implements RewriteTest {
                         }
                         class Product {}
                         """,
-                        """
-                        package example;
-
-                        import org.springframework.cache.annotation.Cacheable;
-                        import org.springframework.data.elasticsearch.annotations.Query;
-                        import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
-
-                        interface ProductRepository extends ElasticsearchRepository<Product, String> {
-                            /*~~>*/@Cacheable("products")
-                            /*~~>*/@Query("{ \\"match\\": { \\"name\\": \\"?0\\" } }")
-                            Product findCached(String name);
-                        }
-                        class Product {}
-                        """
+                        source -> source.after(actual -> actual).afterRecipe(after -> {
+                            String actual = after.printAll();
+                            assertContains(actual, "Spring cache semantics cross Spring 5 to 7");
+                            assertContains(actual, "Repository @Query no longer renders a null parameter");
+                        })
                 ),
                 java(
                         """
@@ -914,22 +1052,257 @@ class UpgradeSpringDataElasticsearchTest implements RewriteTest {
                             SearchRequest request;
                         }
                         """,
+                        source -> source.after(actual -> actual).afterRecipe(after -> {
+                            String actual = after.printAll();
+                            assertContains(actual, "old RHLC-oriented AbstractElasticsearchConfiguration");
+                            assertContains(actual, "RHLC was removed");
+                            assertContains(actual, "RestClients/RHLC configuration is absent");
+                            assertContains(actual, "TransportClient-based ElasticsearchTemplate was removed");
+                            assertContains(actual, "Reactive template/client contracts changed");
+                            assertContains(actual, "Direct Elasticsearch 7 request/response type detected");
+                        })
+                )
+        );
+    }
+
+    @Test
+    void recommendedMigrationUpgradesIsolatedPropertyWithoutFalseBuildMarker() {
+        rewriteRun(
+                spec -> spec.recipe(environment().activateRecipes(MIGRATION_RECIPE))
+                        .cycles(2).expectedCyclesThatMakeChanges(1),
+                pomXml(
+                        propertyPom("4.2.8", "spring-data-elasticsearch.version"),
+                        propertyPom("6.0.5", "spring-data-elasticsearch.version")
+                )
+        );
+    }
+
+    @Test
+    void recommendedMigrationCombinesDependencyAutoFixAndExactBuildMarkerIdempotently() {
+        rewriteRun(
+                spec -> spec.recipe(environment().activateRecipes(MIGRATION_RECIPE))
+                        .cycles(2).expectedCyclesThatMakeChanges(1),
+                pomXml(
+                        """
+                        <project><modelVersion>4.0.0</modelVersion><groupId>example</groupId><artifactId>recommended</artifactId><version>1</version>
+                          <dependencies>
+                            <dependency><groupId>org.springframework.data</groupId><artifactId>spring-data-elasticsearch</artifactId><version>4.4.14</version></dependency>
+                            <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-data-elasticsearch</artifactId><version>3.5.0</version></dependency>
+                          </dependencies>
+                        </project>
+                        """,
+                        source -> source.after(actual -> actual).afterRecipe(after -> {
+                            String actual = after.printAll();
+                            assertContains(actual, "spring-data-elasticsearch</artifactId><version>6.0.5");
+                            assertContains(actual, "align this Spring Boot parent/starter/BOM to the 4.x generation");
+                        })
+                )
+        );
+    }
+
+    @Test
+    void recommendedMigrationDoesNotMarkLocallyTargetManagedVersionlessDependency() {
+        rewriteRun(
+                spec -> spec.recipe(environment().activateRecipes(MIGRATION_RECIPE)),
+                pomXml(
+                        """
+                        <project><modelVersion>4.0.0</modelVersion><groupId>example</groupId><artifactId>locally-managed</artifactId><version>1</version>
+                          <dependencyManagement><dependencies><dependency>
+                            <groupId>org.springframework.data</groupId><artifactId>spring-data-elasticsearch</artifactId><version>6.0.5</version>
+                          </dependency></dependencies></dependencyManagement>
+                          <dependencies><dependency>
+                            <groupId>org.springframework.data</groupId><artifactId>spring-data-elasticsearch</artifactId>
+                          </dependency></dependencies>
+                        </project>
+                        """
+                )
+        );
+    }
+
+    @Test
+    void recommendedMigrationDoesNotMarkTargetBomManagedVersionlessDependency() {
+        rewriteRun(
+                spec -> spec.recipe(environment().activateRecipes(MIGRATION_RECIPE)),
+                pomXml(
+                        """
+                        <project><modelVersion>4.0.0</modelVersion><groupId>example</groupId><artifactId>bom-managed-target</artifactId><version>1</version>
+                          <dependencyManagement><dependencies><dependency>
+                            <groupId>org.springframework.data</groupId><artifactId>spring-data-bom</artifactId><version>2025.1.5</version><type>pom</type><scope>import</scope>
+                          </dependency></dependencies></dependencyManagement>
+                          <dependencies><dependency>
+                            <groupId>org.springframework.data</groupId><artifactId>spring-data-elasticsearch</artifactId>
+                          </dependency></dependencies>
+                        </project>
+                        """
+                )
+        );
+    }
+
+    @Test
+    void auditMarksCustomMavenArtifactAtItsDependencyNode() {
+        rewriteRun(
+                spec -> spec.recipe(environment().activateRecipes(AUDIT_RECIPE)),
+                pomXml(
+                        """
+                        <project><modelVersion>4.0.0</modelVersion><groupId>example</groupId><artifactId>custom-artifact</artifactId><version>1</version>
+                          <dependencies><dependency>
+                            <groupId>org.springframework.data</groupId><artifactId>spring-data-elasticsearch</artifactId><version>4.2.8</version><classifier>tests</classifier>
+                          </dependency></dependencies>
+                        </project>
+                        """,
+                        source -> source.after(actual -> actual).afterRecipe(after ->
+                                assertContains(after.printAll(), "classified or non-JAR Spring Data Elasticsearch artifact"))
+                )
+        );
+    }
+
+    @Test
+    void recommendedMigrationMarksProfileShadowedPropertyWithoutChangingItsOwner() {
+        rewriteRun(
+                spec -> spec.recipe(environment().activateRecipes(MIGRATION_RECIPE)),
+                pomXml(
+                        """
+                        <project><modelVersion>4.0.0</modelVersion><groupId>example</groupId><artifactId>shadow-audit</artifactId><version>1</version>
+                          <properties><search.version>4.2.8</search.version></properties>
+                          <dependencies><dependency>
+                            <groupId>org.springframework.data</groupId><artifactId>spring-data-elasticsearch</artifactId><version>${search.version}</version>
+                          </dependency></dependencies>
+                          <profiles><profile><id>override</id><properties><search.version>4.4.13</search.version></properties></profile></profiles>
+                        </project>
+                        """,
+                        source -> source.after(actual -> actual).afterRecipe(after -> {
+                            String actual = after.printAll();
+                            assertContains(actual, "<search.version>4.2.8</search.version>");
+                            assertContains(actual, "Spring Data Elasticsearch remains unselected");
+                        })
+                ),
+                pomXml(
+                        """
+                        <project><modelVersion>4.0.0</modelVersion><groupId>example</groupId><artifactId>duplicate-audit</artifactId><version>1</version>
+                          <properties><search.version>4.2.8</search.version><search.version>6.0.5</search.version></properties>
+                          <dependencies><dependency>
+                            <groupId>org.springframework.data</groupId><artifactId>spring-data-elasticsearch</artifactId><version>${search.version}</version>
+                          </dependency></dependencies>
+                        </project>
+                        """,
+                        source -> source.path("duplicate/pom.xml").after(actual -> actual).afterRecipe(after ->
+                                assertContains(after.printAll(), "Spring Data Elasticsearch remains unselected"))
+                )
+        );
+    }
+
+    @Test
+    void auditMarksGradleVersionlessAndCustomTargetDeclarations() {
+        rewriteRun(
+                spec -> spec.recipe(environment().activateRecipes(AUDIT_RECIPE))
+                        .typeValidationOptions(TypeValidation.none()),
+                buildGradle(
+                        """
+                        plugins { id 'java-library' }
+                        repositories { mavenCentral() }
+                        dependencies {
+                            implementation 'org.springframework.data:spring-data-elasticsearch'
+                            testImplementation group: 'org.springframework.data', name: 'spring-data-elasticsearch', version: '6.0.5', classifier: 'tests'
+                        }
+                        """,
+                        source -> source.after(actual -> actual).afterRecipe(after -> {
+                            String actual = after.printAll();
+                            assertContains(actual, "Spring Data Elasticsearch remains unselected");
+                            assertContains(actual, "classified or non-JAR Spring Data Elasticsearch artifact");
+                        })
+                )
+        );
+    }
+
+    @Test
+    void auditMarksExactMavenGenerationAndJavaBaselineRisks() {
+        rewriteRun(
+                spec -> spec.recipe(environment().activateRecipes(AUDIT_RECIPE)),
+                pomXml(
+                        """
+                        <project><modelVersion>4.0.0</modelVersion><groupId>example</groupId><artifactId>audit</artifactId><version>1</version>
+                          <properties><java.version>11</java.version></properties>
+                          <dependencies>
+                            <dependency><groupId>org.springframework.data</groupId><artifactId>spring-data-elasticsearch</artifactId><version>6.0.5</version></dependency>
+                            <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-data-elasticsearch</artifactId><version>3.5.0</version></dependency>
+                          </dependencies>
+                        </project>
+                        """,
+                        source -> source.after(actual -> actual).afterRecipe(after -> {
+                            String actual = after.printAll();
+                            assertContains(actual, "requires Java 17 or newer");
+                            assertContains(actual, "align this Spring Boot parent/starter/BOM to the 4.x generation");
+                        })
+                )
+        );
+    }
+
+    @Test
+    void auditMarksOnlyTheUnselectedGradleDeclarationAndItsGenerationPeers() {
+        rewriteRun(
+                spec -> spec
+                        .recipe(environment().activateRecipes(AUDIT_RECIPE))
+                        .beforeRecipe(withToolingApi())
+                        .typeValidationOptions(TypeValidation.none()),
+                buildGradle(
+                        """
+                        plugins { id 'java-library' }
+                        repositories { mavenCentral() }
+                        dependencies {
+                            implementation 'org.springframework.data:spring-data-elasticsearch:4.4.13'
+                            implementation 'org.springframework.data:spring-data-commons:2.7.18'
+                            implementation 'example:unrelated:4.4.13'
+                        }
+                        """,
+                        source -> source.after(actual -> actual).afterRecipe(after -> {
+                            String actual = after.printAll();
+                            assertContains(actual, "remains unselected");
+                            assertContains(actual, "Align this Spring Data module/platform");
+                            assertTrue(actual.contains("implementation 'example:unrelated:4.4.13'"), actual);
+                        })
+                )
+        );
+    }
+
+    @Test
+    void auditMarksGradleMapPeerButNotCoordinateLikeTextOutsideDependencies() {
+        rewriteRun(
+                spec -> spec
+                        .recipe(environment().activateRecipes(AUDIT_RECIPE))
+                        .beforeRecipe(withToolingApi())
+                        .typeValidationOptions(TypeValidation.none()),
+                buildGradle(
+                        """
+                        plugins { id 'java-library' }
+                        repositories { mavenCentral() }
+                        def migrationNote = 'org.springframework.boot:spring-boot-dependencies:3.5.0'
+                        dependencies {
+                            implementation 'org.springframework.data:spring-data-elasticsearch:6.0.5'
+                            implementation group: 'org.springframework.data', name: 'spring-data-commons', version: '2.7.18'
+                        }
+                        """,
+                        source -> source.after(actual -> actual).afterRecipe(after -> {
+                            String actual = after.printAll();
+                            assertContains(actual, "Align this Spring Data module/platform");
+                            assertTrue(actual.contains("def migrationNote = 'org.springframework.boot:spring-boot-dependencies:3.5.0'"), actual);
+                            assertTrue(!actual.contains("Align this Spring Boot dependency/platform"), actual);
+                        })
+                )
+        );
+    }
+
+    @Test
+    void leavesSupportedDocumentDeleteOverloadUnmarked() {
+        rewriteRun(
+                spec -> spec.recipe(environment().activateRecipes(AUDIT_RECIPE)).parser(migrationApiParser()),
+                java(
                         """
                         package example;
-
-                        import org.elasticsearch.action.search.SearchRequest;
-                        import org.elasticsearch.client.RestHighLevelClient;
-                        import org.springframework.data.elasticsearch.client.RestClients;
-                        import org.springframework.data.elasticsearch.config.AbstractElasticsearchConfiguration;
-                        import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
-                        import org.springframework.data.elasticsearch.core.ReactiveElasticsearchTemplate;
-
-                        class /*~~>*/LegacyConfig extends /*~~>*/AbstractElasticsearchConfiguration {
-                            /*~~>*/RestHighLevelClient client;
-                            /*~~>*/RestClients clients;
-                            /*~~>*/ElasticsearchTemplate transportTemplate;
-                            /*~~>*/ReactiveElasticsearchTemplate reactiveTemplate;
-                            /*~~>*/SearchRequest request;
+                        import org.springframework.data.elasticsearch.core.DocumentOperations;
+                        class SupportedDelete {
+                            Object delete(DocumentOperations operations, Object entity) {
+                                return operations.delete(entity);
+                            }
                         }
                         """
                 )
@@ -941,11 +1314,18 @@ class UpgradeSpringDataElasticsearchTest implements RewriteTest {
         Environment environment = environment();
         Recipe dependencyRecipe = environment.activateRecipes(DEPENDENCY_RECIPE);
         Recipe migrationRecipe = environment.activateRecipes(MIGRATION_RECIPE);
+        Recipe auditRecipe = environment.activateRecipes(AUDIT_RECIPE);
 
         assertTrue(environment.listRecipes().stream().anyMatch(recipe -> DEPENDENCY_RECIPE.equals(recipe.getName())));
         assertTrue(environment.listRecipes().stream().anyMatch(recipe -> MIGRATION_RECIPE.equals(recipe.getName())));
+        assertTrue(environment.listRecipes().stream().anyMatch(recipe -> AUDIT_RECIPE.equals(recipe.getName())));
         assertTrue(dependencyRecipe.validate().isValid(), () -> dependencyRecipe.validate().failures().toString());
         assertTrue(migrationRecipe.validate().isValid(), () -> migrationRecipe.validate().failures().toString());
+        assertTrue(auditRecipe.validate().isValid(), () -> auditRecipe.validate().failures().toString());
+    }
+
+    private static void assertContains(String actual, String expected) {
+        assertTrue(actual.contains(expected), () -> "Expected <" + expected + "> in:\n" + actual);
     }
 
     private static String directPom(String version) {
@@ -1096,6 +1476,7 @@ class UpgradeSpringDataElasticsearchTest implements RewriteTest {
                 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
                 import org.springframework.data.elasticsearch.core.query.Query;
                 public interface DocumentOperations {
+                    Object delete(Object entity);
                     Object delete(Query query, Class<?> type);
                     Object delete(Query query, Class<?> type, IndexCoordinates index);
                 }
