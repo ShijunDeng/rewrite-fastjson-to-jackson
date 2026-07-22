@@ -1,0 +1,32 @@
+---
+type: specs.openrewrite.org/v1beta/category
+name: com.huawei.clouds.openrewrite.jaxen
+packageName: com.huawei.clouds.openrewrite.jaxen
+description: Upgrade Jaxen to 2.0.1 with strict dependency ownership, documented Java replacements, and precise XPath migration guidance.
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.jaxen.UpgradeJaxenTo2_0_1
+displayName: Upgrade Jaxen to 2.0.1
+description: Upgrade only workbook-selected jaxen:jaxen versions 1.2.0 and 2.0.0 in owned Maven and Gradle declarations.
+tags:
+  - jaxen
+  - xpath
+  - dependency-upgrade
+recipeList:
+  - com.huawei.clouds.openrewrite.jaxen.UpgradeSelectedJaxenDependency
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.jaxen.MigrateJaxenTo2_0_1
+displayName: Migrate Jaxen applications to 2.0.1
+description: Upgrade Jaxen, apply the two officially documented API replacements, then mark engine/model, context, document, exception, serialization, Java baseline, JPMS, OSGi and reflection risks.
+tags:
+  - jaxen
+  - xpath
+  - java
+  - migration
+recipeList:
+  - com.huawei.clouds.openrewrite.jaxen.UpgradeJaxenTo2_0_1
+  - com.huawei.clouds.openrewrite.jaxen.MigrateJaxenDeterministicJava
+  - com.huawei.clouds.openrewrite.jaxen.FindJaxenJavaMigrationRisks
+  - com.huawei.clouds.openrewrite.jaxen.FindJaxenBuildMigrationRisks
+  - com.huawei.clouds.openrewrite.jaxen.FindJaxenConfigurationRisks
