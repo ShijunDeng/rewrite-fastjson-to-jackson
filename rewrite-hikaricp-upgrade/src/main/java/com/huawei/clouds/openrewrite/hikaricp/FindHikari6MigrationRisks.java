@@ -29,6 +29,14 @@ public final class FindHikari6MigrationRisks extends Recipe {
     public JavaIsoVisitor<ExecutionContext> getVisitor() {
         return new JavaIsoVisitor<ExecutionContext>() {
             @Override
+            public J.CompilationUnit visitCompilationUnit(J.CompilationUnit compilationUnit, ExecutionContext ctx) {
+                if (!UpgradeSelectedHikariCPDependency.isProjectPath(compilationUnit.getSourcePath())) {
+                    return compilationUnit;
+                }
+                return super.visitCompilationUnit(compilationUnit, ctx);
+            }
+
+            @Override
             public J.ClassDeclaration visitClassDeclaration(J.ClassDeclaration classDecl, ExecutionContext ctx) {
                 J.ClassDeclaration c = super.visitClassDeclaration(classDecl, ctx);
                 if (directlyImplements(c, SQL_EXCEPTION_OVERRIDE)) {

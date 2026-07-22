@@ -18,7 +18,7 @@ com.huawei.clouds.openrewrite.hikaricp.UpgradeHikariCPTo6_3_3
 
 完整配方执行以下确定性变换：
 
-1. 只把显式 `com.zaxxer:HikariCP` 的 `3.3.0`、`3.4.5`、`4.0.3` 改为 `6.3.3`。支持 Maven 直接依赖、属性、激活 profile、`dependencyManagement`，以及 Gradle Groovy 的直接字符串/Map notation；`overrideManagedVersion=false`。
+1. 单一确定性依赖 recipe 只把显式 `com.zaxxer:HikariCP` 主 jar 的 `3.3.0`、`3.4.5`、`4.0.3` 改为 `6.3.3`。支持 Maven 项目/profile 的直接依赖、根/profile 自有属性、`dependencyManagement`，以及 Gradle `dependencies {}` 中 Groovy 的直接字符串/Map notation 和 Kotlin DSL 字面量；无需依赖可能缺失的 GradleProject semantic marker。插件内部依赖、classifier 和非 jar 构件保持不变。
 2. 把同一稳定 receiver 上相邻的 `setUsername(username)`、`setPassword(password)` 合并为 `setCredentials(Credentials.of(username, password))`，使新连接原子地读取凭据。只有 username 在前、password 紧邻在后、没有中间注释、receiver 是隐式 this/标识符/稳定字段链时才改写，不会重排有副作用表达式。
 3. 如果业务类继承 `HikariDataSource`、覆盖 `getUsername()` 或 `getPassword()`，但没有覆盖 `getCredentials()`，则添加：
 
@@ -31,9 +31,11 @@ public Credentials getCredentials() {
 
 这使 HikariCP 6 的 `PoolBase` 继续观察动态密码、IAM token 或代理 DataSource 的旧 getter 行为，不依赖临时系统属性。
 4. 在已经存在 `spring.datasource.hikari.*` 配置、但未声明 keepalive 的 `application.properties`/结构化 Spring YAML 中添加 `keepalive-time=0`，显式保留 HikariCP 3.x/4.x “默认禁用”的行为。已经配置 keepalive 的工程保持不变。
-5. 标记自定义 `SQLExceptionOverride`、缺少新方法的直接 `HikariConfigMXBean` 实现、匿名 MXBean、临时 legacy credential 系统属性，以及 Maven 中 Java 8/9/10 baseline。
+5. 标记自定义 `SQLExceptionOverride`、缺少新方法的直接 `HikariConfigMXBean` 实现、匿名 MXBean、临时 legacy credential 系统属性，以及实际声明 HikariCP 的 Maven 模块中 Java 8/9/10 baseline。每个 marker 均附带具体风险原因；Java baseline marker 只落在 `pom.xml` 的精确属性值上，不会污染同一次运行中的无关模块。
 
-版本升级采用来源白名单。`3.4.4`、`4.0.2`、`5.1.0` 等表格未列版本保持不变，`6.3.3` 和更高版本不会降级。Gradle 变量、Kotlin DSL/version catalog 即使值看起来相同也不会仅凭无关字面量猜测归属；应把版本权威迁到明确 dependency declaration，或人工更新后重新运行完整配方。
+版本升级采用来源白名单。`3.4.4`、`4.0.2`、`5.1.0` 等表格未列版本保持不变，`6.3.3` 和更高版本不会降级。Maven 属性只有在定义唯一且全部引用都属于 HikariCP 依赖时才修改；被项目元数据、其他组件共享或在多个 profile 重复定义时 no-op。Gradle/Kotlin 变量、插值、Map 变量、范围、动态版本和 version catalog 即使值看起来相同也不会仅凭无关字面量猜测归属。
+
+`target`、`build`、`out`、`dist`、`generated`、`.gradle`、`.idea`、`node_modules` 等生成目录中的构建描述符、Java 源码和 baseline 元数据不会处理。Maven BOM 或 Gradle platform 管理的无版本依赖也不会被强行添加版本。
 
 配方不会修改 Spring Boot/BOM/platform 托管的无版本依赖，也不会自动选择 JDBC driver、池大小、超时、异常驱逐、metrics backend、SLF4J provider、TCP keepalive 或生产 Java 镜像。
 
@@ -76,14 +78,14 @@ public Credentials getCredentials() {
 - [TechEmpower/Gemini @ fdf8d8a](https://github.com/TechEmpower/gemini/blob/fdf8d8a24c6d94f8f303d61804cd36f444d96f87/pom.xml)：共享 Maven 属性 `3.4.5`；
 - [joaolucasl/wallet @ d5f3c4f](https://github.com/joaolucasl/wallet/blob/d5f3c4f2897db79b5e6bb08c5640fe098bacbddb/build.gradle)：旧 Gradle `compile` 的 `3.4.5`；
 - [AtlasOfLivingAustralia/volunteer-portal @ afcc2b3](https://github.com/AtlasOfLivingAustralia/volunteer-portal/blob/afcc2b3cfd001a4d4de4e043b15582196c897aae/build.gradle.backup.txt)：旧 Gradle `runtime` 的 `4.0.3`；
-- [4o4E/EOrm @ 5755ae3](https://github.com/4o4E/EOrm/blob/5755ae3941d481f9e32239bb4a488af35b3a441e/eorm-core/build.gradle.kts)：Kotlin DSL 无语义归属时严格 no-op。
+- [4o4E/EOrm @ 5755ae3](https://github.com/4o4E/EOrm/blob/5755ae3941d481f9e32239bb4a488af35b3a441e/eorm-core/build.gradle.kts)：Kotlin DSL 中 `HikariCP:4.0.3` 的直接字面量在不依赖 Gradle semantic model 时升级，并保持其余依赖结构。
 
 源码兼容用例采用真实生产缺陷及修复：
 
 - [hortonworks/cloudbreak 修复前 @ 9e75d59](https://github.com/hortonworks/cloudbreak/blob/9e75d595c46134661c6adf36afda57f73b806a00/service-common/src/main/java/com/sequenceiq/cloudbreak/database/RdsIamAuthBasedHikariDataSource.java) 的 IAM DataSource 只覆盖 `getPassword()`；真实 [修复提交 92b69e5](https://github.com/hortonworks/cloudbreak/commit/92b69e5979521b36f4ebfddcfd0b4e9d694dae4c) 在 Spring Boot 静默升级到 HikariCP 6.3.3 后增加 `getCredentials()`。测试验证配方生成同等兼容桥接；
 - [alibaba/SREWorks @ 5eb36fa](https://github.com/alibaba/SREWorks/blob/5eb36fa9170fb737a06d9e690bc6df90a9924067/paas/appmanager/tesla-appmanager-spring/src/main/java/com/alibaba/tesla/appmanager/spring/config/DatasourceExceptionConfig.java) 的自定义 `SQLExceptionOverride` 返回 `CONTINUE_EVICT`；测试验证精确标记 6.2 SQL timeout 行为变化，而不擅自改成 `MUST_EVICT`。
 
-测试结构参考 OpenRewrite 官方固定提交的 [UpgradeDependencyVersionTest](https://github.com/openrewrite/rewrite-java-dependencies/blob/decb8dbb2b5b726f8815efc51c85c34a60268bb0/src/test/java/org/openrewrite/java/dependencies/UpgradeDependencyVersionTest.java)。当前 53 个测试调用覆盖三种来源版本、Maven/Gradle 声明、真实 before/after、Credentials 原子合并、动态子类、风险 marker、properties/YAML keepalive、Java baseline，以及目标/更新/未列版本、BOM/platform、变量/Kotlin DSL、相似坐标和已迁移源码 no-op。
+测试结构参考 OpenRewrite 官方固定提交的 [UpgradeDependencyVersionTest](https://github.com/openrewrite/rewrite-java-dependencies/blob/decb8dbb2b5b726f8815efc51c85c34a60268bb0/src/test/java/org/openrewrite/java/dependencies/UpgradeDependencyVersionTest.java)。当前 67 个执行场景覆盖三种来源版本、Maven/Groovy/Kotlin 直接/managed/profile/安全属性/Map 声明、两周期幂等、真实 before/after、Credentials 原子合并、动态子类、带原因风险 marker、properties/YAML keepalive、Java baseline，以及目标/更新/未列版本、共享/重复属性、BOM/platform、插件依赖/classifier/非 jar、Gradle 非依赖块同名调用、变量/插值/范围/动态/catalog、生成目录、相似坐标和已迁移源码 no-op。
 
 ## 官方依据
 

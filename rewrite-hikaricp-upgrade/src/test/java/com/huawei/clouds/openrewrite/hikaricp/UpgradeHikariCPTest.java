@@ -10,6 +10,7 @@ import org.openrewrite.test.RecipeSpec;
 import org.openrewrite.test.RewriteTest;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.openrewrite.gradle.Assertions.buildGradle;
 import static org.openrewrite.gradle.Assertions.buildGradleKts;
 import static org.openrewrite.gradle.toolingapi.Assertions.withToolingApi;
@@ -36,12 +37,30 @@ class UpgradeHikariCPTest implements RewriteTest {
         rewriteRun(pomXml(directPom(oldVersion), directPom("6.3.3")));
     }
 
+    @Test
+    void strictDependencyUpgradeIsIdempotent() {
+        rewriteRun(
+                spec -> spec.cycles(2).expectedCyclesThatMakeChanges(1),
+                pomXml(directPom("4.0.3"), directPom("6.3.3"))
+        );
+    }
+
     @ParameterizedTest(name = "Gradle upgrades spreadsheet version {0}")
     @ValueSource(strings = {"3.3.0", "3.4.5", "4.0.3"})
     void upgradesEverySpreadsheetVersionInGradle(String oldVersion) {
         rewriteRun(buildGradle(
                 gradleBuild("implementation", oldVersion),
                 gradleBuild("implementation", "6.3.3")
+        ));
+    }
+
+    @ParameterizedTest(name = "Gradle Kotlin upgrades spreadsheet version {0}")
+    @ValueSource(strings = {"3.3.0", "3.4.5", "4.0.3"})
+    void upgradesEverySpreadsheetVersionInGradleKotlin(String oldVersion) {
+        rewriteRun(buildGradleKts(
+                "plugins { java }\ndependencies { implementation(\"com.zaxxer:HikariCP:%s\") }".formatted(oldVersion),
+                "plugins { java }\ndependencies { implementation(\"com.zaxxer:HikariCP:6.3.3\") }",
+                source -> source.path("kotlin/build.gradle.kts")
         ));
     }
 
@@ -68,6 +87,30 @@ class UpgradeHikariCPTest implements RewriteTest {
                 propertyPom("HikariCP.version", "3.4.5"),
                 propertyPom("HikariCP.version", "6.3.3")
         ));
+    }
+
+    @Test
+    void preservesMavenPropertySharedOutsideHikariDependency() {
+        rewriteRun(pomXml("""
+                <project><modelVersion>4.0.0</modelVersion><groupId>example</groupId><artifactId>shared-property</artifactId><version>1</version>
+                  <name>${database.version}</name>
+                  <properties><database.version>3.4.5</database.version></properties>
+                  <dependencies><dependency>
+                    <groupId>com.zaxxer</groupId><artifactId>HikariCP</artifactId><version>${database.version}</version>
+                  </dependency></dependencies>
+                </project>
+                """));
+    }
+
+    @Test
+    void preservesAmbiguousDuplicateMavenPropertyDefinitions() {
+        rewriteRun(pomXml("""
+                <project><modelVersion>4.0.0</modelVersion><groupId>example</groupId><artifactId>duplicate-property</artifactId><version>1</version>
+                  <properties><hikari.version>3.4.5</hikari.version></properties>
+                  <dependencies><dependency><groupId>com.zaxxer</groupId><artifactId>HikariCP</artifactId><version>${hikari.version}</version></dependency></dependencies>
+                  <profiles><profile><id>alternate</id><properties><hikari.version>4.0.3</hikari.version></properties></profile></profiles>
+                </project>
+                """));
     }
 
     @Test
@@ -123,14 +166,14 @@ class UpgradeHikariCPTest implements RewriteTest {
     }
 
     @Test
-    void preservesMavenDependencyMetadata() {
+    void preservesMavenDependencyMetadataOnMainJar() {
         rewriteRun(pomXml(
                 """
                 <project>
                   <modelVersion>4.0.0</modelVersion><groupId>example</groupId><artifactId>pool-details</artifactId><version>1</version>
                   <dependencies><dependency>
                     <groupId>com.zaxxer</groupId><artifactId>HikariCP</artifactId><version>3.4.5</version>
-                    <type>jar</type><classifier>sources</classifier><scope>runtime</scope><optional>true</optional>
+                    <type>jar</type><scope>runtime</scope><optional>true</optional>
                     <exclusions><exclusion><groupId>org.slf4j</groupId><artifactId>slf4j-api</artifactId></exclusion></exclusions>
                   </dependency></dependencies>
                 </project>
@@ -140,7 +183,7 @@ class UpgradeHikariCPTest implements RewriteTest {
                   <modelVersion>4.0.0</modelVersion><groupId>example</groupId><artifactId>pool-details</artifactId><version>1</version>
                   <dependencies><dependency>
                     <groupId>com.zaxxer</groupId><artifactId>HikariCP</artifactId><version>6.3.3</version>
-                    <type>jar</type><classifier>sources</classifier><scope>runtime</scope><optional>true</optional>
+                    <type>jar</type><scope>runtime</scope><optional>true</optional>
                     <exclusions><exclusion><groupId>org.slf4j</groupId><artifactId>slf4j-api</artifactId></exclusion></exclusions>
                   </dependency></dependencies>
                 </project>
@@ -223,6 +266,26 @@ class UpgradeHikariCPTest implements RewriteTest {
     }
 
     @Test
+    void preservesGradleAndKotlinRangesDynamicAndInterpolatedVersions() {
+        rewriteRun(
+                buildGradle("""
+                        plugins { id 'java' }
+                        def hikariVersion = '4.0.3'
+                        dependencies {
+                            implementation "com.zaxxer:HikariCP:$hikariVersion"
+                            implementation 'com.zaxxer:HikariCP:[3.4,5.0)'
+                            implementation 'com.zaxxer:HikariCP:4.+'
+                        }
+                        """),
+                buildGradleKts("""
+                        plugins { java }
+                        val hikariVersion = "4.0.3"
+                        dependencies { implementation("com.zaxxer:HikariCP:$hikariVersion") }
+                        """, source -> source.path("variables/build.gradle.kts"))
+        );
+    }
+
+    @Test
     void upgradesAxRinfinityOopMavenDependency() {
         // Reduced from AxRinfinity/OOP at 8b836552:
         // https://github.com/AxRinfinity/OOP/blob/8b83655242269105df65aef7f1d4de117f1672cf/pom.xml#L25-L30
@@ -296,9 +359,9 @@ class UpgradeHikariCPTest implements RewriteTest {
     }
 
     @Test
-    void leavesEormKotlinDslWithoutSemanticModelUntouched() {
-        // Reduced from 4o4E/EOrm at 5755ae39. UpgradeDependencyVersion needs a GradleProject
-        // marker for Kotlin DSL and therefore fails safe in this parser-only test.
+    void upgradesEormKotlinDslWithoutRequiringSemanticModel() {
+        // Reduced from 4o4E/EOrm at 5755ae39. The strict literal visitor does not require
+        // a GradleProject marker and preserves the surrounding Kotlin DSL structure.
         // https://github.com/4o4E/EOrm/blob/5755ae3941d481f9e32239bb4a488af35b3a441e/eorm-core/build.gradle.kts#L1-L13
         rewriteRun(buildGradleKts(
                 """
@@ -307,6 +370,15 @@ class UpgradeHikariCPTest implements RewriteTest {
                 dependencies {
                     implementation("org.slf4j:slf4j-api:2.0.16")
                     implementation("com.zaxxer:HikariCP:4.0.3")
+                    implementation(kotlin("reflect"))
+                }
+                """,
+                """
+                plugins { kotlin("jvm") version "2.0.21" }
+                repositories { mavenCentral() }
+                dependencies {
+                    implementation("org.slf4j:slf4j-api:2.0.16")
+                    implementation("com.zaxxer:HikariCP:6.3.3")
                     implementation(kotlin("reflect"))
                 }
                 """
@@ -582,16 +654,28 @@ class UpgradeHikariCPTest implements RewriteTest {
                   <modelVersion>4.0.0</modelVersion>
                   <groupId>example</groupId><artifactId>java8-pool</artifactId><version>1</version>
                   <properties><java.version>1.8</java.version></properties>
+                  <dependencies><dependency><groupId>com.zaxxer</groupId><artifactId>HikariCP</artifactId><version>6.3.3</version></dependency></dependencies>
                 </project>
                 """,
                 """
                 <project>
                   <modelVersion>4.0.0</modelVersion>
                   <groupId>example</groupId><artifactId>java8-pool</artifactId><version>1</version>
-                  <properties><!--~~>--><java.version>1.8</java.version></properties>
+                  <properties><java.version><!--~~(HikariCP 6.3.3 requires Java 11 or newer; upgrade the build toolchain and runtime together)~~>-->1.8</java.version></properties>
+                  <dependencies><dependency><groupId>com.zaxxer</groupId><artifactId>HikariCP</artifactId><version>6.3.3</version></dependency></dependencies>
                 </project>
                 """
         ));
+    }
+
+    @Test
+    void doesNotMarkJavaBaselineWithoutAnOwnedHikariDependency() {
+        rewriteRun(pomXml("""
+                <project><modelVersion>4.0.0</modelVersion><groupId>example</groupId><artifactId>unrelated-java8</artifactId><version>1</version>
+                  <properties><java.version>8</java.version></properties>
+                  <dependencies><dependency><groupId>org.postgresql</groupId><artifactId>postgresql</artifactId><version>42.7.7</version></dependency></dependencies>
+                </project>
+                """));
     }
 
     @Test
@@ -619,7 +703,7 @@ class UpgradeHikariCPTest implements RewriteTest {
 
     @Test
     void preservesMavenBomManagedVersionlessDependency() {
-        rewriteRun(pomXml(
+        rewriteRun(org.openrewrite.xml.Assertions.xml(
                 """
                 <project>
                   <modelVersion>4.0.0</modelVersion>
@@ -629,7 +713,7 @@ class UpgradeHikariCPTest implements RewriteTest {
                     <groupId>com.zaxxer</groupId><artifactId>HikariCP</artifactId>
                   </dependency></dependencies>
                 </project>
-                """
+                """, source -> source.path("bom-managed/pom.xml")
         ));
     }
 
@@ -666,6 +750,55 @@ class UpgradeHikariCPTest implements RewriteTest {
         ));
     }
 
+    @Test
+    void preservesGeneratedBuildDescriptorsAndBaselineMetadata() {
+        rewriteRun(
+                pomXml(directPom("4.0.3"), source -> source.path("target/pom.xml")),
+                buildGradle(
+                        "plugins { id 'java' }\ndependencies { implementation 'com.zaxxer:HikariCP:3.4.5' }",
+                        source -> source.path("build/generated/build.gradle")
+                ),
+                pomXml("""
+                        <project><modelVersion>4.0.0</modelVersion><groupId>example</groupId><artifactId>generated-baseline</artifactId><version>1</version>
+                          <properties><java.version>8</java.version></properties>
+                        </project>
+                        """, source -> source.path("target/generated/pom.xml"))
+        );
+    }
+
+    @Test
+    void preservesGeneratedJavaMigrationCandidates() {
+        rewriteRun(java(
+                """
+                import com.zaxxer.hikari.HikariConfig;
+
+                class GeneratedPoolFactory {
+                    void configure(HikariConfig config, String username, String password) {
+                        config.setUsername(username);
+                        config.setPassword(password);
+                        System.setProperty("com.zaxxer.hikari.legacy.supportUserPassDataSourceOverride", "true");
+                    }
+                }
+                """,
+                source -> source.path("build/generated/sources/GeneratedPoolFactory.java")
+        ));
+    }
+
+    @Test
+    void leavesSupportedJavaBaselinesAndUnrelatedXmlPropertiesUnmarked() {
+        rewriteRun(
+                pomXml("""
+                        <project><modelVersion>4.0.0</modelVersion><groupId>example</groupId><artifactId>java17</artifactId><version>1</version>
+                          <properties><java.version>17</java.version><maven.compiler.release>21</maven.compiler.release></properties>
+                        </project>
+                        """),
+                org.openrewrite.xml.Assertions.xml(
+                        "<configuration><properties><java.version>8</java.version></properties></configuration>",
+                        source -> source.path("src/main/resources/database.xml")
+                )
+        );
+    }
+
     @ParameterizedTest(name = "does not downgrade HikariCP {0}")
     @ValueSource(strings = {"6.3.3", "7.0.0", "7.0.1", "7.0.2"})
     void preservesTargetAndNewerVersions(String version) {
@@ -674,12 +807,13 @@ class UpgradeHikariCPTest implements RewriteTest {
 
     @Test
     void preservesUnlistedOlderVersion() {
-        rewriteRun(pomXml(directPom("5.1.0")));
+        rewriteRun(org.openrewrite.xml.Assertions.xml(
+                directPom("5.1.0"), source -> source.path("unlisted/pom.xml")));
     }
 
     @Test
     void doesNotChangeSimilarOrLegacyCoordinates() {
-        rewriteRun(pomXml(
+        rewriteRun(org.openrewrite.xml.Assertions.xml(
                 """
                 <project><modelVersion>4.0.0</modelVersion><groupId>example</groupId><artifactId>similar</artifactId><version>1</version>
                   <dependencies>
@@ -688,7 +822,7 @@ class UpgradeHikariCPTest implements RewriteTest {
                     <dependency><groupId>org.hibernate</groupId><artifactId>hibernate-hikaricp</artifactId><version>5.6.15.Final</version></dependency>
                   </dependencies>
                 </project>
-                """
+                """, source -> source.path("legacy/pom.xml")
         ));
     }
 
@@ -719,13 +853,48 @@ class UpgradeHikariCPTest implements RewriteTest {
     }
 
     @Test
+    void preservesPluginDependenciesAndNonMainArtifacts() {
+        rewriteRun(pomXml("""
+                <project><modelVersion>4.0.0</modelVersion><groupId>example</groupId><artifactId>non-main-artifacts</artifactId><version>1</version>
+                  <properties><plugin.hikari.version>3.4.5</plugin.hikari.version></properties>
+                  <dependencies>
+                    <dependency><groupId>com.zaxxer</groupId><artifactId>HikariCP</artifactId><version>3.4.5</version><classifier>sources</classifier></dependency>
+                    <dependency><groupId>com.zaxxer</groupId><artifactId>HikariCP</artifactId><version>4.0.3</version><type>test-jar</type></dependency>
+                  </dependencies>
+                  <build><plugins><plugin><groupId>example</groupId><artifactId>codegen</artifactId><version>1</version>
+                    <dependencies><dependency><groupId>com.zaxxer</groupId><artifactId>HikariCP</artifactId><version>${plugin.hikari.version}</version></dependency></dependencies>
+                  </plugin></plugins></build>
+                </project>
+                """));
+    }
+
+    @Test
+    void doesNotTreatGroovyMethodNamedImplementationOutsideDependenciesAsADeclaration() {
+        rewriteRun(buildGradle("""
+                plugins { id 'java' }
+                void implementation(String value) { println value }
+                implementation('com.zaxxer:HikariCP:4.0.3')
+                """));
+    }
+
+    @Test
+    void doesNotTreatKotlinMethodNamedImplementationOutsideDependenciesAsADeclaration() {
+        rewriteRun(buildGradleKts("""
+                plugins { java }
+                fun implementation(value: String) = println(value)
+                implementation("com.zaxxer:HikariCP:4.0.3")
+                """, source -> source.path("custom/build.gradle.kts")));
+    }
+
+    @Test
     void discoversAndValidatesRecipe() {
         Environment environment = environment();
-        Recipe recipe = environment.activateRecipes(MIGRATION_RECIPE);
-
-        assertTrue(environment.listRecipes().stream().anyMatch(candidate -> MIGRATION_RECIPE.equals(candidate.getName())));
-        assertTrue(environment.listRecipes().stream().anyMatch(candidate -> DEPENDENCY_RECIPE.equals(candidate.getName())));
-        assertTrue(recipe.validate().isValid(), () -> recipe.validate().failures().toString());
+        assertEquals(3, UpgradeSelectedHikariCPDependency.SOURCE_VERSIONS.size());
+        for (String name : new String[]{MIGRATION_RECIPE, DEPENDENCY_RECIPE}) {
+            Recipe recipe = environment.activateRecipes(name);
+            assertTrue(environment.listRecipes().stream().anyMatch(candidate -> name.equals(candidate.getName())));
+            assertTrue(recipe.validate().isValid(), () -> recipe.validate().failures().toString());
+        }
     }
 
     private static String directPom(String version) {
@@ -797,8 +966,8 @@ class UpgradeHikariCPTest implements RewriteTest {
                <project>
                  <modelVersion>4.0.0</modelVersion>
                  <groupId>example</groupId><artifactId>profile-property-pool</artifactId><version>1</version>
-                 <properties><hikari.profile.version>%s</hikari.profile.version></properties>
                  <profiles><profile><id>database</id><activation><activeByDefault>true</activeByDefault></activation>
+                   <properties><hikari.profile.version>%s</hikari.profile.version></properties>
                    <dependencies><dependency>
                      <groupId>com.zaxxer</groupId><artifactId>HikariCP</artifactId><version>${hikari.profile.version}</version>
                    </dependency></dependencies>

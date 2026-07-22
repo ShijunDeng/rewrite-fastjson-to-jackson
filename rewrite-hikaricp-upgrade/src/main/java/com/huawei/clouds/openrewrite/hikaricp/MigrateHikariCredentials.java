@@ -62,6 +62,14 @@ public final class MigrateHikariCredentials extends Recipe {
                     .build();
 
             @Override
+            public J.CompilationUnit visitCompilationUnit(J.CompilationUnit compilationUnit, ExecutionContext ctx) {
+                if (!UpgradeSelectedHikariCPDependency.isProjectPath(compilationUnit.getSourcePath())) {
+                    return compilationUnit;
+                }
+                return super.visitCompilationUnit(compilationUnit, ctx);
+            }
+
+            @Override
             public J.Block visitBlock(J.Block block, ExecutionContext ctx) {
                 J.Block b = super.visitBlock(block, ctx);
                 List<Statement> statements = b.getStatements();
