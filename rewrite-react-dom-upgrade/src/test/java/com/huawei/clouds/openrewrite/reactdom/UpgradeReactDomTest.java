@@ -233,10 +233,13 @@ class UpgradeReactDomTest implements RewriteTest {
     @ParameterizedTest(name = "upgrades supported registry semver {0}")
     @ValueSource(strings = {
             "^16.6.1",
+            "~16.6.1",
+            "^16.14.0",
             "~16.14.0",
-            "v17.0.2",
-            "=18.2.0",
-            "^v16.14.0"
+            "^17.0.2",
+            "~17.0.2",
+            "^18.2.0",
+            "~18.2.0"
     })
     void upgradesSupportedRegistrySemverForms(String oldVersion) {
         rewriteRun(packageVersion("package.json", oldVersion));
@@ -249,7 +252,7 @@ class UpgradeReactDomTest implements RewriteTest {
                 {
                   "dependencies": {"react-dom": "16.6.1"},
                   "devDependencies": {"react-dom": "^16.14.0"},
-                  "peerDependencies": {"react-dom": "=17.0.2"},
+                  "peerDependencies": {"react-dom": "17.0.2"},
                   "optionalDependencies": {"react-dom": "~18.2.0"}
                 }
                 """,
@@ -384,6 +387,9 @@ class UpgradeReactDomTest implements RewriteTest {
     @ValueSource(strings = {
             "18.2.0-rc.1",
             "17.0.2+vendor.4",
+            "v17.0.2",
+            "=18.2.0",
+            "^v16.14.0",
             ">=16.14.0 <18",
             "16.6.1 - 18.2.0",
             "16.14.0 || ^18.2.0"
