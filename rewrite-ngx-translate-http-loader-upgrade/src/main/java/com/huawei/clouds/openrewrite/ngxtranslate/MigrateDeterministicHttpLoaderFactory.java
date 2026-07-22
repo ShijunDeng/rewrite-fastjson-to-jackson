@@ -1,15 +1,17 @@
 package com.huawei.clouds.openrewrite.ngxtranslate;
 
 import org.openrewrite.ExecutionContext;
+import org.openrewrite.Parser;
 import org.openrewrite.Recipe;
 import org.openrewrite.TreeVisitor;
-import org.openrewrite.text.PlainText;
-import org.openrewrite.text.PlainTextVisitor;
+import org.openrewrite.javascript.JavaScriptIsoVisitor;
+import org.openrewrite.javascript.JavaScriptParser;
+import org.openrewrite.javascript.tree.JS;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -21,7 +23,6 @@ import java.util.regex.Pattern;
  */
 public final class MigrateDeterministicHttpLoaderFactory extends Recipe {
     private static final String LITERAL = "(?:'[^'\\r\\n]*'|\"[^\"\\r\\n]*\"|`[^`$\\r\\n]*`)";
-    private static final Pattern SOURCE_EXTENSION = Pattern.compile(".*\\.(?:ts|tsx|mts|cts)$");
     private static final Pattern FACTORY = Pattern.compile(
             "(?m)^[ \\t]*(?:export[ \\t]+)?function[ \\t]+(?<name>[A-Za-z_$][\\w$]*)[ \\t]*\\(" +
             "[ \\t]*(?<http>[A-Za-z_$][\\w$]*)[ \\t]*:[ \\t]*HttpClient[ \\t]*\\)[ \\t]*" +
@@ -31,9 +32,8 @@ public final class MigrateDeterministicHttpLoaderFactory extends Recipe {
             "(?:[ \\t]*,[ \\t]*(?<suffix>" + LITERAL + "))?)?[ \\t]*\\)[ \\t]*;?[ \\t\\r\\n]*" +
             "\\}[ \\t]*(?:\\r?\\n(?:[ \\t]*\\r?\\n)?)?"
     );
-    private static final Pattern HTTP_LOADER_IMPORT = Pattern.compile(
-            "(?m)^[ \\t]*import[ \\t]*\\{(?<body>[^}]+)}[ \\t]*from[ \\t]*(?<quote>['\"])" +
-            "@ngx-translate/http-loader\\k<quote>[ \\t]*;?[ \\t]*(?:\\r?\\n)?"
+    private static final Pattern MODULE_CALL = Pattern.compile(
+            "\\bTranslateModule[ \\t\\r\\n]*\\.[ \\t\\r\\n]*(?:forRoot|forChild)[ \\t\\r\\n]*\\("
     );
 
     @Override
@@ -49,14 +49,27 @@ public final class MigrateDeterministicHttpLoaderFactory extends Recipe {
 
     @Override
     public TreeVisitor<?, ExecutionContext> getVisitor() {
-        return new PlainTextVisitor<ExecutionContext>() {
+        return new JavaScriptIsoVisitor<ExecutionContext>() {
             @Override
-            public PlainText visitText(PlainText text, ExecutionContext ctx) {
-                PlainText visited = super.visitText(text, ctx);
-                if (!SOURCE_EXTENSION.matcher(visited.getSourcePath().toString().toLowerCase(Locale.ROOT)).matches()) {
-                    return visited;
+            public JS.CompilationUnit visitJsCompilationUnit(JS.CompilationUnit cu, ExecutionContext ctx) {
+                if (!HttpLoaderSupport.isProjectPath(cu.getSourcePath())) {
+                    return cu;
                 }
-                return visited.withText(migrate(visited.getText()));
+                JS.CompilationUnit visited = super.visitJsCompilationUnit(cu, ctx);
+                String migrated = migrate(visited.printAll());
+                if (migrated.equals(visited.printAll())) return visited;
+
+                Path path = visited.getSourcePath();
+                Parser.Input input = Parser.Input.fromString(path, migrated, visited.getCharset());
+                JS.CompilationUnit parsed = (JS.CompilationUnit) JavaScriptParser.builder().build()
+                        .parseInputs(List.of(input), Path.of("."), ctx)
+                        .findFirst()
+                        .orElseThrow(() -> new IllegalStateException("Unable to parse migrated " + path));
+                return parsed.withId(visited.getId())
+                        .withSourcePath(path)
+                        .withFileAttributes(visited.getFileAttributes())
+                        .withCharsetBomMarked(visited.isCharsetBomMarked())
+                        .withMarkers(visited.getMarkers());
             }
         };
     }
@@ -64,7 +77,11 @@ public final class MigrateDeterministicHttpLoaderFactory extends Recipe {
     private static String migrate(String source) {
         boolean[] code = codePositions(source);
         List<Match> factories = codeMatches(source, FACTORY, code);
-        if (factories.size() != 1 || !hasExactHttpLoaderImport(source, code)) {
+        if (factories.size() != 1 ||
+            !hasExactNamedImport(source, HttpLoaderSupport.HTTP_LOADER, "TranslateHttpLoader", code) ||
+            !hasExactNamedImport(source, HttpLoaderSupport.CORE, "TranslateLoader", code) ||
+            !hasExactNamedImport(source, HttpLoaderSupport.CORE, "TranslateModule", code) ||
+            !hasExactNamedImport(source, HttpLoaderSupport.ANGULAR_HTTP, "HttpClient", code)) {
             return source;
         }
 
@@ -78,7 +95,7 @@ public final class MigrateDeterministicHttpLoaderFactory extends Recipe {
                 "\\[[ \\t\\r\\n]*HttpClient[ \\t\\r\\n]*][ \\t\\r\\n]*,?[ \\t\\r\\n]*}"
         );
         List<Match> providers = codeMatches(source, providerPattern, code);
-        if (providers.size() != 1) {
+        if (providers.size() != 1 || !insideTranslateModuleCall(source, providers.get(0), code)) {
             return source;
         }
 
@@ -95,18 +112,46 @@ public final class MigrateDeterministicHttpLoaderFactory extends Recipe {
         );
         String migrated = apply(source, replacements);
         migrated = replaceNamedImport(migrated, "@ngx-translate/http-loader",
-                "TranslateHttpLoader", "provideTranslateHttpLoader", true);
+                "TranslateHttpLoader", "provideTranslateHttpLoader");
         migrated = removeUnusedNamedImport(migrated, "@ngx-translate/core", "TranslateLoader");
         migrated = removeUnusedNamedImport(migrated, "@angular/common/http", "HttpClient");
         return migrated;
     }
 
-    private static boolean hasExactHttpLoaderImport(String source, boolean[] code) {
-        for (Match match : codeMatches(source, HTTP_LOADER_IMPORT, code)) {
+    private static boolean hasExactNamedImport(String source, String module, String wanted, boolean[] code) {
+        Pattern importPattern = Pattern.compile(
+                "(?m)^[ \\t]*import[ \\t]*\\{(?<body>[^}]+)}[ \\t]*from[ \\t]*(?<quote>['\"])" +
+                Pattern.quote(module) + "\\k<quote>[ \\t]*;?[ \\t]*(?:\\r?\\n)?"
+        );
+        for (Match match : codeMatches(source, importPattern, code)) {
             for (String specifier : match.group("body").split(",")) {
-                if ("TranslateHttpLoader".equals(specifier.trim())) {
+                if (wanted.equals(specifier.trim())) {
                     return true;
                 }
+            }
+        }
+        return false;
+    }
+
+    private static boolean insideTranslateModuleCall(String source, Match provider, boolean[] code) {
+        for (Match call : codeMatches(source, MODULE_CALL, code)) {
+            int open = source.indexOf('(', call.start);
+            if (open < 0 || open >= provider.start) continue;
+            int parentheses = 0;
+            int braces = 0;
+            int brackets = 0;
+            for (int index = open; index <= provider.start; index++) {
+                if (!code[index]) continue;
+                if (index == provider.start) {
+                    return parentheses == 1 && braces == 1 && brackets == 0;
+                }
+                char token = source.charAt(index);
+                if (token == '(') parentheses++;
+                else if (token == ')' && --parentheses == 0) break;
+                else if (token == '{') braces++;
+                else if (token == '}') braces--;
+                else if (token == '[') brackets++;
+                else if (token == ']') brackets--;
             }
         }
         return false;
@@ -132,7 +177,7 @@ public final class MigrateDeterministicHttpLoaderFactory extends Recipe {
     }
 
     private static String replaceNamedImport(String source, String module, String oldName,
-                                             String newName, boolean required) {
+                                             String newName) {
         Pattern pattern = namedImport(module);
         Matcher matcher = pattern.matcher(source);
         while (matcher.find()) {
@@ -149,7 +194,7 @@ public final class MigrateDeterministicHttpLoaderFactory extends Recipe {
             String replacement = renderImport(matcher, names, module);
             return source.substring(0, matcher.start()) + replacement + source.substring(matcher.end());
         }
-        return required ? source : source;
+        return source;
     }
 
     private static Pattern namedImport(String module) {

@@ -2,27 +2,27 @@
 type: specs.openrewrite.org/v1beta/category
 name: com.huawei.clouds.openrewrite.ngxtranslate
 packageName: com.huawei.clouds.openrewrite.ngxtranslate
-description: Upgrade ngx-translate HTTP loader dependencies and source with explicit automated and review-only behavior.
+description: Upgrade ngx-translate HTTP loader with strict spreadsheet declarations, deterministic factory migration and precise source/project audits.
 ---
 type: specs.openrewrite.org/v1beta/recipe
 name: com.huawei.clouds.openrewrite.ngxtranslate.UpgradeNgxTranslateHttpLoaderTo17
-displayName: Upgrade selected @ngx-translate/http-loader declarations to 17.0.0
-description: Update only spreadsheet-selected direct package.json declarations; preserve ranges, protocols, aliases, lockfiles, nested metadata, and unlisted versions.
+displayName: Upgrade spreadsheet-selected @ngx-translate/http-loader declarations to 17.0.0
+description: Upgrade only exact, caret or tilde forms of 4.0.0, 6.0.0, 7.0.0 and 8.0.0 in direct package.json dependency sections.
 tags:
   - ngx-translate
   - http-loader
   - angular
-  - nodejs
   - dependency-upgrade
 recipeList:
   - com.huawei.clouds.openrewrite.ngxtranslate.UpgradeSelectedNgxTranslateHttpLoaderDependency
 ---
 type: specs.openrewrite.org/v1beta/recipe
 name: com.huawei.clouds.openrewrite.ngxtranslate.MigrateDeterministicHttpLoaderFactoriesTo17
-displayName: Migrate deterministic ngx-translate HTTP loader factories to version 17
-description: Replace exact same-file HttpClient factories and raw NgModule loader providers with provideTranslateHttpLoader, preserving literal prefix and suffix settings and pruning imports that become unused.
+displayName: Apply deterministic ngx-translate HTTP loader 17 factory migrations
+description: Replace an exact same-file HttpClient factory and raw NgModule loader provider with provideTranslateHttpLoader while preserving literal prefix and suffix and pruning proven-unused imports.
 tags:
   - ngx-translate
+  - http-loader
   - angular
   - typescript
   - source-migration
@@ -30,106 +30,64 @@ recipeList:
   - com.huawei.clouds.openrewrite.ngxtranslate.MigrateDeterministicHttpLoaderFactory
 ---
 type: specs.openrewrite.org/v1beta/recipe
-name: com.huawei.clouds.openrewrite.ngxtranslate.FindManualHttpLoader17MigrationRisks
-displayName: Find ngx-translate HTTP loader 17 migration risks requiring review
-description: Mark constructor calls and provider shapes that could not be converted safely, custom loader contracts, cache/interceptor behavior switches, browser-dependent paths, and HTTP registration sites.
+name: com.huawei.clouds.openrewrite.ngxtranslate.AuditNgxTranslateHttpLoader17Source
+displayName: Audit ngx-translate HTTP loader 17 source compatibility
+description: Mark unresolved construction/provider shapes, functional provider behavior, custom loader contracts, dynamic paths, cache/interceptor switches, HTTP registration and deep imports.
 tags:
   - ngx-translate
-  - angular
-  - search
-  - manual-review
-preconditions:
-  - org.openrewrite.text.Find:
-      find: '@ngx-translate/(?:http-loader|core)'
-      regex: true
-      caseSensitive: true
-      filePattern: "**/*.{ts,tsx,mts,cts}"
-      contextSize: 0
+  - http-loader
+  - typescript
+  - migration-audit
 recipeList:
-  - org.openrewrite.text.Find:
-      find: '\bnew[ \t]+TranslateHttpLoader[ \t]*\('
-      regex: true
-      caseSensitive: true
-      filePattern: "**/*.{ts,tsx,mts,cts}"
-      contextSize: 80
-  - org.openrewrite.text.Find:
-      find: '\bloader[ \t\r\n]*:[ \t\r\n]*\{[ \t\r\n]*provide[ \t\r\n]*:[ \t\r\n]*TranslateLoader\b'
-      regex: true
-      caseSensitive: true
-      filePattern: "**/*.{ts,tsx,mts,cts}"
-      contextSize: 80
-  - org.openrewrite.text.Find:
-      find: '\bimplements[ \t]+TranslateLoader\b|\bgetTranslation[ \t]*\('
-      regex: true
-      caseSensitive: true
-      filePattern: "**/*.{ts,tsx,mts,cts}"
-      contextSize: 80
-  - org.openrewrite.text.Find:
-      find: '\b(?:useHttpBackend|enforceLoading)[ \t]*:[ \t]*true\b'
-      regex: true
-      caseSensitive: true
-      filePattern: "**/*.{ts,tsx,mts,cts}"
-      contextSize: 80
-  - org.openrewrite.text.Find:
-      find: '\bprovideTranslateHttpLoader[ \t]*\([ \t]*\{[^}]*(?:window|document|location|environment|BASE_URL|APP_BASE_HREF)\b'
-      regex: true
-      caseSensitive: true
-      filePattern: "**/*.{ts,tsx,mts,cts}"
-      contextSize: 80
-  - org.openrewrite.text.Find:
-      find: '\b(?:HttpClientModule|provideHttpClient)[ \t]*(?:\b|\()'
-      regex: true
-      caseSensitive: true
-      filePattern: "**/*.{ts,tsx,mts,cts}"
-      contextSize: 40
+  - com.huawei.clouds.openrewrite.ngxtranslate.FindHttpLoaderJavaScriptRisks
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.ngxtranslate.AuditNgxTranslateHttpLoader17Project
+displayName: Audit ngx-translate HTTP loader 17 project compatibility
+description: Mark unresolved declarations, core/Angular/TypeScript alignment, private paths and strict/module-resolution constraints.
+tags:
+  - ngx-translate
+  - http-loader
+  - json
+  - migration-audit
+recipeList:
+  - com.huawei.clouds.openrewrite.ngxtranslate.FindHttpLoaderJsonRisks
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.ngxtranslate.FindManualHttpLoader17MigrationRisks
+displayName: Find ngx-translate HTTP loader 17 source risks requiring review
+description: Backward-compatible source-audit entry point.
+tags:
+  - ngx-translate
+  - http-loader
+  - migration-audit
+recipeList:
+  - com.huawei.clouds.openrewrite.ngxtranslate.AuditNgxTranslateHttpLoader17Source
 ---
 type: specs.openrewrite.org/v1beta/recipe
 name: com.huawei.clouds.openrewrite.ngxtranslate.FindHttpLoader17CompanionDependencies
-displayName: Find companion dependencies for ngx-translate HTTP loader 17 review
-description: Mark ngx-translate core and Angular peer declarations because loader 17 requires a compatible core configuration and Angular common/core 16 or newer.
+displayName: Find ngx-translate HTTP loader 17 project and companion risks
+description: Backward-compatible project-audit entry point for core, Angular, TypeScript and JSON configuration.
 tags:
   - ngx-translate
-  - angular
-  - search
-  - dependency-review
+  - http-loader
+  - migration-audit
 recipeList:
-  - org.openrewrite.json.search.FindKey:
-      key: $.dependencies['@ngx-translate/core']
-  - org.openrewrite.json.search.FindKey:
-      key: $.devDependencies['@ngx-translate/core']
-  - org.openrewrite.json.search.FindKey:
-      key: $.peerDependencies['@ngx-translate/core']
-  - org.openrewrite.json.search.FindKey:
-      key: $.optionalDependencies['@ngx-translate/core']
-  - org.openrewrite.json.search.FindKey:
-      key: $.dependencies['@angular/core']
-  - org.openrewrite.json.search.FindKey:
-      key: $.devDependencies['@angular/core']
-  - org.openrewrite.json.search.FindKey:
-      key: $.peerDependencies['@angular/core']
-  - org.openrewrite.json.search.FindKey:
-      key: $.optionalDependencies['@angular/core']
-  - org.openrewrite.json.search.FindKey:
-      key: $.dependencies['@angular/common']
-  - org.openrewrite.json.search.FindKey:
-      key: $.devDependencies['@angular/common']
-  - org.openrewrite.json.search.FindKey:
-      key: $.peerDependencies['@angular/common']
-  - org.openrewrite.json.search.FindKey:
-      key: $.optionalDependencies['@angular/common']
+  - com.huawei.clouds.openrewrite.ngxtranslate.AuditNgxTranslateHttpLoader17Project
 ---
 type: specs.openrewrite.org/v1beta/recipe
 name: com.huawei.clouds.openrewrite.ngxtranslate.MigrateNgxTranslateHttpLoaderTo17
-displayName: Migrate ngx-translate HTTP loader applications to 17.0.0
-description: Upgrade selected dependencies, migrate deterministic same-file factories, and mark unresolved provider, custom loader, HTTP, path, caching, interceptor, core, and Angular compatibility work.
+displayName: Migrate spreadsheet-selected ngx-translate HTTP loader applications to 17.0.0
+description: Recommended migration that applies strict dependency and deterministic factory changes, then marks exact source and project compatibility decisions.
 tags:
   - ngx-translate
   - http-loader
   - angular
   - typescript
-  - migration
+  - dependency-upgrade
+  - migration-audit
 recipeList:
   - com.huawei.clouds.openrewrite.ngxtranslate.UpgradeNgxTranslateHttpLoaderTo17
   - com.huawei.clouds.openrewrite.ngxtranslate.MigrateDeterministicHttpLoaderFactoriesTo17
-  - com.huawei.clouds.openrewrite.ngxtranslate.FindManualHttpLoader17MigrationRisks
-  - com.huawei.clouds.openrewrite.ngxtranslate.FindHttpLoader17CompanionDependencies
+  - com.huawei.clouds.openrewrite.ngxtranslate.AuditNgxTranslateHttpLoader17Source
+  - com.huawei.clouds.openrewrite.ngxtranslate.AuditNgxTranslateHttpLoader17Project

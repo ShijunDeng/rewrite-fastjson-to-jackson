@@ -9,14 +9,13 @@ import org.openrewrite.json.tree.Json;
 
 import java.nio.file.Path;
 import java.util.Set;
-import java.util.regex.Pattern;
 
 /** Upgrades only scalar direct declarations selected by the migration spreadsheet. */
 public final class UpgradeSelectedNgxTranslateHttpLoaderDependency extends Recipe {
-    private static final Set<String> SECTIONS = Set.of(
+    static final Set<String> SECTIONS = Set.of(
             "dependencies", "devDependencies", "peerDependencies", "optionalDependencies"
     );
-    private static final Set<String> VERSIONS = Set.of("4.0.0", "6.0.0", "7.0.0", "8.0.0");
+    static final Set<String> VERSIONS = Set.of("4.0.0", "6.0.0", "7.0.0", "8.0.0");
 
     @Override
     public String getDisplayName() {
@@ -41,10 +40,7 @@ public final class UpgradeSelectedNgxTranslateHttpLoaderDependency extends Recip
                     return visited;
                 }
 
-                Cursor objectCursor = getCursor().getParentTreeCursor();
-                Cursor sectionCursor = objectCursor == null ? null : objectCursor.getParentTreeCursor();
-                if (sectionCursor == null || !(sectionCursor.getValue() instanceof Json.Member section) ||
-                    !SECTIONS.contains(key(section))) {
+                if (directDependencySection(getCursor()) == null) {
                     return visited;
                 }
                 return visited.withValue(value.withSource("\"17.0.0\"").withValue("17.0.0"));
@@ -52,24 +48,22 @@ public final class UpgradeSelectedNgxTranslateHttpLoaderDependency extends Recip
 
             private boolean isPackageJson() {
                 Path path = getCursor().firstEnclosingOrThrow(Json.Document.class).getSourcePath();
-                return path.getFileName() != null && "package.json".equals(path.getFileName().toString());
+                return path.getFileName() != null && "package.json".equals(path.getFileName().toString()) &&
+                       HttpLoaderSupport.isProjectPath(path);
             }
         };
     }
 
     private static boolean isSelected(String declaration) {
         String candidate = declaration;
-        if (candidate.startsWith("^") || candidate.startsWith("~") || candidate.startsWith("=")) {
-            candidate = candidate.substring(1);
-        }
-        if (candidate.startsWith("v")) {
+        if (candidate.startsWith("^") || candidate.startsWith("~")) {
             candidate = candidate.substring(1);
         }
         return VERSIONS.contains(candidate) &&
-               declaration.matches("(?:[~^=]?|\\^?v)" + Pattern.quote(candidate));
+               declaration.matches("[~^]?\\d+\\.\\d+\\.\\d+");
     }
 
-    private static String key(Json.Member member) {
+    static String key(Json.Member member) {
         if (member.getKey() instanceof Json.Literal literal) {
             return String.valueOf(literal.getValue());
         }
@@ -77,5 +71,19 @@ public final class UpgradeSelectedNgxTranslateHttpLoaderDependency extends Recip
             return identifier.getName();
         }
         return "";
+    }
+
+    static String directDependencySection(Cursor memberCursor) {
+        Cursor dependencyObject = memberCursor.getParentTreeCursor();
+        Cursor sectionCursor = dependencyObject == null ? null : dependencyObject.getParentTreeCursor();
+        if (sectionCursor == null || !(sectionCursor.getValue() instanceof Json.Member section) ||
+            !SECTIONS.contains(key(section))) {
+            return null;
+        }
+        Cursor rootObject = sectionCursor.getParentTreeCursor();
+        Cursor documentCursor = rootObject == null ? null : rootObject.getParentTreeCursor();
+        return rootObject != null && rootObject.getValue() instanceof Json.JsonObject root &&
+               documentCursor != null && documentCursor.getValue() instanceof Json.Document document &&
+               document.getValue() == root ? key(section) : null;
     }
 }
