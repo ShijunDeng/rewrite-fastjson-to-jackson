@@ -55,6 +55,7 @@
 | [`rewrite-kubernetes-client-java-upgrade`](rewrite-kubernetes-client-java-upgrade) | `com.huawei.clouds.openrewrite.kubernetesclientjava.MigrateKubernetesClientJavaTo25_0_0_Legacy` | 将表格指定的 Kubernetes Java Client 11/16/17/18 升级到 25.0.0-legacy，保留旧式调用接口并说明集群/API/序列化迁移边界 |
 | [`rewrite-jaxb-runtime-upgrade`](rewrite-jaxb-runtime-upgrade) | `com.huawei.clouds.openrewrite.jaxbruntime.MigrateJaxbRuntimeTo4_0_8` | 将 JAXB Runtime 2.3.7/2.3.8 升级到 4.0.8，迁移 Jakarta XML Binding/Activation、RI 扩展与 XJC binding 文件 |
 | [`rewrite-i18next-upgrade`](rewrite-i18next-upgrade) | `com.huawei.clouds.openrewrite.i18next.UpgradeI18nextTo25_10_10` | 将表格指定的 i18next 21.x/22.x 声明升级到 25.10.10，并说明 TypeScript、JSON v4、语言切换、selector 与模块解析变化 |
+| [`rewrite-diagram-js-minimap-upgrade`](rewrite-diagram-js-minimap-upgrade) | `com.huawei.clouds.openrewrite.diagramjsminimap.UpgradeDiagramJsMinimapTo5_2_0` | 将 diagram-js-minimap 2.1.0 升级到 5.2.0，并说明 diagram-js、CSS、触摸、焦点、键盘与多实例兼容边界 |
 
 后续迁移应新增独立模块，例如：
 

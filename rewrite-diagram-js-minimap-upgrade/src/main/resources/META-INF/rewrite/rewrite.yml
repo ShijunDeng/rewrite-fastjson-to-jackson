@@ -1,0 +1,92 @@
+---
+type: specs.openrewrite.org/v1beta/category
+name: com.huawei.clouds.openrewrite.diagramjsminimap
+packageName: com.huawei.clouds.openrewrite.diagramjsminimap
+description: Upgrade diagram-js-minimap with explicit diagram-js, bpmn-js, CSS, bundler, keyboard, focus, and touch migration guidance.
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.diagramjsminimap.UpgradeDiagramJsMinimapTo5_2_0
+displayName: Upgrade diagram-js-minimap to 5.2.0
+description: Update only direct diagram-js-minimap 2.1.0 declarations in package.json to 5.2.0 without changing other versions, aliases, protocols, overrides, lockfiles, or source code.
+tags:
+  - diagram-js-minimap
+  - diagram-js
+  - bpmn-js
+  - javascript
+  - dependency-upgrade
+preconditions:
+  - org.openrewrite.FindSourceFiles:
+      filePattern: package.json;**/package.json
+recipeList:
+  - org.openrewrite.json.ChangeValue:
+      oldKeyPath: $.dependencies['diagram-js-minimap'][?(@ == '2.1.0')]
+      value: '"5.2.0"'
+  - org.openrewrite.json.ChangeValue:
+      oldKeyPath: $.dependencies['diagram-js-minimap'][?(@ == '^2.1.0')]
+      value: '"5.2.0"'
+  - org.openrewrite.json.ChangeValue:
+      oldKeyPath: $.dependencies['diagram-js-minimap'][?(@ == '~2.1.0')]
+      value: '"5.2.0"'
+  - org.openrewrite.json.ChangeValue:
+      oldKeyPath: $.dependencies['diagram-js-minimap'][?(@ == '=2.1.0')]
+      value: '"5.2.0"'
+  - org.openrewrite.json.ChangeValue:
+      oldKeyPath: $.dependencies['diagram-js-minimap'][?(@ == 'v2.1.0')]
+      value: '"5.2.0"'
+  - org.openrewrite.json.ChangeValue:
+      oldKeyPath: $.dependencies['diagram-js-minimap'][?(@ == '^v2.1.0')]
+      value: '"5.2.0"'
+  - org.openrewrite.json.ChangeValue:
+      oldKeyPath: $.devDependencies['diagram-js-minimap'][?(@ == '2.1.0')]
+      value: '"5.2.0"'
+  - org.openrewrite.json.ChangeValue:
+      oldKeyPath: $.devDependencies['diagram-js-minimap'][?(@ == '^2.1.0')]
+      value: '"5.2.0"'
+  - org.openrewrite.json.ChangeValue:
+      oldKeyPath: $.devDependencies['diagram-js-minimap'][?(@ == '~2.1.0')]
+      value: '"5.2.0"'
+  - org.openrewrite.json.ChangeValue:
+      oldKeyPath: $.devDependencies['diagram-js-minimap'][?(@ == '=2.1.0')]
+      value: '"5.2.0"'
+  - org.openrewrite.json.ChangeValue:
+      oldKeyPath: $.devDependencies['diagram-js-minimap'][?(@ == 'v2.1.0')]
+      value: '"5.2.0"'
+  - org.openrewrite.json.ChangeValue:
+      oldKeyPath: $.devDependencies['diagram-js-minimap'][?(@ == '^v2.1.0')]
+      value: '"5.2.0"'
+  - org.openrewrite.json.ChangeValue:
+      oldKeyPath: $.peerDependencies['diagram-js-minimap'][?(@ == '2.1.0')]
+      value: '"5.2.0"'
+  - org.openrewrite.json.ChangeValue:
+      oldKeyPath: $.peerDependencies['diagram-js-minimap'][?(@ == '^2.1.0')]
+      value: '"5.2.0"'
+  - org.openrewrite.json.ChangeValue:
+      oldKeyPath: $.peerDependencies['diagram-js-minimap'][?(@ == '~2.1.0')]
+      value: '"5.2.0"'
+  - org.openrewrite.json.ChangeValue:
+      oldKeyPath: $.peerDependencies['diagram-js-minimap'][?(@ == '=2.1.0')]
+      value: '"5.2.0"'
+  - org.openrewrite.json.ChangeValue:
+      oldKeyPath: $.peerDependencies['diagram-js-minimap'][?(@ == 'v2.1.0')]
+      value: '"5.2.0"'
+  - org.openrewrite.json.ChangeValue:
+      oldKeyPath: $.peerDependencies['diagram-js-minimap'][?(@ == '^v2.1.0')]
+      value: '"5.2.0"'
+  - org.openrewrite.json.ChangeValue:
+      oldKeyPath: $.optionalDependencies['diagram-js-minimap'][?(@ == '2.1.0')]
+      value: '"5.2.0"'
+  - org.openrewrite.json.ChangeValue:
+      oldKeyPath: $.optionalDependencies['diagram-js-minimap'][?(@ == '^2.1.0')]
+      value: '"5.2.0"'
+  - org.openrewrite.json.ChangeValue:
+      oldKeyPath: $.optionalDependencies['diagram-js-minimap'][?(@ == '~2.1.0')]
+      value: '"5.2.0"'
+  - org.openrewrite.json.ChangeValue:
+      oldKeyPath: $.optionalDependencies['diagram-js-minimap'][?(@ == '=2.1.0')]
+      value: '"5.2.0"'
+  - org.openrewrite.json.ChangeValue:
+      oldKeyPath: $.optionalDependencies['diagram-js-minimap'][?(@ == 'v2.1.0')]
+      value: '"5.2.0"'
+  - org.openrewrite.json.ChangeValue:
+      oldKeyPath: $.optionalDependencies['diagram-js-minimap'][?(@ == '^v2.1.0')]
+      value: '"5.2.0"'
