@@ -30,7 +30,7 @@
 | [`rewrite-angular-forms-upgrade`](rewrite-angular-forms-upgrade) | `com.huawei.clouds.openrewrite.angular.MigrateAngularFormsTo20_3_26` | 严格升级 `@angular/forms`，自动迁移可证明安全的 typed-forms/CVA/template 变化并精确标记业务语义风险 |
 | [`rewrite-angular-compiler-upgrade`](rewrite-angular-compiler-upgrade) | `com.huawei.clouds.openrewrite.angular.MigrateAngularCompilerTo20_3_26` | 严格升级依赖，自动迁移 Ivy/ngcc/NgModule/保留字的确定性变化并精确标记 compiler、template、toolchain 与 SSR 风险 |
 | [`rewrite-jasypt-spring-boot-starter-upgrade`](rewrite-jasypt-spring-boot-starter-upgrade) | `com.huawei.clouds.openrewrite.jasypt.MigrateJasyptSpringBootStarterTo4_0_3` | 严格升级到 4.0.3，自动迁移配置键和自动配置包，并定位 Java/Boot 基线、历史密文、密钥及扩展点风险 |
-| [`rewrite-angular-cdk-upgrade`](rewrite-angular-cdk-upgrade) | `com.huawei.clouds.openrewrite.angular.UpgradeAngularCdkTo20_2_14` | 将 `@angular/cdk` 升级到 20.2.14，且不降级后续版本 |
+| [`rewrite-angular-cdk-upgrade`](rewrite-angular-cdk-upgrade) | `com.huawei.clouds.openrewrite.angular.MigrateAngularCdkTo20_2_14` | 严格升级 Angular CDK，自动迁移确定性的 portal/overlay/dialog/Sass 变化，并精确标记 Material、drag-drop、table、SSR 与工具链风险 |
 | [`rewrite-hibernate-core-upgrade`](rewrite-hibernate-core-upgrade) | `com.huawei.clouds.openrewrite.hibernate.MigrateHibernateCoreTo7_2_12` | 将 Hibernate Core 5.x 依赖和常见源码 API 迁到 7.2.12.Final |
 | [`rewrite-vue-router-upgrade`](rewrite-vue-router-upgrade) | `com.huawei.clouds.openrewrite.vuerouter.MigrateVueRouterTo5_0_3` | 严格升级 Vue Router，自动迁移 unplugin/路由/滚动/配置的确定性变化并精确标记 Vue 2、导航与 SSR 风险 |
 | [`rewrite-okhttp-upgrade`](rewrite-okhttp-upgrade) | `com.huawei.clouds.openrewrite.okhttp.MigrateOkHttpTo5_3_0` | 严格升级 OkHttp，迁移 `OkHttpClient.clone()`，并标记 internal、Kotlin、MockWebServer、alpha 与连接行为风险 |

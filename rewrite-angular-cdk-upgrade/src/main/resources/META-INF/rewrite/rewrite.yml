@@ -2,34 +2,57 @@
 type: specs.openrewrite.org/v1beta/category
 name: com.huawei.clouds.openrewrite.angular
 packageName: com.huawei.clouds.openrewrite.angular
-description: Upgrade Angular CDK with explicit lockstep and CLI migration guidance.
+description: Upgrade Angular CDK with strict dependency selection, deterministic source changes and compatibility audits.
 ---
 type: specs.openrewrite.org/v1beta/recipe
 name: com.huawei.clouds.openrewrite.angular.UpgradeAngularCdkTo20_2_14
-displayName: Upgrade @angular/cdk to 20.2.14
-description: Update older direct @angular/cdk declarations in package.json to 20.2.14 without downgrading later versions or workspace references.
-tags:
-  - angular
-  - angular-cdk
-  - nodejs
-  - dependency-upgrade
-preconditions:
-  - org.openrewrite.FindSourceFiles:
-      filePattern: package.json;**/package.json
+displayName: Upgrade selected @angular/cdk declarations to 20.2.14
+description: Upgrade only exact, caret, or tilde source releases visible in the migration spreadsheet; compound ranges, protocols, variables, lockfiles and unlisted versions remain unchanged.
+tags: [angular, angular-cdk, nodejs, dependency-upgrade]
 recipeList:
-  - org.openrewrite.json.ChangeValue:
-      oldKeyPath: >-
-        $.dependencies[?(@['@angular/cdk'] =~ '^[<>=~^ ]*(?:1[0-9]\.|20\.(?:[01]\.|2\.(?:[0-9]|1[0-3])(?:[^0-9]|$))).*')]['@angular/cdk']
-      value: '"20.2.14"'
-  - org.openrewrite.json.ChangeValue:
-      oldKeyPath: >-
-        $.devDependencies[?(@['@angular/cdk'] =~ '^[<>=~^ ]*(?:1[0-9]\.|20\.(?:[01]\.|2\.(?:[0-9]|1[0-3])(?:[^0-9]|$))).*')]['@angular/cdk']
-      value: '"20.2.14"'
-  - org.openrewrite.json.ChangeValue:
-      oldKeyPath: >-
-        $.peerDependencies[?(@['@angular/cdk'] =~ '^[<>=~^ ]*(?:1[0-9]\.|20\.(?:[01]\.|2\.(?:[0-9]|1[0-3])(?:[^0-9]|$))).*')]['@angular/cdk']
-      value: '"20.2.14"'
-  - org.openrewrite.json.ChangeValue:
-      oldKeyPath: >-
-        $.optionalDependencies[?(@['@angular/cdk'] =~ '^[<>=~^ ]*(?:1[0-9]\.|20\.(?:[01]\.|2\.(?:[0-9]|1[0-3])(?:[^0-9]|$))).*')]['@angular/cdk']
-      value: '"20.2.14"'
+  - com.huawei.clouds.openrewrite.angular.UpgradeSelectedAngularCdkDependency
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.angular.MigrateDeterministicAngularCdkTo20
+displayName: Migrate deterministic Angular CDK 20 constructs
+description: Rename alias-preserving APIs, update owned position-builder calls, remove a typed obsolete dialog option and normalize Sass module URLs.
+tags: [angular, angular-cdk, typescript, sass, source-migration]
+recipeList:
+  - com.huawei.clouds.openrewrite.angular.MigrateDeterministicAngularCdkSource
+  - com.huawei.clouds.openrewrite.angular.MigrateDeterministicAngularCdkStyles
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.angular.AuditAngularCdk20Source
+displayName: Audit Angular CDK 20 source compatibility
+description: Mark removed/changed portal, overlay, dialog, drag-drop, table, selection, testing and private TypeScript APIs.
+tags: [angular, angular-cdk, typescript, search]
+recipeList:
+  - com.huawei.clouds.openrewrite.angular.FindAngularCdkTypeScriptRisks
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.angular.AuditAngularCdk20Project
+displayName: Audit Angular CDK 20 project compatibility
+description: Mark unresolved declarations, peer/toolchain alignment, builders, styles, SSR, e2e and compiler configuration.
+tags: [angular, angular-cdk, dependencies, configuration, search]
+recipeList:
+  - com.huawei.clouds.openrewrite.angular.FindAngularCdkJsonRisks
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.angular.AuditAngularCdk20TemplatesAndStyles
+displayName: Audit Angular CDK 20 templates and styles
+description: Mark overlay, drag/drop, virtual-scroll, portal, table, focus, scrollable and Sass/style behavior boundaries.
+tags: [angular, angular-cdk, html, css, sass, search]
+recipeList:
+  - com.huawei.clouds.openrewrite.angular.FindAngularCdkTemplateStyleRisks
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.angular.MigrateAngularCdkTo20_2_14
+displayName: Migrate Angular CDK applications to 20.2.14
+description: Upgrade spreadsheet-selected declarations, apply deterministic migrations, and mark every remaining CDK 20 compatibility decision.
+tags: [angular, angular-cdk, typescript, sass, migration]
+recipeList:
+  - com.huawei.clouds.openrewrite.angular.UpgradeAngularCdkTo20_2_14
+  - com.huawei.clouds.openrewrite.angular.MigrateDeterministicAngularCdkTo20
+  - com.huawei.clouds.openrewrite.angular.AuditAngularCdk20Source
+  - com.huawei.clouds.openrewrite.angular.AuditAngularCdk20Project
+  - com.huawei.clouds.openrewrite.angular.AuditAngularCdk20TemplatesAndStyles
