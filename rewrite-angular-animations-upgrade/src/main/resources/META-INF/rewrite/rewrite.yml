@@ -1,0 +1,31 @@
+---
+type: specs.openrewrite.org/v1beta/category
+name: com.huawei.clouds.openrewrite.angular
+packageName: com.huawei.clouds.openrewrite.angular
+description: Upgrade Angular packages with explicit lockstep and CLI migration guidance.
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.angular.UpgradeAngularAnimationsTo20_3_26
+displayName: Upgrade @angular/animations to 20.3.26
+description: Update direct @angular/animations declarations in package.json to 20.3.26. The package is deprecated as of Angular 20.2 and should be migrated to native CSS animations.
+tags:
+  - angular
+  - angular-animations
+  - nodejs
+  - dependency-upgrade
+preconditions:
+  - org.openrewrite.FindSourceFiles:
+      filePattern: package.json;**/package.json
+recipeList:
+  - org.openrewrite.json.ChangeValue:
+      oldKeyPath: $.dependencies['@angular/animations']
+      value: '"20.3.26"'
+  - org.openrewrite.json.ChangeValue:
+      oldKeyPath: $.devDependencies['@angular/animations']
+      value: '"20.3.26"'
+  - org.openrewrite.json.ChangeValue:
+      oldKeyPath: $.peerDependencies['@angular/animations']
+      value: '"20.3.26"'
+  - org.openrewrite.json.ChangeValue:
+      oldKeyPath: $.optionalDependencies['@angular/animations']
+      value: '"20.3.26"'

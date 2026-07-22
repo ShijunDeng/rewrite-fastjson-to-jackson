@@ -47,6 +47,7 @@
     <module>rewrite-angular-common-upgrade</module>
     <module>rewrite-angular-platform-browser-upgrade</module>
     <module>rewrite-angular-platform-browser-dynamic-upgrade</module>
+    <module>rewrite-angular-animations-upgrade</module>
   </modules>
 
   <dependencyManagement>
