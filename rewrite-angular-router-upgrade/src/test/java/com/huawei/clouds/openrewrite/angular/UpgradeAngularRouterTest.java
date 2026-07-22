@@ -12,6 +12,8 @@ import static org.openrewrite.json.Assertions.json;
 class UpgradeAngularRouterTest implements RewriteTest {
     private static final String RECIPE_NAME =
             "com.huawei.clouds.openrewrite.angular.UpgradeAngularRouterTo20_3_26";
+    private static final String MIGRATE_RECIPE_NAME =
+            "com.huawei.clouds.openrewrite.angular.MigrateAngularRouterTo20_3_26";
 
     @Override
     public void defaults(RecipeSpec spec) {
@@ -19,14 +21,14 @@ class UpgradeAngularRouterTest implements RewriteTest {
     }
 
     @Test
-    void upgradesEveryDirectDependencySectionInPackageJson() {
+    void upgradesSelectedSingleVersionsInEveryDirectSectionAndLeavesComplexRanges() {
         rewriteRun(json(
                 """
                 {
                   "dependencies": {"@angular/router": "~10.0.14"},
                   "devDependencies": {"@angular/router": "12.2.17"},
-                  "peerDependencies": {"@angular/router": ">=13 <20"},
-                  "optionalDependencies": {"@angular/router": "19.2.0"}
+                  "peerDependencies": {"@angular/router": "^13.1.3"},
+                  "optionalDependencies": {"@angular/router": ">=13 <20"}
                 }
                 """,
                 """
@@ -34,7 +36,7 @@ class UpgradeAngularRouterTest implements RewriteTest {
                   "dependencies": {"@angular/router": "20.3.26"},
                   "devDependencies": {"@angular/router": "20.3.26"},
                   "peerDependencies": {"@angular/router": "20.3.26"},
-                  "optionalDependencies": {"@angular/router": "20.3.26"}
+                  "optionalDependencies": {"@angular/router": ">=13 <20"}
                 }
                 """,
                 spec -> spec.path("package.json")
@@ -65,7 +67,10 @@ class UpgradeAngularRouterTest implements RewriteTest {
         Recipe recipe = environment.activateRecipes(RECIPE_NAME);
         assertTrue(environment.listRecipes().stream()
                 .anyMatch(candidate -> RECIPE_NAME.equals(candidate.getName())));
+        assertTrue(environment.listRecipes().stream()
+                .anyMatch(candidate -> MIGRATE_RECIPE_NAME.equals(candidate.getName())));
         assertTrue(recipe.validate().isValid(), () -> recipe.validate().failures().toString());
+        assertTrue(environment.activateRecipes(MIGRATE_RECIPE_NAME).validate().isValid());
     }
 
     private static Environment environment() {

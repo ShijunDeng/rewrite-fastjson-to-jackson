@@ -7,7 +7,7 @@ description: Upgrade Angular packages with explicit lockstep and CLI migration g
 type: specs.openrewrite.org/v1beta/recipe
 name: com.huawei.clouds.openrewrite.angular.UpgradeAngularRouterTo20_3_26
 displayName: Upgrade @angular/router to 20.3.26
-description: Update direct @angular/router declarations in package.json to 20.3.26. Other Angular packages and CLI migrations must be handled in lockstep.
+description: Update spreadsheet-selected exact, caret, or tilde direct @angular/router declarations to 20.3.26 without guessing complex constraints.
 tags:
   - angular
   - angular-router
@@ -17,15 +17,20 @@ preconditions:
   - org.openrewrite.FindSourceFiles:
       filePattern: package.json;**/package.json
 recipeList:
-  - org.openrewrite.json.ChangeValue:
-      oldKeyPath: $.dependencies['@angular/router']
-      value: '"20.3.26"'
-  - org.openrewrite.json.ChangeValue:
-      oldKeyPath: $.devDependencies['@angular/router']
-      value: '"20.3.26"'
-  - org.openrewrite.json.ChangeValue:
-      oldKeyPath: $.peerDependencies['@angular/router']
-      value: '"20.3.26"'
-  - org.openrewrite.json.ChangeValue:
-      oldKeyPath: $.optionalDependencies['@angular/router']
-      value: '"20.3.26"'
+  - com.huawei.clouds.openrewrite.angular.UpgradeSelectedAngularRouterDependency
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.angular.MigrateAngularRouterTo20_3_26
+displayName: Migrate @angular/router applications to 20.3.26
+description: Upgrade selected dependencies, apply official deterministic Router source/configuration changes, and precisely mark navigation decisions requiring application knowledge.
+tags:
+  - angular
+  - angular-router
+  - typescript
+  - dependency-upgrade
+recipeList:
+  - com.huawei.clouds.openrewrite.angular.UpgradeSelectedAngularRouterDependency
+  - com.huawei.clouds.openrewrite.angular.MigrateDeterministicAngularRouterSource
+  - com.huawei.clouds.openrewrite.angular.FindAngularRouterJsonRisks
+  - com.huawei.clouds.openrewrite.angular.FindAngularRouterTypeScriptRisks
+  - com.huawei.clouds.openrewrite.angular.FindAngularRouterTemplateRisks

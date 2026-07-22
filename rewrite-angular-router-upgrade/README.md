@@ -1,52 +1,98 @@
-# @angular/router upgrade to 20.3.26
+# @angular/router 迁移到 20.3.26
 
-本模块对应 `开源软件升级.xlsx` 中的 `@angular/router`，合并处理 `10.0.14`、`10.2.5`、`11.2.14`、`12.2.10`、`12.2.13`、`12.2.14`、`12.2.16`、`12.2.17`、`13.1.3` 以及 `13.2.6 …（共 28 个版本）`，目标版本为 `20.3.26`。
+本模块对应 `开源软件升级.xlsx` 中的 `@angular/router`。只处理表格中**明确可见**的源版本：
 
-配方名称：
+```text
+10.0.14, 10.2.5, 11.2.14, 12.2.10, 12.2.13, 12.2.14,
+12.2.16, 12.2.17, 13.1.3, 13.2.6
+```
+
+表格把最后一格折叠为 `13.2.6 ...（共28个版本）`；本模块只采用其中明确可见的 `13.2.6`，不会猜测省略的其他版本。每个可见版本接受 npm exact、单一 caret 或单一 tilde 声明（例如 `12.2.17`、`^12.2.17`、`~12.2.17`），并收敛为精确目标 `20.3.26`。复杂范围、协议、变量、tag、alias、中央版本 owner 和锁文件不会被自动改写。
+
+## 配方
+
+完整应用迁移推荐使用：
+
+```text
+com.huawei.clouds.openrewrite.angular.MigrateAngularRouterTo20_3_26
+```
+
+它组合严格依赖升级、Angular 官方可确定的 Router TypeScript/config migration，以及对需要导航业务语义的位置写入精确 `SearchResult`。仅需检查依赖声明时可使用：
 
 ```text
 com.huawei.clouds.openrewrite.angular.UpgradeAngularRouterTo20_3_26
 ```
 
-## 自动处理范围
+Angular framework 包必须锁步到同一 patch。应从当前版本开始逐个大版本运行 `ng update @angular/core@<major> @angular/cli@<major>`，接受并验证每一阶段的官方 migrations，再用本模块收敛表格目标；不能把一次依赖字符串替换当作完整 Router 迁移。
 
-配方仅把 `package.json` 四个直接依赖区中的 `@angular/router` 设置为 `20.3.26`。目标包要求 core、common、platform-browser 精确匹配 `20.3.26`，并支持 RxJS `^6.5.3` 或 `^7.4.0`。
+## AUTO / MARK / NO-OP 与测试证明
 
-必须逐大版本运行 Angular CLI `ng update` migrations；本配方用于最后核对 Excel 目标版本，不替代路由源码迁移。
+`AUTO` 表示静态信息足以安全改写；`MARK` 表示精确标出需要业务决策的 AST/JSON/HTML 节点；`NO-OP` 表示有意保持原文以防误改。
 
-## 不兼容修改点
+| 不兼容点或边界 | 状态 | 配方行为 | 对应测试 |
+| --- | --- | --- | --- |
+| XLSX 可见 10 个版本的 exact/`^`/`~` 单值 | AUTO | 只改 `package.json` 四个根级直接依赖区，并收敛为精确 `20.3.26` | `AngularRouterDependencyTest.upgradesEveryVisibleExactCaretAndTildeDeclaration`（30 组）、`supportsNpmYarnAndPnpmWorkspacePackageLocations` |
+| 比较/并集/hyphen 等复杂范围，workspace/protocol/变量/tag/alias、未列出或较新版本 | MARK / NO-OP | 依赖 recipe 保持原值；推荐 recipe 在实际声明标记约束选择和锁文件重建 | `leavesComplexRangesUntouched`、`leavesProtocolsVariablesTagsUnlistedNewerAndTargetUntouched`、`marksComplexConstraintCentralOwnerAndLockstepToolchain` |
+| catalog/overrides/resolutions/pnpm 与 nested metadata | MARK / NO-OP | 不误当直接依赖；中央 owner 精确标记原子升级要求 | `leavesCentralOwnersAndNestedMetadataUntouched`、`marksComplexConstraintCentralOwnerAndLockstepToolchain` |
+| core/common/platform-browser 等 peers 与 framework 包必须同 patch | MARK | 标记未对齐的 sibling Angular 声明 | `apacheNifiPinnedFixtureMigratesOnlyRouter`、`marksComplexConstraintCentralOwnerAndLockstepToolchain` |
+| Node `^20.19.0`/`^22.12.0`/`>=24`、TypeScript `>=5.8 <6`、RxJS 支持范围 | MARK | 只在包含 Router 的 package 标记真实声明，避免普通 Node 服务误报 | `marksComplexConstraintCentralOwnerAndLockstepToolchain`、`doesNotMarkSupportedSingleDeclarationsOrUnrelatedNodePackages` |
+| `Router.getCurrentNavigation()` 废弃，改为 `currentNavigation` signal | AUTO / MARK | 仅对显式 `Router` 类型或 `inject(Router)` 变量按官方 migration 改名；随后标记 active-navigation 生命周期与 signal 读取决策；`any` 保持原文 | `followsOfficialAngularTypedConstructorCurrentNavigationMigration`、`migratesInjectRouterFromPinnedOktaStyleFixture`、`conservativelyLeavesAnyAndSameNamedNonAngularRouter`、`marksNavigationEventsAndCurrentNavigationLifecycle` |
+| `relativeLinkResolution` 被移除 | AUTO / MARK | 仅从 attributed `RouterModule.forRoot` option object 删除；保留 forRoot marker，要求回归相对链接/空路径 | `removesLegacyRelativeLinkResolutionFromPinnedRealFixture`、`doesNotRemoveSamePropertyOutsideAttributedRouterForRoot`、`marksPinnedRelativeLinkResolutionAndRouterModuleProviderChoices` |
+| `initialNavigation: 'enabled'` 被 `enabledBlocking` 取代 | AUTO / MARK | 精确替换已移除的字面量；Router option marker提示检查 SSR/客户端时序 | `migratesRemovedEnabledInitialNavigationValue`、`marksProvideRouterFeaturesAndTestProviderOrder` |
+| `RouterLinkWithHref` 合并到 `RouterLink` | AUTO / MARK | 已有 alias 时只改 imported property 并保留本地 alias；mixed/unaliased import 精确标记，避免未归因地重命名本地符号 | `migratesAliasedRouterLinkWithHrefImportWithoutTouchingLocalUses`、`marksPinnedWebDbRouterLinkWithHrefFixture` |
+| class/InjectionToken guards 与 resolvers、`CanLoad`/`CanMatch`、functional guards | MARK | 标记 API import 和 route property；要求确认 DI context、首个 emission、empty/error/cancel 和“不匹配后继续匹配” | `marksPinnedCanLoadGuardImportAndRouteProperty`、`marksDynamicLazyLoadingAndRouteProviders` |
+| guard/resolver 返回 `UrlTree`/`RedirectCommand`，resolver 只取首值且空流取消导航 | MARK | 标记 guard/resolver、UrlTree/RedirectCommand import 和配置成员 | `marksUrlTreeRedirectCommandAndReuseStrategyImports`、`marksPinnedCanLoadGuardImportAndRouteProperty` |
+| `redirectTo` 可为函数，绝对 redirect 可继续 redirect，replace/history 语义变化 | MARK | 在 `redirectTo` member 标记 loop、参数、outlet、history、SSR 与鉴权决策 | `marksRedirectAndPathMatchChoices` |
+| 字符串式 `loadChildren` 被移除；动态 lazy loader 进入 route injection context | MARK | 分别标记旧字符串与函数属性；不猜 module/export 或 chunk 路径 | `marksPinnedLegacyStringLazyLoadingAtTheProperty`、`marksDynamicLazyLoadingAndRouteProviders` |
+| `Route.pathMatch` 类型收紧，空路径/redirect/named outlet 规则跨版本修正 | MARK | 标记 `pathMatch` 和 redirect；要求保留 `Routes`/`Route` attribution | `marksRedirectAndPathMatchChoices` |
+| route-level providers/lazy injectors 不再从 RouterOutlet component provider 继承 | MARK | 标记 route `providers` 成员 | `marksDynamicLazyLoadingAndRouteProviders` |
+| RouteReuseStrategy、detached handle、title/url handling 与 Router writable properties | MARK | 标记 reuse import；在已归因 Router receiver 上标记移除/废弃 property | `marksUrlTreeRedirectCommandAndReuseStrategyImports`、`marksRemovedWritableRouterProperties` |
+| `navigate`/`navigateByUrl`/`createUrlTree`、相对 URL、query/matrix/named outlet | MARK | 在已归因 Router call 标记历史、并发导航、取消、promise rejection 与完整 UrlTree 断言 | `marksNavigationAndUrlCreationCalls` |
+| NavigationCancel/Error/Skipped、Scroll 与并发/redirect 生命周期 | MARK | 标记导航事件 import 和 current navigation 读取 | `marksNavigationEventsAndCurrentNavigationLifecycle` |
+| `RouterModule.forRoot/forChild` 与 `provideRouter`/`with*` provider features | MARK | 在 call 精确标记 initial navigation、hash、scrolling、preloading、error handler、component input 与 provider order | `marksPinnedRelativeLinkResolutionAndRouterModuleProviderChoices`、`marksProvideRouterFeaturesAndTestProviderOrder` |
+| `RouterTestingModule` 废弃，测试迁移为 `provideRouter`/`RouterTestingHarness` | MARK | 标记 testing import；test 文件中的 provider call使用专门的顺序/异步语义提示 | `marksPinnedNgRxRouterTestingModuleFixture`、`marksProvideRouterFeaturesAndTestProviderOrder` |
+| SSR/prerender blocking initial navigation 与 client hydration/event replay | MARK | 标记 server provider call、hydration call及 workspace server/ssr/prerender target | `marksServerRoutingAndHydrationInteractions`、`marksWorkspaceBuilderDeploymentAndSsrTargets` |
+| baseHref/deployUrl/custom builder 影响 browser history、lazy chunk、navigation fallback | MARK | 在 `angular.json`/`workspace.json` 的具体值上标记部署验证 | `marksWorkspaceBuilderDeploymentAndSsrTargets` |
+| 模板 routerLink/RouterLinkActive/router-outlet/query/fragment | MARK | 在每个 HTML attribute/tag snippet 标记相对链接、active match、outlet activation/reuse、query/fragment 语义 | `AngularRouterTemplateRiskTest` 的 7 个测试，含固定 angular-gridster2 fixture |
+| 非 Angular Router、`any` receiver、非 HTML、无 Router package 的 Node 服务 | NO-OP | import/type/path/package scope 防止同名 API 误改误报 | `conservativelyLeavesAnyAndSameNamedNonAngularRouter`、`ignoresSimilarTextOutsideHtmlFiles`、`doesNotMarkSupportedSingleDeclarationsOrUnrelatedNodePackages` |
+| 多次执行 | NO-OP | dependency/source/config 第二轮无 diff，template markers 不重叠 | `directSectionsMoveTogetherAndRecipeIsIdempotent`、`deterministicRouterMigrationIsIdempotent`、`templateMarkersRemainNonOverlappingAcrossCycles` |
 
-| 版本跨度内的变化 | 影响与迁移建议 |
-| --- | --- |
-| standalone 路由成为首选配置 | `RouterModule.forRoot()` 可逐步迁移为 `provideRouter(routes, ...)`；feature 使用 standalone route/component imports |
-| 字符串式 lazy `loadChildren` 已移除 | 改为动态 import 返回 routes 或 NgModule；对 chunk 失败、预加载和部署 base href 做 E2E 测试 |
-| class-based guard/resolver 可用但 functional API 成为推荐 | 使用 `CanActivateFn`、`CanMatchFn`、`ResolveFn` 与 `inject()`；避免在函数外调用 inject |
-| `CanLoad` 被 `CanMatch` 取代 | 迁移权限逻辑并确认“不匹配后尝试后续 route”与旧阻止加载语义的差异 |
-| `RouterLinkWithHref` 合并/废弃 | 统一使用 `RouterLink`；更新直接引用该 directive 类型的测试和封装组件 |
-| `RouterTestingModule` 废弃 | 测试使用 `provideRouter()` 与 `RouterTestingHarness`，不要依赖旧 stub 的非真实导航行为 |
-| `Router.getCurrentNavigation()` 在 v20.2 废弃 | 改用 `Router.currentNavigation` signal；导航结束后 signal 为 null，保存状态时明确生命周期 |
-| Router 配置转为 feature/provider API | initial navigation、hash location、scrolling、preloading、component input binding 等使用对应 `with*` feature，避免重复 provider |
-| 导航取消/跳过事件和 code 类型演进 | 不要只按事件名称/字符串判断；处理 `NavigationCancel`、`NavigationSkipped` 和重定向/守卫拒绝的不同结果 |
-| resolver/guard 返回空 Observable 会取消导航 | 确保每条路径明确发出值或 UrlTree/RedirectCommand，并覆盖 error、timeout 与 unsubscribe |
-| relative link、redirect 和 params 继承边界经多次修正 | 回归嵌套路由、空路径、matrix/query params、named outlets、通配符与相对 `routerLink` |
-| route `title`、component input binding 和 signal API 增加 | 自定义 TitleStrategy、resolver data 与 input 名称冲突需测试，避免业务静默拿到不同值 |
-| SSR blocking initial navigation 与 hydration | server/client 使用一致 routes/provider；防止重复导航、认证重定向闪烁和 hydration mismatch |
-| scroll restoration 时机与 ViewportScroller 行为变化 | 测试 back/forward、anchor、异步页面高度和自定义容器；不要以固定 timeout 模拟路由稳定 |
-| Node/TypeScript/Angular 包基线锁步 | Node 使用 `^20.19.0`、`^22.12.0` 或 `>=24`，TypeScript 按 v20 兼容矩阵；全部 framework 包同 patch |
+## 固定官方依据与真实仓用例
 
-完整迁移步骤以 Angular 官方 [Update Guide](https://angular.dev/update-guide)、[Routing guide](https://angular.dev/guide/routing)、[版本兼容矩阵](https://angular.dev/reference/versions) 和 [20.2.0 release](https://github.com/angular/angular/releases/tag/20.2.0) 为准。
+Angular 语义固定到 `v20.3.26` release cut [`4d627600a9b096cb85a828fd3cea0ea27fb354aa`](https://github.com/angular/angular/tree/4d627600a9b096cb85a828fd3cea0ea27fb354aa)：
+
+- [v14–v20 完整 CHANGELOG](https://github.com/angular/angular/blob/4d627600a9b096cb85a828fd3cea0ea27fb354aa/CHANGELOG.md)；
+- [官方 router-current-navigation migration](https://github.com/angular/angular/blob/4d627600a9b096cb85a828fd3cea0ea27fb354aa/packages/core/schematics/migrations/router-current-navigation/router_current_navigation_migration.ts)及其[测试](https://github.com/angular/angular/blob/4d627600a9b096cb85a828fd3cea0ea27fb354aa/packages/core/schematics/test/router_current_navigation_spec.ts)；
+- [`@angular/router` package metadata](https://github.com/angular/angular/blob/4d627600a9b096cb85a828fd3cea0ea27fb354aa/packages/router/package.json)；
+- CHANGELOG 中固定的官方 [`relativeLinkResolution` migration commit](https://github.com/angular/angular/commit/7bee28d037a8a21a7440293b3e8c118cc93ec8c1) 与 [`RouterLinkWithHref` migration commit](https://github.com/angular/angular/commit/16c8f55663c30270fcd647b1a8a20ddbc8923349)。
+
+OpenRewrite TypeScript recipe/test写法固定参考 [`openrewrite/rewrite-javascript@b3008cc4a1f0c43f562da16e5933a2a56d9bc568`](https://github.com/openrewrite/rewrite-javascript/tree/b3008cc4a1f0c43f562da16e5933a2a56d9bc568) 的 [JavaScript/TypeScript tests](https://github.com/openrewrite/rewrite-javascript/tree/b3008cc4a1f0c43f562da16e5933a2a56d9bc568/src/test/java/org/openrewrite/javascript)。
+
+公开仓 fixture 全部固定 commit：
+
+| 固定仓库/文件 | 提取内容 | 用例 |
+| --- | --- | --- |
+| [apache/nifi@59cff970](https://github.com/apache/nifi/blob/59cff970ca8b98ee51ae4418cf4de6830fa28c37/nifi-registry/nifi-registry-core/nifi-registry-web-ui/src/main/package.json) | 精确 Router 11.2.14 与 sibling Angular packages | dependency before→after + siblings no-op |
+| [okta/okta-angular@d437b3a4](https://github.com/okta/okta-angular/blob/d437b3a4cf13190f0adddd395edca9cb2d7a9d8b/lib/src/okta/okta.guard.ts) | `inject(Router)` + `getCurrentNavigation()` | currentNavigation before→after |
+| [aitboudad/ngx-loading-bar@f788e933](https://github.com/aitboudad/ngx-loading-bar/blob/f788e93335a20bba29a366a5974bc8ccac19c465/packages/router/src/router.service.ts) | `router: any` current-navigation compatibility wrapper | conservative no-op + lifecycle marker |
+| [ngrx/platform@7f22a8e8](https://github.com/ngrx/platform/blob/7f22a8e81747c1a6c236cea7adef9983686cd9d3/modules/router-store/spec/utils.ts) | RouterTestingModule、guards、lazy routes、redirect | testing/route markers |
+| [WebDB-App/app@297d200d](https://github.com/WebDB-App/app/blob/297d200df0ccfdd47781fe7ea4ea16dad0955f7c/front/src/shared/shared.module.ts) | mixed RouterLink/RouterLinkWithHref import | precise marker |
+| [mathisGarberg/angular-folder-structure@9d554b33](https://github.com/mathisGarberg/angular-folder-structure/blob/9d554b33144f2a90f56f80e90cd65c32be0424d5/src/app/app-routing.module.ts) | `relativeLinkResolution:'legacy'` 与 dynamic lazy routes | config AUTO + forRoot marker |
+| [hantsy/spring-microservice-sample@f0051138](https://github.com/hantsy/spring-microservice-sample/blob/f005113835de3e46eccf51ddc97cabba51310315/ui/src/app/core/load-guard.ts) | class `CanLoad` guard | guard marker |
+| [vladotesanovic/angular2-express-starter@81d08fb3](https://github.com/vladotesanovic/angular2-express-starter/blob/81d08fb3eea7b154302403a8c07a2e4b777d0bc4/src/app/app.router.ts) | 字符串 `loadChildren` | removed lazy syntax marker |
+| [tiberiuzuld/angular-gridster2@ff33c128](https://github.com/tiberiuzuld/angular-gridster2/blob/ff33c1283c1718db6e5623dd143260a004053847/src/app/app.html) | routerLink、RouterLinkActive、router-outlet | HTML snippet markers |
 
 ## 使用与验证
 
 ```bash
 mvn -U org.openrewrite.maven:rewrite-maven-plugin:6.44.0:dryRun \
   -Drewrite.recipeArtifactCoordinates=com.huawei.clouds.openrewrite:rewrite-angular-router-upgrade:1.0.0-SNAPSHOT \
-  -Drewrite.activeRecipes=com.huawei.clouds.openrewrite.angular.UpgradeAngularRouterTo20_3_26
+  -Drewrite.activeRecipes=com.huawei.clouds.openrewrite.angular.MigrateAngularRouterTo20_3_26
 ```
 
-确认 patch 后执行 `run`，重建锁文件，并运行 production build、路由 harness、权限/重定向、lazy chunk、浏览器历史、SSR 与 hydration 测试。
+审查 patch 和所有 `SearchResult` 后再执行 `run`。用原包管理器重建锁文件，并逐阶段运行 production build、RouterTestingHarness、guard/resolver/redirect、lazy chunk、history/back-forward、scroll、SSR/prerender/hydration 与端到端测试。
 
-本模块自身验证：
+模块验证：
 
 ```bash
 mvn -pl rewrite-angular-router-upgrade -am clean verify
