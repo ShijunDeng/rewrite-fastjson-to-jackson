@@ -1,0 +1,176 @@
+---
+type: specs.openrewrite.org/v1beta/category
+name: com.huawei.clouds.openrewrite.hikaricp
+packageName: com.huawei.clouds.openrewrite.hikaricp
+description: Upgrade HikariCP with deterministic credential and configuration compatibility migrations plus targeted review markers.
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.hikaricp.MigrateHikariCPTo6_3_3
+displayName: Migrate HikariCP to 6.3.3
+description: Preserve the old disabled keepalive default in explicit Spring Hikari configuration, migrate deterministic HikariCP 6 credential API changes, upgrade spreadsheet-listed dependencies, and mark unsafe runtime decisions for review.
+tags:
+  - hikaricp
+  - jdbc
+  - java
+  - connection-pool
+  - dependency-upgrade
+recipeList:
+  - com.huawei.clouds.openrewrite.hikaricp.PreserveDisabledKeepaliveInSpringProperties
+  - com.huawei.clouds.openrewrite.hikaricp.PreserveDisabledKeepaliveInSpringYaml
+  - com.huawei.clouds.openrewrite.hikaricp.MigrateHikariCredentials
+  - com.huawei.clouds.openrewrite.hikaricp.UpgradeHikariCPTo6_3_3
+  - com.huawei.clouds.openrewrite.hikaricp.FindHikari6MigrationRisks
+  - com.huawei.clouds.openrewrite.hikaricp.ReviewHikariJavaBaseline
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.hikaricp.UpgradeHikariCPTo6_3_3
+displayName: Upgrade spreadsheet-listed HikariCP versions to 6.3.3
+description: Upgrade only explicit com.zaxxer:HikariCP versions 3.3.0, 3.4.5, and 4.0.3 to 6.3.3 without adding versions to platform-managed dependencies or downgrading newer releases.
+tags:
+  - hikaricp
+  - jdbc
+  - dependency-upgrade
+recipeList:
+  - com.huawei.clouds.openrewrite.hikaricp.UpgradeHikariCP3_3_0To6_3_3
+  - com.huawei.clouds.openrewrite.hikaricp.UpgradeHikariCP3_4_5To6_3_3
+  - com.huawei.clouds.openrewrite.hikaricp.UpgradeHikariCP4_0_3To6_3_3
+  - com.huawei.clouds.openrewrite.hikaricp.UpgradeManagedHikariCP3_3_0To6_3_3
+  - com.huawei.clouds.openrewrite.hikaricp.UpgradeManagedHikariCP3_4_5To6_3_3
+  - com.huawei.clouds.openrewrite.hikaricp.UpgradeManagedHikariCP4_0_3To6_3_3
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.hikaricp.UpgradeHikariCP3_3_0To6_3_3
+displayName: Upgrade HikariCP 3.3.0 to 6.3.3
+description: Upgrade only com.zaxxer:HikariCP dependency declarations resolved at version 3.3.0.
+preconditions:
+  - org.openrewrite.java.dependencies.FindDependency:
+      groupId: com.zaxxer
+      artifactId: HikariCP
+      version: 3.3.0
+recipeList:
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: com.zaxxer
+      artifactId: HikariCP
+      newVersion: 6.3.3
+      overrideManagedVersion: false
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.hikaricp.UpgradeHikariCP3_4_5To6_3_3
+displayName: Upgrade HikariCP 3.4.5 to 6.3.3
+description: Upgrade only com.zaxxer:HikariCP dependency declarations resolved at version 3.4.5.
+preconditions:
+  - org.openrewrite.java.dependencies.FindDependency:
+      groupId: com.zaxxer
+      artifactId: HikariCP
+      version: 3.4.5
+recipeList:
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: com.zaxxer
+      artifactId: HikariCP
+      newVersion: 6.3.3
+      overrideManagedVersion: false
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.hikaricp.UpgradeHikariCP4_0_3To6_3_3
+displayName: Upgrade HikariCP 4.0.3 to 6.3.3
+description: Upgrade only com.zaxxer:HikariCP dependency declarations resolved at version 4.0.3.
+preconditions:
+  - org.openrewrite.java.dependencies.FindDependency:
+      groupId: com.zaxxer
+      artifactId: HikariCP
+      version: 4.0.3
+recipeList:
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: com.zaxxer
+      artifactId: HikariCP
+      newVersion: 6.3.3
+      overrideManagedVersion: false
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.hikaricp.UpgradeManagedHikariCP3_3_0To6_3_3
+displayName: Upgrade managed HikariCP 3.3.0 to 6.3.3
+description: Upgrade a Maven dependencyManagement entry for com.zaxxer:HikariCP at version 3.3.0.
+preconditions:
+  - org.openrewrite.maven.search.FindManagedDependency:
+      groupId: com.zaxxer
+      artifactId: HikariCP
+      version: 3.3.0
+recipeList:
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: com.zaxxer
+      artifactId: HikariCP
+      newVersion: 6.3.3
+      overrideManagedVersion: false
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.hikaricp.UpgradeManagedHikariCP3_4_5To6_3_3
+displayName: Upgrade managed HikariCP 3.4.5 to 6.3.3
+description: Upgrade a Maven dependencyManagement entry for com.zaxxer:HikariCP at version 3.4.5.
+preconditions:
+  - org.openrewrite.maven.search.FindManagedDependency:
+      groupId: com.zaxxer
+      artifactId: HikariCP
+      version: 3.4.5
+recipeList:
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: com.zaxxer
+      artifactId: HikariCP
+      newVersion: 6.3.3
+      overrideManagedVersion: false
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.hikaricp.UpgradeManagedHikariCP4_0_3To6_3_3
+displayName: Upgrade managed HikariCP 4.0.3 to 6.3.3
+description: Upgrade a Maven dependencyManagement entry for com.zaxxer:HikariCP at version 4.0.3.
+preconditions:
+  - org.openrewrite.maven.search.FindManagedDependency:
+      groupId: com.zaxxer
+      artifactId: HikariCP
+      version: 4.0.3
+recipeList:
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: com.zaxxer
+      artifactId: HikariCP
+      newVersion: 6.3.3
+      overrideManagedVersion: false
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.hikaricp.PreserveDisabledKeepaliveInSpringProperties
+displayName: Preserve disabled Hikari keepalive in Spring properties
+description: When an application.properties file has explicit Spring Hikari settings but no keepalive setting, add zero to preserve the HikariCP 3.x/4.x disabled default.
+preconditions:
+  - org.openrewrite.properties.search.FindProperties:
+      propertyKey: spring.datasource.hikari.*
+      relaxedBinding: true
+recipeList:
+  - org.openrewrite.properties.AddProperty:
+      property: spring.datasource.hikari.keepalive-time
+      value: 0
+      comment: HikariCP 6.2.1 defaults keepalive to 120000ms; zero preserves the 3.x/4.x behavior
+      delimiter: "="
+      orderedInsertion: true
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.hikaricp.PreserveDisabledKeepaliveInSpringYaml
+displayName: Preserve disabled Hikari keepalive in Spring YAML
+description: When structured Spring YAML has explicit Hikari settings but no keepalive setting, add zero to preserve the HikariCP 3.x/4.x disabled default.
+preconditions:
+  - org.openrewrite.yaml.search.FindProperty:
+      propertyKey: spring.datasource.hikari.*
+      relaxedBinding: true
+recipeList:
+  - org.openrewrite.yaml.MergeYaml:
+      key: $.spring.datasource.hikari
+      yaml: |
+        keepalive-time: 0
+      acceptTheirs: true
+      createNewKeys: true
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.hikaricp.ReviewHikariJavaBaseline
+displayName: Review HikariCP 6 Java baseline
+description: Mark Maven properties that still select Java 8, 9, or 10 because HikariCP 6.3.3 requires a Java 11 or newer runtime and build toolchain.
+recipeList:
+  - org.openrewrite.maven.search.FindProperties:
+      propertyPattern: '(java[.]version|maven[.]compiler[.](release|source|target))'
+      valuePattern: '^(1[.]8|8|9|10)$'
