@@ -92,6 +92,7 @@
     <module>rewrite-ngx-infinite-scroll-upgrade</module>
     <module>rewrite-jul-to-slf4j-upgrade</module>
     <module>rewrite-swiper-upgrade</module>
+    <module>rewrite-antv-x6-upgrade</module>
   </modules>
 
   <dependencyManagement>

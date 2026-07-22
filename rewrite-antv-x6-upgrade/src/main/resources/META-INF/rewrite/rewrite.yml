@@ -1,0 +1,33 @@
+---
+type: specs.openrewrite.org/v1beta/category
+name: com.huawei.clouds.openrewrite.antvx6
+packageName: com.huawei.clouds.openrewrite.antvx6
+description: Upgrade AntV X6 dependencies and surface source, package-manager, framework, configuration, runtime, and animation decisions.
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.antvx6.UpgradeAntvX6To3_1_7
+displayName: Upgrade selected AntV X6 dependencies to 3.1.7
+description: Update only XLSX-visible exact, caret, or tilde direct @antv/x6 declarations in package.json while preserving the declaration style.
+tags:
+  - antv
+  - x6
+  - dependency-upgrade
+recipeList:
+  - com.huawei.clouds.openrewrite.antvx6.UpgradeSelectedAntvX6Dependency
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.antvx6.MigrateAntvX6To3_1_7
+displayName: Migrate AntV X6 applications to 3.1.7
+description: Apply the strict dependency upgrade, documented import consolidation, and precise manifest, lockfile, configuration, TypeScript, framework, runtime, and animation markers.
+tags:
+  - antv
+  - x6
+  - javascript
+  - typescript
+  - migration
+recipeList:
+  - com.huawei.clouds.openrewrite.antvx6.UpgradeAntvX6To3_1_7
+  - com.huawei.clouds.openrewrite.antvx6.MigrateConsolidatedAntvX6Imports
+  - com.huawei.clouds.openrewrite.antvx6.FindAntvX6JsonRisks
+  - com.huawei.clouds.openrewrite.antvx6.FindAntvX6JavaScriptRisks
+  - com.huawei.clouds.openrewrite.antvx6.FindAntvX6TextLockRisks
