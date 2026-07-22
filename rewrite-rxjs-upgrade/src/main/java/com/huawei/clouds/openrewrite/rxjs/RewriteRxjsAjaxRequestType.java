@@ -28,7 +28,10 @@ public final class RewriteRxjsAjaxRequestType extends Recipe {
                 String source = visited.getText();
                 if (!RxjsSourceText.isSupported(visited) ||
                     !RxjsSourceText.hasUnaliasedNamedImport(source, "rxjs/ajax", "AjaxRequest") ||
-                    RxjsSourceText.hasUnaliasedNamedImport(source, "rxjs/ajax", "AjaxConfig")) {
+                    RxjsSourceText.hasUnaliasedNamedImport(source, "rxjs/ajax", "AjaxConfig") ||
+                    RxjsSourceText.hasAnyImportBinding(source, "AjaxConfig") ||
+                    RxjsSourceText.hasPotentialShadowingBinding(source, "AjaxRequest") ||
+                    RxjsSourceText.hasPotentialShadowingBinding(source, "AjaxConfig")) {
                     return visited;
                 }
                 return visited.withText(RxjsSourceText.replaceIdentifierInCode(

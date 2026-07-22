@@ -12,6 +12,7 @@ import org.openrewrite.test.RewriteTest;
 
 import java.util.stream.Stream;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.openrewrite.json.Assertions.json;
 import static org.openrewrite.test.SourceSpecs.text;
@@ -65,7 +66,7 @@ class UpgradeRxjsTest implements RewriteTest {
                 {"peerDependencies":{"@angular/core":">=16.0.0","rxjs":"^6.6.7"},"devDependencies":{"typescript":"5.9.3"}}
                 """,
                 """
-                {"peerDependencies":{"@angular/core":">=16.0.0","rxjs":"7.8.2"},"devDependencies":{/*~~>*/"typescript":"5.9.3"}}
+                {"peerDependencies":{"@angular/core":">=16.0.0","rxjs":"7.8.2"},"devDependencies":{"typescript":"5.9.3"}}
                 """,
                 spec -> spec.path("package.json")
         ));
@@ -73,11 +74,11 @@ class UpgradeRxjsTest implements RewriteTest {
 
     @ParameterizedTest(name = "leaves unsupported declaration {0}")
     @ValueSource(strings = {
-            "6.5.4", "6.6.6", "6.6.8", "7.8.2", "7.8.1", "8.0.0",
+            "6.5.4", "6.6.6", "6.6.8", "7.2.9", "7.7.0", "7.8.2", "7.8.3", "8.0.0",
             ">=6.5.5 <7", "^6.5.5 || ^7.0.0", "6.x", "latest", "6.6.7-beta.0"
     })
     void leavesUnsupportedDeclarations(String declaration) {
-        rewriteRun(json(
+        rewriteRun(spec -> spec.recipe(environment().activateRecipes(DEPENDENCY_RECIPE)), json(
                 "{\"dependencies\":{\"rxjs\":\"" + declaration + "\"}}",
                 spec -> spec.path("package.json")
         ));
@@ -88,7 +89,7 @@ class UpgradeRxjsTest implements RewriteTest {
             "workspace:^6.6.7", "npm:rxjs@6.6.7", "file:../rxjs", "git+https://github.com/ReactiveX/rxjs.git#6.6.7"
     })
     void leavesProtocolsAndAliases(String declaration) {
-        rewriteRun(json(
+        rewriteRun(spec -> spec.recipe(environment().activateRecipes(DEPENDENCY_RECIPE)), json(
                 "{\"dependencies\":{\"rxjs\":\"" + declaration + "\"}}",
                 spec -> spec.path("package.json")
         ));
@@ -96,11 +97,12 @@ class UpgradeRxjsTest implements RewriteTest {
 
     @Test
     void leavesOverridesNestedValuesAndNonScalarValuesUntouched() {
-        rewriteRun(json(
+        rewriteRun(spec -> spec.recipe(environment().activateRecipes(DEPENDENCY_RECIPE)), json(
                 """
                 {
                   "overrides":{"rxjs":"6.6.7"},
                   "resolutions":{"rxjs":"6.5.5"},
+                  "config":{"dependencies":{"rxjs":"7.8.1"}},
                   "dependencies":{"wrapper":{"rxjs":"6.6.7"},"rxjs":{"version":"6.6.7"}},
                   "devDependencies":{"rxjs":["6.6.7"]}
                 }
@@ -111,10 +113,30 @@ class UpgradeRxjsTest implements RewriteTest {
 
     @Test
     void leavesLockfilesBackupsAndOtherJsonUntouched() {
-        rewriteRun(
+        rewriteRun(spec -> spec.recipe(environment().activateRecipes(DEPENDENCY_RECIPE)),
                 json("{\"dependencies\":{\"rxjs\":\"6.6.7\"}}", spec -> spec.path("package-lock.json")),
                 json("{\"dependencies\":{\"rxjs\":\"6.6.7\"}}", spec -> spec.path("package.json.backup")),
                 json("{\"dependencies\":{\"rxjs\":\"6.6.7\"}}", spec -> spec.path("config/dependencies.json"))
+        );
+    }
+
+    @Test
+    void leavesGeneratedAndVendoredPackageJsonUntouched() {
+        rewriteRun(spec -> spec.recipe(environment().activateRecipes(DEPENDENCY_RECIPE)),
+                json("{\"dependencies\":{\"rxjs\":\"7.8.1\"}}",
+                        source -> source.path("node_modules/example/package.json")),
+                json("{\"dependencies\":{\"rxjs\":\"7.8.1\"}}",
+                        source -> source.path("dist/package.json"))
+        );
+    }
+
+    @Test
+    void dependencyUpgradeIsIdempotent() {
+        rewriteRun(spec -> spec.recipe(environment().activateRecipes(DEPENDENCY_RECIPE))
+                        .cycles(2).expectedCyclesThatMakeChanges(1),
+                json("{\"dependencies\":{\"rxjs\":\"7.8.1\"}}",
+                        "{\"dependencies\":{\"rxjs\":\"7.8.2\"}}",
+                        source -> source.path("package.json"))
         );
     }
 
@@ -159,6 +181,44 @@ class UpgradeRxjsTest implements RewriteTest {
                         "import { Observable as Stream } from 'rxjs';\nimport { of as makeOne } from 'rxjs';\n",
                         source -> source.path("src/aliases.ts")
                 )
+        );
+    }
+
+    @Test
+    void migratesNestedOperatorExportsButLeavesOpaqueModuleObjectsForAudit() {
+        rewriteRun(
+                spec -> spec.recipe(environment().activateRecipes(SOURCE_RECIPE)),
+                text(
+                        """
+                        export { map as transform } from 'rxjs/internal/operators/map';
+                        const observableModule = require("rxjs/internal/Observable");
+                        const filterModule = import('rxjs/internal/operators/filter');
+                        """,
+                        """
+                        export { map as transform } from 'rxjs/operators';
+                        const observableModule = require("rxjs/internal/Observable");
+                        const filterModule = import('rxjs/internal/operators/filter');
+                        """,
+                        source -> source.path("src/modules.ts")
+                )
+        );
+    }
+
+    @Test
+    void deepImportMigrationRejectsUnknownMismatchedDefaultAndGeneratedSource() {
+        String source = """
+                        import { Subject } from 'rxjs/internal/Observable';
+                        import { Observable, InternalOperator } from 'rxjs/internal/Observable';
+                        import Observable from 'rxjs/internal/Observable';
+                        import { custom } from 'rxjs/internal/operators/custom';
+                        const documentation = "rxjs/internal/operators/map";
+                        // import { map } from 'rxjs/internal/operators/map';
+                        """;
+        rewriteRun(
+                spec -> spec.recipe(environment().activateRecipes(SOURCE_RECIPE)),
+                text(source, input -> input.path("src/unknown.ts")),
+                text("import { Observable } from 'rxjs/internal/Observable';\n",
+                        input -> input.path("dist/generated.ts"))
         );
     }
 
@@ -255,6 +315,59 @@ class UpgradeRxjsTest implements RewriteTest {
     }
 
     @Test
+    void sourceMigrationSkipsShadowedBindingsAndPropertyNames() {
+        rewriteRun(
+                spec -> spec.recipe(environment().activateRecipes(SOURCE_RECIPE)),
+                text(
+                        """
+                        import { AjaxRequest } from 'rxjs/ajax';
+                        function nested() { const AjaxRequest = localType; return AjaxRequest; }
+                        export const request = (value: AjaxRequest) => value;
+                        """,
+                        source -> source.path("src/shadowed-ajax.ts")
+                ),
+                text(
+                        """
+                        import { throwError } from 'rxjs';
+                        const nested = (throwError: (value: string) => unknown) => throwError('local');
+                        const actual = throwError('rxjs');
+                        """,
+                        source -> source.path("src/shadowed-error.ts")
+                ),
+                text(
+                        "import { AjaxRequest } from 'rxjs/ajax';\nimport { AjaxConfig } from './local-config';\nconst value: AjaxRequest = load();\n",
+                        source -> source.path("src/conflicting-import.ts")
+                ),
+                text(
+                        """
+                        import { AjaxRequest } from 'rxjs/ajax';
+                        const property = namespace.AjaxRequest;
+                        const config: AjaxRequest = property;
+                        """,
+                        """
+                        import { AjaxConfig } from 'rxjs/ajax';
+                        const property = namespace.AjaxRequest;
+                        const config: AjaxConfig = property;
+                        """,
+                        source -> source.path("src/property.ts")
+                )
+        );
+    }
+
+    @Test
+    void deterministicSourceMigrationIsIdempotent() {
+        rewriteRun(
+                spec -> spec.recipe(environment().activateRecipes(SOURCE_RECIPE))
+                        .cycles(2).expectedCyclesThatMakeChanges(1),
+                text(
+                        "import { of } from 'rxjs/internal/observable/of';\nimport { throwError } from 'rxjs';\nconst failed = throwError('x');\n",
+                        "import { of } from 'rxjs';\nimport { throwError } from 'rxjs';\nconst failed = throwError(() => 'x');\n",
+                        source -> source.path("src/idempotent.ts")
+                )
+        );
+    }
+
+    @Test
     void doesNotRewriteLookalikeSourceWithoutRxjsImports() {
         rewriteRun(
                 spec -> spec.recipe(environment().activateRecipes(SOURCE_RECIPE)),
@@ -270,9 +383,12 @@ class UpgradeRxjsTest implements RewriteTest {
         rewriteRun(
                 spec -> spec.recipe(environment().activateRecipes(AUDIT_RECIPE)),
                 text(
-                        "import { Observable } from 'rxjs';\nconst result = stream.toPromise();\nroot.add(first).add(second);\n",
-                        "import { Observable } from 'rxjs';\nconst result = stream~~>.toPromise();\nroot~~>.add(first).add(second);\n",
-                        source -> source.path("src/legacy.ts")
+                        "import { Observable, Subscription } from 'rxjs';\nconst result = stream.toPromise();\nroot.add(first).add(second);\n",
+                        source -> source.path("src/legacy.ts").after(actual -> actual).afterRecipe(after -> {
+                            String printed = after.printAll();
+                            assertTrue(printed.contains("choose firstValueFrom or lastValueFrom"), printed);
+                            assertTrue(printed.contains("Subscription.add returns void"), printed);
+                        })
                 )
         );
     }
@@ -285,8 +401,10 @@ class UpgradeRxjsTest implements RewriteTest {
                 spec -> spec.recipe(environment().activateRecipes(AUDIT_RECIPE)),
                 text(
                         "import { Observable, map, of as observableOf } from 'rxjs';\nreturn this.buildAsObservable().toPromise();\n",
-                        "import { Observable, map, of as observableOf } from 'rxjs';\nreturn this.buildAsObservable()~~>.toPromise();\n",
-                        source -> source.path("src/lib/packagr.ts")
+                        source -> source.path("src/lib/packagr.ts").after(actual -> actual)
+                                .afterRecipe(after -> assertTrue(
+                                        after.printAll().contains("choose firstValueFrom or lastValueFrom"),
+                                        after.printAll()))
                 )
         );
     }
@@ -303,13 +421,145 @@ class UpgradeRxjsTest implements RewriteTest {
     }
 
     @Test
+    void auditExplainsImportedSemanticRisksAtExactSnippets() {
+        rewriteRun(
+                spec -> spec.recipe(environment().activateRecipes(AUDIT_RECIPE)),
+                text(
+                        """
+                        import { Observable, throwError, defer, iif, race, zip } from 'rxjs';
+                        import { publish, finalize } from 'rxjs/operators';
+                        const old = Observable.create(observer => observer.complete());
+                        const error = throwError(problem);
+                        const delayed = defer(() => undefined);
+                        const selected = iif(flag, ready$, undefined);
+                        const connected = publish()(source$);
+                        const finished = finalize(cleanup)(source$);
+                        const winner = race(one$, two$);
+                        const paired = zip(one$, two$);
+                        stream._subscribe = customSubscribe;
+                        """,
+                        source -> source.path("src/semantic-risks.ts").after(actual -> actual).afterRecipe(after -> {
+                            String printed = after.printAll();
+                            assertTrue(printed.contains("Observable.create was removed"), printed);
+                            assertTrue(printed.contains("throwError should receive a lazy factory"), printed);
+                            assertTrue(printed.contains("no longer accepts undefined"), printed);
+                            assertTrue(printed.contains("Legacy multicast/publish APIs"), printed);
+                            assertTrue(printed.contains("notifier/finalization ordering"), printed);
+                            assertTrue(printed.contains("race/zip edge behavior"), printed);
+                            assertTrue(printed.contains("private/internal field"), printed);
+                        })
+                )
+        );
+    }
+
+    @Test
+    void auditExplainsRemainingInternalImports() {
+        rewriteRun(
+                spec -> spec.recipe(environment().activateRecipes(AUDIT_RECIPE)),
+                text(
+                        "import { CustomThing } from 'rxjs/internal/custom/CustomThing';\n",
+                        source -> source.path("src/internal.ts").after(actual -> actual)
+                                .afterRecipe(after -> assertTrue(
+                                        after.printAll().contains("internal entry points are unsupported"),
+                                        after.printAll()))
+                )
+        );
+    }
+
+    @Test
+    void auditIgnoresCommentsStringsPropertiesAndValidFactories() {
+        rewriteRun(
+                spec -> spec.recipe(environment().activateRecipes(AUDIT_RECIPE)),
+                text(
+                        """
+                        import { throwError as rxThrow } from 'rxjs';
+                        // stream.toPromise(); rxThrow(problem);
+                        const docs = "rxjs/internal/Observable and .toPromise()";
+                        service.rxThrow(problem);
+                        const first = rxThrow(() => problem);
+                        const second = rxThrow((context) => context.problem);
+                        """,
+                        source -> source.path("src/safe.ts")
+                )
+        );
+    }
+
+    @Test
+    void sourceRiskMarkersAreIdempotent() {
+        rewriteRun(
+                spec -> spec.recipe(environment().activateRecipes(AUDIT_RECIPE))
+                        .cycles(2).expectedCyclesThatMakeChanges(1),
+                text(
+                        "import { Observable } from 'rxjs';\nreturn source.toPromise();\n",
+                        source -> source.path("src/idempotent-risk.ts").after(actual -> actual)
+                )
+        );
+    }
+
+    @Test
     void auditMarksRxjsCompatAndTypeScriptVersionOwners() {
         rewriteRun(
                 spec -> spec.recipe(environment().activateRecipes(AUDIT_RECIPE)),
                 json(
                         "{\"dependencies\":{\"rxjs-compat\":\"6.6.7\"},\"devDependencies\":{\"typescript\":\"3.9.10\"}}",
-                        "{\"dependencies\":{/*~~>*/\"rxjs-compat\":\"6.6.7\"},\"devDependencies\":{/*~~>*/\"typescript\":\"3.9.10\"}}",
+                        source -> source.path("package.json").after(actual -> actual).afterRecipe(after -> {
+                            String printed = after.printAll();
+                            assertTrue(printed.contains("rxjs-compat is not an RxJS 7 migration strategy"), printed);
+                            assertTrue(printed.contains("TypeScript 3 predates"), printed);
+                        })
+                )
+        );
+    }
+
+    @Test
+    void packageAuditMarksUnresolvedAndCentralOwnershipButNotModernTooling() {
+        rewriteRun(
+                spec -> spec.recipe(environment().activateRecipes(AUDIT_RECIPE)),
+                json(
+                        """
+                        {"dependencies":{"rxjs":">=6.5.5 <8"},"devDependencies":{"typescript":"^5.9.3"},"pnpm":{"overrides":{"rxjs":"6.6.7"}}}
+                        """,
+                        source -> source.path("package.json").after(actual -> actual).afterRecipe(after -> {
+                            String printed = after.printAll();
+                            assertTrue(printed.contains("range, protocol, alias, unlisted, or newer"), printed);
+                            assertTrue(printed.contains("Central RxJS version ownership detected"), printed);
+                            assertFalse(printed.contains("TypeScript 3 predates"), printed);
+                        })
+                )
+        );
+    }
+
+    @Test
+    void packageAuditLeavesTargetAndModernTypeScriptUnmarked() {
+        rewriteRun(
+                spec -> spec.recipe(environment().activateRecipes(AUDIT_RECIPE)),
+                json(
+                        "{\"dependencies\":{\"rxjs\":\"7.8.2\"},\"devDependencies\":{\"typescript\":\"5.9.3\"}}",
                         source -> source.path("package.json")
+                ),
+                json(
+                        "{\"devDependencies\":{\"typescript\":\"3.9.10\"}}",
+                        source -> source.path("services/api/package.json")
+                ),
+                json(
+                        "{\"config\":{\"dependencies\":{\"rxjs\":\"6.6.7\",\"typescript\":\"3.9.10\"}}}",
+                        source -> source.path("nested/package.json")
+                ),
+                json(
+                        "{\"config\":{\"rxjs\":\"6.6.7\"},\"devDependencies\":{\"typescript\":\"3.9.10\"}}",
+                        source -> source.path("unrelated/package.json")
+                )
+        );
+    }
+
+    @Test
+    void packageRiskMarkersAreIdempotent() {
+        rewriteRun(
+                spec -> spec.recipe(new FindRxjs7JsonRisks())
+                        .cycles(2).expectedCyclesThatMakeChanges(1),
+                json(
+                        "{\"dependencies\":{\"rxjs-compat\":\"6.6.7\"}}",
+                        source -> source.path("package.json").after(actual -> actual)
                 )
         );
     }
@@ -317,16 +567,25 @@ class UpgradeRxjsTest implements RewriteTest {
     @Test
     void discoversAndValidatesAllPublicRecipes() {
         Environment environment = environment();
-        for (String name : new String[]{MIGRATION_RECIPE, DEPENDENCY_RECIPE, SOURCE_RECIPE, AUDIT_RECIPE}) {
+        for (String name : new String[]{
+                MIGRATION_RECIPE, DEPENDENCY_RECIPE, SOURCE_RECIPE, AUDIT_RECIPE,
+                "com.huawei.clouds.openrewrite.rxjs.MigrateAjaxRequestToAjaxConfig",
+                "com.huawei.clouds.openrewrite.rxjs.MigrateLiteralThrowErrorFactories",
+                "com.huawei.clouds.openrewrite.rxjs.AuditRxjs7SourceCompatibility",
+                "com.huawei.clouds.openrewrite.rxjs.AuditRxjs7ProjectCompatibility"
+        }) {
             Recipe recipe = environment.activateRecipes(name);
             assertTrue(environment.listRecipes().stream().anyMatch(candidate -> name.equals(candidate.getName())));
-            assertTrue(recipe.validate().isValid(), () -> name + ": " + recipe.validate().failures());
+            assertTrue(recipe.validateAll().stream().allMatch(validation -> validation.isValid()),
+                    () -> name + ": " + recipe.validateAll());
         }
     }
 
     private static Stream<Arguments> selectedDeclarations() {
         return Stream.of("dependencies", "devDependencies", "peerDependencies", "optionalDependencies")
-                .flatMap(section -> Stream.of("6.5.5", "6.6.7")
+                .flatMap(section -> Stream.of(
+                                "6.5.5", "6.6.7", "7.3.0", "7.4.0", "7.5.5",
+                                "7.5.6", "7.5.7", "7.6.0", "7.8.0", "7.8.1")
                         .flatMap(version -> Stream.of("", "^", "~")
                                 .map(prefix -> Arguments.of(section, prefix + version))));
     }

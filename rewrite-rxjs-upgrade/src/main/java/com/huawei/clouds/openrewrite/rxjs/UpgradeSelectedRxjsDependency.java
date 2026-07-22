@@ -12,10 +12,14 @@ import java.util.Set;
 
 /** Upgrades only spreadsheet-listed scalar RxJS declarations in direct dependency sections. */
 public final class UpgradeSelectedRxjsDependency extends Recipe {
-    private static final Set<String> SECTIONS = Set.of(
+    static final String TARGET_VERSION = "7.8.2";
+    static final Set<String> SECTIONS = Set.of(
             "dependencies", "devDependencies", "peerDependencies", "optionalDependencies"
     );
-    private static final Set<String> VERSIONS = Set.of("6.5.5", "6.6.7");
+    static final Set<String> SOURCE_VERSIONS = Set.of(
+            "6.5.5", "6.6.7", "7.3.0", "7.4.0", "7.5.5",
+            "7.5.6", "7.5.7", "7.6.0", "7.8.0", "7.8.1"
+    );
 
     @Override
     public String getDisplayName() {
@@ -24,7 +28,7 @@ public final class UpgradeSelectedRxjsDependency extends Recipe {
 
     @Override
     public String getDescription() {
-        return "Upgrade only direct scalar RxJS declarations for the spreadsheet-listed 6.5.5 and 6.6.7 " +
+        return "Upgrade only direct scalar RxJS declarations for the ten spreadsheet-listed source " +
                "versions, including exact, caret, and tilde forms, to 7.8.2.";
     }
 
@@ -40,30 +44,28 @@ public final class UpgradeSelectedRxjsDependency extends Recipe {
                     return visited;
                 }
 
-                Cursor objectCursor = getCursor().getParentTreeCursor();
-                Cursor sectionCursor = objectCursor == null ? null : objectCursor.getParentTreeCursor();
-                if (sectionCursor == null || !(sectionCursor.getValue() instanceof Json.Member section) ||
-                    !SECTIONS.contains(key(section))) {
+                if (directDependencySection(getCursor()) == null) {
                     return visited;
                 }
-                return visited.withValue(value.withSource("\"7.8.2\"").withValue("7.8.2"));
+                return visited.withValue(value.withSource("\"" + TARGET_VERSION + "\"").withValue(TARGET_VERSION));
             }
 
             private boolean isPackageJson() {
                 Path path = getCursor().firstEnclosingOrThrow(Json.Document.class).getSourcePath();
-                return path.getFileName() != null && "package.json".equals(path.getFileName().toString());
+                return path.getFileName() != null && "package.json".equals(path.getFileName().toString()) &&
+                       !RxjsSourceText.isGenerated(path);
             }
         };
     }
 
-    private static boolean isSelected(String declaration) {
+    static boolean isSelected(String declaration) {
         String candidate = declaration.startsWith("^") || declaration.startsWith("~") ?
                 declaration.substring(1) : declaration;
-        return VERSIONS.contains(candidate) && declaration.matches("[~^]?" +
+        return SOURCE_VERSIONS.contains(candidate) && declaration.matches("[~^]?" +
                 java.util.regex.Pattern.quote(candidate));
     }
 
-    private static String key(Json.Member member) {
+    static String key(Json.Member member) {
         if (member.getKey() instanceof Json.Literal literal) {
             return String.valueOf(literal.getValue());
         }
@@ -71,5 +73,24 @@ public final class UpgradeSelectedRxjsDependency extends Recipe {
             return identifier.getName();
         }
         return "";
+    }
+
+    /** Returns the top-level direct dependency section owning the current member, or {@code null}. */
+    static String directDependencySection(Cursor memberCursor) {
+        Cursor dependencyObject = memberCursor.getParentTreeCursor();
+        Cursor sectionCursor = dependencyObject == null ? null : dependencyObject.getParentTreeCursor();
+        if (sectionCursor == null || !(sectionCursor.getValue() instanceof Json.Member section) ||
+            !SECTIONS.contains(key(section)) || !isTopLevelMember(sectionCursor)) {
+            return null;
+        }
+        return key(section);
+    }
+
+    static boolean isTopLevelMember(Cursor memberCursor) {
+        Cursor rootObject = memberCursor.getParentTreeCursor();
+        Cursor documentCursor = rootObject == null ? null : rootObject.getParentTreeCursor();
+        return rootObject != null && rootObject.getValue() instanceof Json.JsonObject root &&
+               documentCursor != null && documentCursor.getValue() instanceof Json.Document document &&
+               document.getValue() == root;
     }
 }

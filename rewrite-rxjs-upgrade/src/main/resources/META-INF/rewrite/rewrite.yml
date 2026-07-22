@@ -2,131 +2,84 @@
 type: specs.openrewrite.org/v1beta/category
 name: com.huawei.clouds.openrewrite.rxjs
 packageName: com.huawei.clouds.openrewrite.rxjs
-description: Upgrade selected RxJS 6 declarations, migrate deterministic public imports and renamed types, and locate compatibility work that requires stream semantics.
+description: Upgrade spreadsheet-listed RxJS declarations, migrate bounded public-source constructs, and locate semantic compatibility work.
 ---
 type: specs.openrewrite.org/v1beta/recipe
 name: com.huawei.clouds.openrewrite.rxjs.UpgradeRxjsDependencyTo7_8_2
 displayName: Upgrade the RxJS dependency to 7.8.2
-description: Upgrade only spreadsheet-listed direct RxJS 6.5.5 and 6.6.7 package.json declarations to 7.8.2 without changing ranges, protocols, aliases, lockfiles, overrides, or source code.
+description: Upgrade the ten spreadsheet-listed direct RxJS package.json versions in exact, caret, or tilde form without changing ranges, protocols, central owners, generated files, or lockfiles.
 tags:
   - rxjs
   - nodejs
   - dependency-upgrade
-preconditions:
-  - org.openrewrite.FindSourceFiles:
-      filePattern: package.json;**/package.json
 recipeList:
   - com.huawei.clouds.openrewrite.rxjs.UpgradeSelectedRxjsDependency
 ---
 type: specs.openrewrite.org/v1beta/recipe
-name: com.huawei.clouds.openrewrite.rxjs.MigrateDeterministicRxjsSourceTo7
-displayName: Migrate deterministic RxJS 7 source constructs
-description: Migrate type-safe named deep imports, the AjaxRequest type rename, and literal throwError calls whose factory semantics are unambiguous.
-tags:
-  - rxjs
-  - typescript
-  - source-migration
-recipeList:
-  - org.openrewrite.text.FindAndReplace:
-      find: '(?m)^(?<indent>[ \t]*)import[ \t]+\{[ \t]*(?<symbol>Observable|Subject|BehaviorSubject|ReplaySubject|AsyncSubject|Subscription|Subscriber|Notification)(?<alias>[ \t]+as[ \t]+[A-Za-z_$][A-Za-z0-9_$]*)?[ \t]*\}[ \t]+from[ \t]+(?<quote>["''])rxjs/internal/\k<symbol>\k<quote>[ \t]*;?[ \t]*$'
-      replace: '${indent}import { ${symbol}${alias} } from ${quote}rxjs${quote};'
-      regex: true
-      multiline: true
-      filePattern: "**/*.{js,jsx,ts,tsx,mjs,cjs}"
-      plaintextOnly: false
-  - org.openrewrite.text.FindAndReplace:
-      find: '(?<quote>["''])rxjs/internal/operators\k<quote>'
-      replace: '${quote}rxjs/operators${quote}'
-      regex: true
-      filePattern: "**/*.{js,jsx,ts,tsx,mjs,cjs}"
-      plaintextOnly: false
-  - org.openrewrite.text.FindAndReplace:
-      find: '(?m)^(?<indent>[ \t]*)import[ \t]+\{[ \t]*(?<symbol>of|from|fromEvent|defer|iif|throwError|EMPTY|NEVER)(?<alias>[ \t]+as[ \t]+[A-Za-z_$][A-Za-z0-9_$]*)?[ \t]*\}[ \t]+from[ \t]+(?<quote>["''])rxjs/internal/observable/\k<symbol>\k<quote>[ \t]*;?[ \t]*$'
-      replace: '${indent}import { ${symbol}${alias} } from ${quote}rxjs${quote};'
-      regex: true
-      multiline: true
-      filePattern: "**/*.{js,jsx,ts,tsx,mjs,cjs}"
-      plaintextOnly: false
-  - com.huawei.clouds.openrewrite.rxjs.MigrateAjaxRequestToAjaxConfig
-  - com.huawei.clouds.openrewrite.rxjs.MigrateLiteralThrowErrorFactories
----
-type: specs.openrewrite.org/v1beta/recipe
 name: com.huawei.clouds.openrewrite.rxjs.MigrateAjaxRequestToAjaxConfig
 displayName: Migrate RxJS AjaxRequest to AjaxConfig
-description: Rename the directly imported rxjs/ajax AjaxRequest type and its references to AjaxConfig within the same JavaScript or TypeScript source file.
-preconditions:
-  - org.openrewrite.text.Find:
-      find: 'import\s*\{(?=[^}]*\bAjaxRequest\b)(?![^}]*\bAjaxConfig\b)[^}]*\}\s*from\s*["'']rxjs/ajax["'']'
-      regex: true
-      caseSensitive: true
-      filePattern: "**/*.{js,jsx,ts,tsx,mjs,cjs}"
+description: Rename the unaliased rxjs/ajax AjaxRequest import and its unshadowed code references to AjaxConfig.
 recipeList:
   - com.huawei.clouds.openrewrite.rxjs.RewriteRxjsAjaxRequestType
 ---
 type: specs.openrewrite.org/v1beta/recipe
 name: com.huawei.clouds.openrewrite.rxjs.MigrateLiteralThrowErrorFactories
 displayName: Migrate literal RxJS throwError calls to factories
-description: Wrap only string literals and new Error string literals passed directly to the imported RxJS throwError function in a lazy factory.
-preconditions:
-  - org.openrewrite.text.Find:
-      find: 'import\s*\{(?=[^}]*\bthrowError\b)[^}]*\}\s*from\s*["'']rxjs["'']'
-      regex: true
-      caseSensitive: true
-      filePattern: "**/*.{js,jsx,ts,tsx,mjs,cjs}"
+description: Wrap direct string and new Error string literals passed to an unshadowed RxJS throwError binding in lazy factories.
 recipeList:
   - com.huawei.clouds.openrewrite.rxjs.RewriteRxjsLiteralThrowErrorFactories
 ---
 type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.rxjs.MigrateDeterministicRxjsSourceTo7
+displayName: Migrate deterministic RxJS 7 source constructs
+description: Move known internal modules to public entry points, rename AjaxRequest, and migrate unambiguous literal throwError calls while preserving comments, strings, formatting, and shadowed symbols.
+tags:
+  - rxjs
+  - typescript
+  - source-migration
+recipeList:
+  - com.huawei.clouds.openrewrite.rxjs.MigrateRxjsDeepImports
+  - com.huawei.clouds.openrewrite.rxjs.MigrateAjaxRequestToAjaxConfig
+  - com.huawei.clouds.openrewrite.rxjs.MigrateLiteralThrowErrorFactories
+---
+type: specs.openrewrite.org/v1beta/recipe
 name: com.huawei.clouds.openrewrite.rxjs.AuditRxjs7SourceCompatibility
 displayName: Locate RxJS 7 source compatibility work
-description: In source files that import RxJS, mark promise conversion, Subscription chaining, direct throwError values, remaining internal imports, legacy multicasting, internal fields, and completion-sensitive operators for semantic review.
+description: Mark exact import-owned source constructs whose migration requires stream, completion, subscription, multicast, error, or private-extension semantics.
 tags:
   - rxjs
   - search
   - manual-review
-preconditions:
-  - org.openrewrite.text.Find:
-      find: '(?:\bfrom\s*["'']rxjs(?:/[^"'']*)?["'']|\brequire\s*\(\s*["'']rxjs(?:/[^"'']*)?["'']\s*\)|\bimport\s*["'']rxjs(?:/[^"'']*)?["''])'
-      regex: true
-      caseSensitive: true
-      filePattern: "**/*.{js,jsx,ts,tsx,mjs,cjs}"
 recipeList:
-  - org.openrewrite.text.Find:
-      find: '(?:\.toPromise\s*\(|\.add\s*\([^;\r\n]*\)\s*\.add\s*\(|\bthrowError\s*\(\s*(?!\(\s*\)\s*=>)|["'']rxjs/internal/|\bObservable\s*\.\s*create\s*\(|\b(?:multicast|publish|publishBehavior|publishLast|publishReplay|refCount)\s*\(|\b(?:_subscribe|_isScalar|syncErrorThrowable|syncErrorThrown|syncErrorValue)\b|\b(?:audit|buffer|debounce|sample|throttle|finalize)\s*\()'
-      regex: true
-      caseSensitive: true
-      filePattern: "**/*.{js,jsx,ts,tsx,mjs,cjs}"
-      contextSize: 80
-  - org.openrewrite.text.Find:
-      find: '\b(?:defer\s*\([^\r\n]*=>\s*(?:undefined|void\s+0)|iif\s*\([^\r\n]*(?:undefined|void\s+0))'
-      regex: true
-      caseSensitive: true
-      filePattern: "**/*.{js,jsx,ts,tsx,mjs,cjs}"
-      contextSize: 80
+  - com.huawei.clouds.openrewrite.rxjs.FindRxjs7SourceRisks
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.rxjs.AuditRxjs7ProjectCompatibility
+displayName: Locate RxJS 7 package compatibility work
+description: Mark unresolved RxJS constraints, rxjs-compat, central version owners, and legacy TypeScript declarations in package.json.
+tags:
+  - rxjs
+  - search
+  - manual-review
+recipeList:
+  - com.huawei.clouds.openrewrite.rxjs.FindRxjs7JsonRisks
 ---
 type: specs.openrewrite.org/v1beta/recipe
 name: com.huawei.clouds.openrewrite.rxjs.AuditRxjs7Compatibility
 displayName: Locate RxJS 7 compatibility work
-description: Mark source constructs whose correct migration depends on stream semantics, plus rxjs-compat and TypeScript dependency owners that must be reviewed with the RxJS 7 upgrade.
+description: Combine precise source and package compatibility diagnostics for RxJS 7.8.2.
 tags:
   - rxjs
   - search
   - manual-review
 recipeList:
   - com.huawei.clouds.openrewrite.rxjs.AuditRxjs7SourceCompatibility
-  - org.openrewrite.json.search.FindKey:
-      key: $.dependencies['rxjs-compat']
-  - org.openrewrite.json.search.FindKey:
-      key: $.devDependencies['rxjs-compat']
-  - org.openrewrite.json.search.FindKey:
-      key: $.dependencies.typescript
-  - org.openrewrite.json.search.FindKey:
-      key: $.devDependencies.typescript
+  - com.huawei.clouds.openrewrite.rxjs.AuditRxjs7ProjectCompatibility
 ---
 type: specs.openrewrite.org/v1beta/recipe
 name: com.huawei.clouds.openrewrite.rxjs.MigrateRxjsTo7_8_2
 displayName: Migrate RxJS applications to 7.8.2
-description: Upgrade selected dependencies, migrate deterministic public imports and renamed types, and mark source constructs whose correct migration depends on stream semantics.
+description: Upgrade spreadsheet-listed dependencies, migrate deterministic public source constructs, and mark compatibility work that requires application semantics.
 tags:
   - rxjs
   - nodejs

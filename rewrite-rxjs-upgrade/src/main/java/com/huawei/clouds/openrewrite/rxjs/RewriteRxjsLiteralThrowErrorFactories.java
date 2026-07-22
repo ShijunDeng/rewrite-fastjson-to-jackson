@@ -36,7 +36,8 @@ public final class RewriteRxjsLiteralThrowErrorFactories extends Recipe {
                 PlainText visited = super.visitText(text, ctx);
                 String source = visited.getText();
                 if (!RxjsSourceText.isSupported(visited) ||
-                    !RxjsSourceText.hasUnaliasedNamedImport(source, "rxjs", "throwError")) {
+                    !RxjsSourceText.hasUnaliasedNamedImport(source, "rxjs", "throwError") ||
+                    RxjsSourceText.hasPotentialShadowingBinding(source, "throwError")) {
                     return visited;
                 }
                 String migrated = RxjsSourceText.replaceCodeMatches(source, NEW_ERROR, match ->
