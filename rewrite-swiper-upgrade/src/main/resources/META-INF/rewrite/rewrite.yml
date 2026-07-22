@@ -2,136 +2,93 @@
 type: specs.openrewrite.org/v1beta/category
 name: com.huawei.clouds.openrewrite.swiper
 packageName: com.huawei.clouds.openrewrite.swiper
-description: Upgrade selected Swiper declarations to 12.1.2, migrate deterministic package entry points, and identify source constructs that require manual review.
+description: Upgrade selected Swiper releases to 12.1.2 with strict dependency changes, deterministic public-entry migration and precise source/configuration review markers.
 ---
 type: specs.openrewrite.org/v1beta/recipe
 name: com.huawei.clouds.openrewrite.swiper.UpgradeSwiperDependencyTo12_1_2
-displayName: Upgrade the Swiper dependency to 12.1.2
-description: Update only explicitly selected direct Swiper declarations in package.json without changing aliases, protocols, lockfiles, overrides, unlisted versions, or source code.
+displayName: Upgrade spreadsheet-selected Swiper declarations to 12.1.2
+description: Upgrade only exact, caret or tilde forms of the nine spreadsheet-visible releases in direct package.json dependency sections.
 tags:
   - swiper
   - javascript
   - typescript
   - dependency-upgrade
-preconditions:
-  - org.openrewrite.FindSourceFiles:
-      filePattern: package.json;**/package.json
 recipeList:
   - com.huawei.clouds.openrewrite.swiper.UpgradeSelectedSwiperDependency
 ---
 type: specs.openrewrite.org/v1beta/recipe
 name: com.huawei.clouds.openrewrite.swiper.MigrateDeterministicSwiperSourceTo12
-displayName: Migrate deterministic Swiper source constructs to version 12
-description: Rewrite only unambiguous legacy Swiper JavaScript, TypeScript, stylesheet, and markup entry points, module imports, the v7 container class, and watchVisibleSlides option.
+displayName: Apply deterministic Swiper 12 source, style and markup migrations
+description: Normalize proven legacy core/bundle/CSS entry points, named-only built-in module imports, Swiper constructor selectors and standalone style/markup container classes.
 tags:
   - swiper
   - javascript
   - typescript
   - source-migration
 recipeList:
-  - org.openrewrite.text.FindAndReplace:
-      find: '(?<quote>["''])swiper/(?:dist/)?js/swiper(?:\.min)?\.js\k<quote>'
-      replace: '${quote}swiper${quote}'
-      regex: true
-      filePattern: "**/*.{js,jsx,ts,tsx,mjs,cjs,vue,svelte,html}"
-      plaintextOnly: false
-  - org.openrewrite.text.FindAndReplace:
-      find: '(?<quote>["''])swiper/swiper(?:\.esm)?(?:\.min)?\.js\k<quote>'
-      replace: '${quote}swiper${quote}'
-      regex: true
-      filePattern: "**/*.{js,jsx,ts,tsx,mjs,cjs,vue,svelte,html}"
-      plaintextOnly: false
-  - org.openrewrite.text.FindAndReplace:
-      find: '(?<quote>["''])swiper/swiper-bundle(?:\.esm)?(?:\.min)?\.js\k<quote>'
-      replace: '${quote}swiper/bundle${quote}'
-      regex: true
-      filePattern: "**/*.{js,jsx,ts,tsx,mjs,cjs,vue,svelte,html}"
-      plaintextOnly: false
-  - org.openrewrite.text.FindAndReplace:
-      find: '(?<quote>["''])swiper/(?:dist/css/|css/|)swiper(?:\.min)?\.css\k<quote>'
-      replace: '${quote}swiper/css${quote}'
-      regex: true
-      filePattern: "**/*.{js,jsx,ts,tsx,mjs,cjs,vue,svelte,html,css,scss,less}"
-      plaintextOnly: false
-  - org.openrewrite.text.FindAndReplace:
-      find: '(?<quote>["''])swiper/(?:dist/css/|css/|)swiper-bundle(?:\.min)?\.css\k<quote>'
-      replace: '${quote}swiper/css/bundle${quote}'
-      regex: true
-      filePattern: "**/*.{js,jsx,ts,tsx,mjs,cjs,vue,svelte,html,css,scss,less}"
-      plaintextOnly: false
-  - org.openrewrite.text.FindAndReplace:
-      find: '(?<quote>["''])swiper/components/(?<module>a11y|autoplay|controller|effect-coverflow|effect-cube|effect-fade|effect-flip|free-mode|hash-navigation|history|keyboard|mousewheel|navigation|pagination|parallax|scrollbar|thumbs|virtual|zoom)/\k<module>(?:\.min)?\.css\k<quote>'
-      replace: '${quote}swiper/css/${module}${quote}'
-      regex: true
-      filePattern: "**/*.{js,jsx,ts,tsx,mjs,cjs,vue,svelte,html,css,scss,less}"
-      plaintextOnly: false
-  - org.openrewrite.text.FindAndReplace:
-      find: '(?<quote>["''])swiper/(?:scss|less)(?<module>/bundle|/a11y|/autoplay|/controller|/effect-coverflow|/effect-cube|/effect-fade|/effect-flip|/effect-creative|/effect-cards|/free-mode|/grid|/hash-navigation|/history|/keyboard|/manipulation|/mousewheel|/navigation|/pagination|/parallax|/scrollbar|/thumbs|/virtual|/zoom)?\k<quote>'
-      replace: '${quote}swiper/css${module}${quote}'
-      regex: true
-      filePattern: "**/*.{js,jsx,ts,tsx,mjs,cjs,vue,svelte,html,css,scss,less}"
-      plaintextOnly: false
-  - org.openrewrite.text.FindAndReplace:
-      find: '(?m)^(?<indent>[ \t]*)import[ \t]+(?<core>[A-Za-z_$][A-Za-z0-9_$]*)[ \t]*,[ \t\r\n]*\{(?<modules>[ \t\r\n]*(?:A11y|Autoplay|Controller|EffectCards|EffectCoverflow|EffectCreative|EffectCube|EffectFade|EffectFlip|FreeMode|Grid|HashNavigation|History|Keyboard|Manipulation|Mousewheel|Navigation|Pagination|Parallax|Scrollbar|Thumbs|Virtual|Zoom)(?:[ \t\r\n]*,[ \t\r\n]*(?:A11y|Autoplay|Controller|EffectCards|EffectCoverflow|EffectCreative|EffectCube|EffectFade|EffectFlip|FreeMode|Grid|HashNavigation|History|Keyboard|Manipulation|Mousewheel|Navigation|Pagination|Parallax|Scrollbar|Thumbs|Virtual|Zoom))*[ \t\r\n]*,?)[ \t\r\n]*\}[ \t]+from[ \t]+(?<quote>["''])swiper\k<quote>[ \t]*;?[ \t]*$'
-      replace: |-
-        ${indent}import ${core} from ${quote}swiper${quote};
-        ${indent}import {${modules}} from ${quote}swiper/modules${quote};
-      regex: true
-      multiline: true
-      filePattern: "**/*.{js,jsx,ts,tsx,mjs,vue,svelte}"
-      plaintextOnly: false
-  - org.openrewrite.text.FindAndReplace:
-      find: '(?m)^(?<indent>[ \t]*)import[ \t]+\{(?<modules>[ \t]*(?:A11y|Autoplay|Controller|EffectCards|EffectCoverflow|EffectCreative|EffectCube|EffectFade|EffectFlip|FreeMode|Grid|HashNavigation|History|Keyboard|Manipulation|Mousewheel|Navigation|Pagination|Parallax|Scrollbar|Thumbs|Virtual|Zoom)(?:[ \t]*,[ \t]*(?:A11y|Autoplay|Controller|EffectCards|EffectCoverflow|EffectCreative|EffectCube|EffectFade|EffectFlip|FreeMode|Grid|HashNavigation|History|Keyboard|Manipulation|Mousewheel|Navigation|Pagination|Parallax|Scrollbar|Thumbs|Virtual|Zoom))*[ \t]*,?)[ \t]*\}[ \t]+from[ \t]+(?<quote>["''])swiper\k<quote>[ \t]*;?[ \t]*$'
-      replace: '${indent}import {${modules}} from ${quote}swiper/modules${quote};'
-      regex: true
-      multiline: true
-      filePattern: "**/*.{js,jsx,ts,tsx,mjs,vue,svelte}"
-      plaintextOnly: false
-  - org.openrewrite.text.FindAndReplace:
-      find: '(?<![A-Za-z0-9_$])watchVisibleSlides(?=[ \t]*:)'
-      replace: watchSlidesProgress
-      regex: true
-      filePattern: "**/*.{js,jsx,ts,tsx,mjs,cjs,vue,svelte}"
-      plaintextOnly: false
-  - org.openrewrite.text.FindAndReplace:
-      find: '\.swiper-container(?![A-Za-z0-9_-])'
-      replace: '.swiper'
-      regex: true
-      filePattern: "**/*.{js,jsx,ts,tsx,mjs,cjs,vue,svelte,html,css,scss,less}"
-      plaintextOnly: false
-  - org.openrewrite.text.FindAndReplace:
-      find: '(?<prefix>\bclass(?:Name)?[ \t]*=[ \t]*["''][^"'']*(?<![A-Za-z0-9_-]))swiper-container(?<suffix>(?![A-Za-z0-9_-])[^"'']*["''])'
-      replace: '${prefix}swiper${suffix}'
-      regex: true
-      filePattern: "**/*.{jsx,tsx,vue,svelte,html}"
-      plaintextOnly: false
+  - com.huawei.clouds.openrewrite.swiper.MigrateDeterministicSwiperSource
+  - com.huawei.clouds.openrewrite.swiper.MigrateDeterministicSwiperText
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.swiper.AuditSwiper12Source
+displayName: Audit Swiper 12 JavaScript and TypeScript compatibility
+description: Mark exact imports, wrappers, registration, removed options, behavior configuration, Element events, CommonJS and legacy selectors in Swiper-owned source.
+tags:
+  - swiper
+  - javascript
+  - typescript
+  - migration-audit
+recipeList:
+  - com.huawei.clouds.openrewrite.swiper.FindSwiperJavaScriptRisks
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.swiper.AuditSwiper12Project
+displayName: Audit Swiper 12 manifests and JSON configuration
+description: Mark unresolved declarations, third-party wrappers, legacy types/tooling, CommonJS mode, old browser targets and internal resolver/copy paths.
+tags:
+  - swiper
+  - json
+  - migration-audit
+recipeList:
+  - com.huawei.clouds.openrewrite.swiper.FindSwiperJsonRisks
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.swiper.AuditSwiper12TemplatesAndStyles
+displayName: Audit Swiper 12 templates and styles
+description: Mark Swiper Element contracts, removed preprocessor/lazy assets, internal DOM selectors, navigation SVG styling and CDN physical paths.
+tags:
+  - swiper
+  - html
+  - css
+  - migration-audit
+recipeList:
+  - com.huawei.clouds.openrewrite.swiper.FindSwiperTemplateStyleRisks
 ---
 type: specs.openrewrite.org/v1beta/recipe
 name: com.huawei.clouds.openrewrite.swiper.FindManualSwiper12MigrationRisks
-displayName: Find Swiper 12 migration risks requiring manual review
-description: Mark legacy wrappers, APIs, options, event assumptions, CommonJS loading, lazy loading, loop, multi-row grid, and custom module installation that cannot be rewritten safely without application semantics.
+displayName: Find all Swiper 12 migration risks requiring manual review
+description: Backward-compatible aggregate audit across source, manifests, JSON configuration, templates and styles.
 tags:
   - swiper
-  - search
-  - manual-review
+  - migration-audit
 recipeList:
-  - org.openrewrite.text.Find:
-      find: '(?:swiper/(?:angular|svelte|solid)|swiper/components/lazy/|Swiper\s*\.\s*use\s*\(|\bloopedSlides\b|\bslidesPerColumn(?:Fill)?\b|\bfreeMode(?:MinimumVelocity|Momentum|MomentumBounce|MomentumRatio|MomentumVelocityRatio|Sticky)\b|\blazy\s*:|swiper-lazy|require\s*\(\s*["'']swiper|addEventListener\s*\(\s*["''](?:slidechange|progress|reachbeginning|reachend|transitionstart|transitionend)["''])'
-      regex: true
-      caseSensitive: true
-      filePattern: "**/*.{js,jsx,ts,tsx,mjs,cjs,vue,svelte,html,css,scss,less}"
-      contextSize: 0
+  - com.huawei.clouds.openrewrite.swiper.AuditSwiper12Source
+  - com.huawei.clouds.openrewrite.swiper.AuditSwiper12Project
+  - com.huawei.clouds.openrewrite.swiper.AuditSwiper12TemplatesAndStyles
 ---
 type: specs.openrewrite.org/v1beta/recipe
 name: com.huawei.clouds.openrewrite.swiper.MigrateSwiperTo12_1_2
-displayName: Migrate Swiper applications to 12.1.2
-description: Upgrade selected package.json declarations, migrate deterministic package entry points and source constructs, and mark remaining high-risk Swiper constructs for manual review.
+displayName: Migrate spreadsheet-selected Swiper projects to 12.1.2
+description: Recommended migration that applies strict dependency and deterministic source changes, then leaves precise review markers for behavior and configuration decisions.
 tags:
   - swiper
   - javascript
   - typescript
-  - source-migration
+  - dependency-upgrade
+  - migration-audit
 recipeList:
   - com.huawei.clouds.openrewrite.swiper.UpgradeSwiperDependencyTo12_1_2
   - com.huawei.clouds.openrewrite.swiper.MigrateDeterministicSwiperSourceTo12
-  - com.huawei.clouds.openrewrite.swiper.FindManualSwiper12MigrationRisks
+  - com.huawei.clouds.openrewrite.swiper.AuditSwiper12Source
+  - com.huawei.clouds.openrewrite.swiper.AuditSwiper12Project
+  - com.huawei.clouds.openrewrite.swiper.AuditSwiper12TemplatesAndStyles

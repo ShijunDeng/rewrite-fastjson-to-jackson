@@ -68,7 +68,7 @@
 | [`rewrite-hikaricp-upgrade`](rewrite-hikaricp-upgrade) | `com.huawei.clouds.openrewrite.hikaricp.MigrateHikariCPTo6_3_3` | 将 HikariCP 3.3/3.4/4.0 升级到 6.3.3，自动迁移原子 Credentials 与旧 keepalive 默认值，并标记 Java、MXBean 和异常驱逐风险 |
 | [`rewrite-ngx-infinite-scroll-upgrade`](rewrite-ngx-infinite-scroll-upgrade) | `com.huawei.clouds.openrewrite.ngxinfinitescroll.MigrateNgxInfiniteScrollTo17_0_1` | 将 ngx-infinite-scroll 9/10/13/14/16 升级到 17.0.1，自动迁移 deprecated NgModule 到 standalone directive，并标记 Angular peer、深度导入与滚动行为风险 |
 | [`rewrite-jul-to-slf4j-upgrade`](rewrite-jul-to-slf4j-upgrade) | `com.huawei.clouds.openrewrite.jultoslf4j.MigrateJulToSlf4jTo2_0_17` | 将 JUL-to-SLF4J 1.7.30/1.7.32/1.7.36 升级到 2.0.17，迁移 provider/binder 兼容点，并检测双向桥和旧 binding 风险 |
-| [`rewrite-swiper-upgrade`](rewrite-swiper-upgrade) | `com.huawei.clouds.openrewrite.swiper.MigrateSwiperTo12_1_2` | 将 Swiper 3/6/7/8/9 升级到 12.1.2，自动迁移包入口、模块 import、样式路径、容器类和参数，并标记 framework/loop/lazy/event 风险 |
+| [`rewrite-swiper-upgrade`](rewrite-swiper-upgrade) | `com.huawei.clouds.openrewrite.swiper.MigrateSwiperTo12_1_2` | 将 Swiper 3/6/7/8/9 升级到 12.1.2，自动迁移可证明的包入口、模块 import、样式路径和容器类，并标记 framework/参数/loop/lazy/event 风险 |
 
 后续迁移应新增独立模块，例如：
 

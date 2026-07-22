@@ -16,24 +16,28 @@
 com.huawei.clouds.openrewrite.swiper.MigrateSwiperTo12_1_2
 ```
 
-它依次升级受控的依赖声明、迁移可以确定等价的源码/样式入口，并把不能在缺少业务语义时安全改写的代码标成 OpenRewrite 搜索结果。模块还提供三个可以单独运行的配方：
+它依次升级受控的依赖声明、迁移可以确定等价的源码/样式入口，并把不能在缺少业务语义时安全改写的代码标成 OpenRewrite 搜索结果。模块还提供以下可单独运行的配方：
 
 | 配方 | 用途 |
 | --- | --- |
 | `com.huawei.clouds.openrewrite.swiper.UpgradeSwiperDependencyTo12_1_2` | 只升级 `package.json` 中的受控 Swiper 版本 |
-| `com.huawei.clouds.openrewrite.swiper.MigrateDeterministicSwiperSourceTo12` | 只迁移确定性的入口、模块导入、CSS 路径、容器类名和参数名 |
-| `com.huawei.clouds.openrewrite.swiper.FindManualSwiper12MigrationRisks` | 只搜索需要人工判断的高风险兼容性问题 |
+| `com.huawei.clouds.openrewrite.swiper.MigrateDeterministicSwiperSourceTo12` | 只迁移确定性的入口、模块导入、CSS 路径和容器类名 |
+| `com.huawei.clouds.openrewrite.swiper.AuditSwiper12Source` | 审计 JS/TS import、API、参数与事件 |
+| `com.huawei.clouds.openrewrite.swiper.AuditSwiper12Project` | 审计 manifest、TypeScript、bundler 与 Jest JSON 配置 |
+| `com.huawei.clouds.openrewrite.swiper.AuditSwiper12TemplatesAndStyles` | 审计 Swiper Element、样式、Lazy 与 CDN 资产 |
+| `com.huawei.clouds.openrewrite.swiper.FindManualSwiper12MigrationRisks` | 兼容旧调用方式的三个审计配方聚合入口 |
 
 ## Spec 与配方能力映射
 
 | 不兼容点 | 配方行为 | 测试证据 |
 | --- | --- | --- |
-| 表格列出的 3/6/7/8/9 版本 | **自动修复**：四个直接依赖区中的六种安全标量形式升级到 `12.1.2` | 版本×声明形式×依赖区参数化测试、6 个真实 package 样本和协议/range/override/lockfile 负例 |
-| 旧 JS core/bundle 与 CSS/模块样式入口 | **自动修复**：改为 Swiper 12 package exports | 21 类入口 before→after、现代入口和非目标扩展名 no-op 测试 |
-| 根入口导出的内置模块 | **自动修复**：已知 module named import 移到 `swiper/modules`，默认 core import 保留 | 多行、named-only、default+named 和 4 个真实源码 revision 测试 |
-| `watchVisibleSlides` 与 `.swiper-container` | **自动修复**：改为 `watchSlidesProgress` 与 `.swiper`，Web Component 和带前后缀 class 不动 | 参数、JS selector、CSS、markup before→after 与边界负例 |
-| framework wrapper、Lazy、loop、Grid/freeMode、`Swiper.use`、CJS、旧 Element 事件 | **精准检测**：在具体文本位置添加 SearchResult | 风险 marker 与组合配方测试 |
-| callback 参数、SSR/bundler、Pointer Events、loop 行为、视觉/CSP | **人工验证**：缺少应用运行时语义，不能通用改写 | 本文 build、E2E、SSR、浏览器与视觉回归清单 |
+| 表格列出的 3/6/7/8/9 版本 | **AUTO**：四个直接依赖区中仅 exact、`^`、`~` 三种严格形式升级到 `12.1.2` | 版本×声明形式×依赖区参数化测试、6 个真实 package 样本和 protocol/range/lockfile no-op |
+| 精确旧 JS core/bundle 与 CSS/模块样式入口 | **AUTO**：无 named binding 的 ESM import 与静态 `import()` 按全功能语义改为 `swiper`/`swiper/bundle`，样式改为公开 CSS export | JS/TS LST import/dynamic import 与注释感知 style visitor before→after |
+| 根入口的 named-only 内置模块 import | **AUTO**：移动到 `swiper/modules`；default+named 混合 import 不猜拆分 | named、alias、多模块、混合 import MARK/no-op 测试 |
+| Swiper 构造器字符串及独立 style/markup `.swiper-container` token | **AUTO**：改为 `.swiper`；动态 selector、Web Component 和前后缀 class 不动 | 绑定级构造器、CSS、HTML/Vue/Svelte 与边界测试 |
+| `watchVisibleSlides`、wrapper、Lazy、loop、Grid/freeMode、`Swiper.use`、CJS、Element 事件 | **MARK**：在具体 LST/文本节点添加 SearchResult | 风险 marker、无 Swiper 绑定同名 API no-op 与推荐配方测试 |
+| `= / v / ^v`、complex range、protocol、alias、catalog、未列版本 | **NO-OP + MARK**：依赖 AUTO 不猜；项目审计说明所有权或人工升级路径 | 严格白名单与 unresolved declaration 测试 |
+| target/更高版本、override/resolution、lockfile、相似包、生成目录、注释/文档/样式字符串 | **NO-OP** | 防降级、防误改和文件/绑定/注释/字符串边界测试 |
 
 ## 自动处理范围
 
@@ -46,7 +50,7 @@ com.huawei.clouds.openrewrite.swiper.MigrateSwiperTo12_1_2
 - `peerDependencies`
 - `optionalDependencies`
 
-表格所列九个版本及其常见单一 registry 表达形式会被设置为精确版本 `12.1.2`，包括 `9.4.1`、`^9.4.1`、`~9.4.1`、`=9.4.1`、`v9.4.1` 和 `^v9.4.1`。配方不笼统匹配整个主版本，因而不会把 `9.4.0`、`9.4.2`、`10.x` 或 `11.x` 纳入本次表格规定的升级范围。
+表格所列九个版本仅在 exact、caret、tilde 三种完整标量形式下被设置为精确版本 `12.1.2`，例如 `9.4.1`、`^9.4.1`、`~9.4.1`。`=9.4.1`、`v9.4.1`、`^v9.4.1` 也保持不变并由审计配方标记；配方不笼统匹配整个主版本，也不会把 `9.4.0`、`9.4.2`、`10.x` 或 `11.x` 纳入升级范围。
 
 以下内容有意保持不变：
 
@@ -63,31 +67,30 @@ com.huawei.clouds.openrewrite.swiper.MigrateSwiperTo12_1_2
 
 源码配方只在 JavaScript、TypeScript、Vue、Svelte、HTML、CSS、SCSS 和 Less 的受控扩展名中执行边界明确的迁移：
 
-- `swiper/dist/js/swiper*.js`、`swiper/swiper*.js` 改为 `swiper`；
+- 无 named binding 的 `swiper/dist/js/swiper*.js`、`swiper/js/swiper*.js` ESM import 改为 `swiper/bundle`，保留旧全功能构建语义；明确的旧 core ESM 入口改为 `swiper`；
 - `swiper/swiper-bundle*.js` 改为 `swiper/bundle`；
 - 旧 core/bundle CSS 入口改为 `swiper/css` 或 `swiper/css/bundle`；
 - `swiper/components/<module>/<module>.css` 改为 `swiper/css/<module>`，但不猜测已经移除的 Lazy 模块；
-- `swiper/scss`、`swiper/less` 及其模块路径改到相应 CSS export；
-- 从根 `swiper` 导入的已知模块迁到 `swiper/modules`，并保留默认 core import；
-- 参数键 `watchVisibleSlides:` 改为 `watchSlidesProgress:`；
-- 独立的旧选择器/markup class `.swiper-container`、`class="swiper-container"` 改为 `.swiper`/`swiper`。
+- 从根 `swiper` 导入且只包含已知内置模块的 named import 迁到 `swiper/modules`；混合 default+named import 标记后人工拆分；
+- 静态 `import('旧公开文件')` 会改为目标 export；CommonJS `require(...)` 因 Swiper 7+ 为纯 ESM 而保持不变并精确标记，不能只改字符串路径伪装成已完成迁移；
+- 已证明为 Swiper 构造器第一参数的字符串，以及独立 CSS/markup token `.swiper-container`、`class="swiper-container"` 改为 `.swiper`/`swiper`；
+- `swiper/scss`、`swiper/less`、`watchVisibleSlides` 等缺少等价上下文的用法只做精确标记，不自动猜改。
 
 例如：
 
 ```diff
--import SwiperCore, { Navigation, Pagination } from 'swiper';
+-import { Navigation, Pagination } from 'swiper';
 -import 'swiper/swiper-bundle.min.css';
-+import SwiperCore from 'swiper';
 +import { Navigation, Pagination } from 'swiper/modules';
 +import 'swiper/css/bundle';
 
--new Swiper('.hero .swiper-container', { watchVisibleSlides: true });
-+new Swiper('.hero .swiper', { watchSlidesProgress: true });
+-new Swiper('.hero .swiper-container', { loop: true });
++new Swiper('.hero .swiper', { loop: true }); // loop 会留下人工复核标记
 ```
 
 配方不会把 `<swiper-container>` Web Component 标签误改，也不会改 `.swiper-container-horizontal`、`.custom-swiper-container` 等带前后缀的类名。混合导入、未知模块、配置 JSON、文档和文本快照也保持不变。
 
-源码迁移基于严格限定的文本模式，因为 OpenRewrite 当前没有可用于本模块的稳定 JavaScript/TypeScript 语义 AST。务必审查 dry-run diff；特别是 SCSS/Less import 改成 CSS export 后，要验证现有预处理器和 bundler 是否允许该导入位置。
+JavaScript/TypeScript 自动迁移和风险检测使用 OpenRewrite JavaScript LST visitor，先收集 Swiper import binding 和局部声明，再修改精确 ESM import/dynamic import/未遮蔽构造器节点；普通同名 `Swiper`、非构造器 options 和未证明的 Element 变量不会命中。CSS、HTML、Vue、Svelte 的纯文本资产使用受控扩展名、精确 token、静态 class 属性与注释/字符串屏蔽 visitor；动态 class binding 保持不变。务必审查 dry-run diff，并逐个处理 `SearchResult`。
 
 ## 版本跨度内的不兼容修改点
 
@@ -170,11 +173,11 @@ com.huawei.clouds.openrewrite.swiper.MigrateSwiperTo12_1_2
 - [windiest/Angular-news @ aec41cc](https://github.com/windiest/Angular-news/blob/aec41cc0c2f4af2876507a22719b426e0935bdc9/webroot/news/directive/swiper.html)：旧容器 markup/class selector；
 - [nathobson Swiper 示例](https://gist.github.com/nathobson/5770850df9485542ee93a583ca23248e/ba7b9b65b55b57acaefa890625684d61ad3db8eb)：迁移容器 selector，同时保留需人工处理的 lazy/loop 参数。
 
-测试写法参考 OpenRewrite 官方固定提交 `b3008cc4` 的 [ChangeValueTest](https://github.com/openrewrite/rewrite/blob/b3008cc4a1f0c43f562da16e5933a2a56d9bc568/rewrite-json/src/test/java/org/openrewrite/json/ChangeValueTest.java)、[JsonPathMatcherTest](https://github.com/openrewrite/rewrite/blob/b3008cc4a1f0c43f562da16e5933a2a56d9bc568/rewrite-json/src/test/java/org/openrewrite/json/JsonPathMatcherTest.java) 和 [FindAndReplaceTest](https://github.com/openrewrite/rewrite/blob/b3008cc4a1f0c43f562da16e5933a2a56d9bc568/rewrite-core/src/test/java/org/openrewrite/text/FindAndReplaceTest.java)。当前测试套件执行 181 个测试 invocation，覆盖：
+测试写法参考 OpenRewrite 官方固定提交 `b3008cc4a1f0c43f562da16e5933a2a56d9bc568` 的 JSON、JavaScript visitor、PlainText marker 与 RewriteTest 用例。当前测试套件执行 354 个测试 invocation，覆盖：
 
-- 九个表格版本、六类允许的 semver 形式、四个直接依赖区和 workspace 子包；
+- 九个表格版本、exact/`^`/`~` 三类允许形式、四个直接依赖区和 workspace 子包；
 - 真实仓库 package/source 形态；
-- 21 类旧 JS/CSS/SCSS/Less/module/class 入口的 before/after；
+- 绑定级旧 JS core/bundle、named modules、静态 dynamic import、CSS module 与 class 入口的 before/after；
 - 目标/高版本、未列版本、协议/alias、复杂 range、override、lockfile、错误 JSON 类型、相似包名、现代入口、Web Component 标签和不支持扩展名的 no-op；
 - 风险标记、组合配方、配方发现、元数据和配置验证。
 

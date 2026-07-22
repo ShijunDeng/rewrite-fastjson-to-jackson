@@ -15,10 +15,10 @@ import java.util.Set;
  * JsonPath leaf filters in the supported OpenRewrite version also match values nested in arrays.
  */
 public final class UpgradeSelectedSwiperDependency extends Recipe {
-    private static final Set<String> SECTIONS = Set.of(
+    static final Set<String> SECTIONS = Set.of(
             "dependencies", "devDependencies", "peerDependencies", "optionalDependencies"
     );
-    private static final Set<String> VERSIONS = Set.of(
+    static final Set<String> VERSIONS = Set.of(
             "3.4.2", "6.8.1", "6.8.4", "7.2.0", "8.3.1", "8.4.7", "9.1.0", "9.2.0", "9.4.1"
     );
 
@@ -44,8 +44,11 @@ public final class UpgradeSelectedSwiperDependency extends Recipe {
 
                 Cursor objectCursor = getCursor().getParentTreeCursor();
                 Cursor sectionCursor = objectCursor == null ? null : objectCursor.getParentTreeCursor();
+                Cursor rootObjectCursor = sectionCursor == null ? null : sectionCursor.getParentTreeCursor();
+                Cursor documentCursor = rootObjectCursor == null ? null : rootObjectCursor.getParentTreeCursor();
                 if (sectionCursor == null || !(sectionCursor.getValue() instanceof Json.Member) ||
-                        !SECTIONS.contains(key((Json.Member) sectionCursor.getValue()))) {
+                    !SECTIONS.contains(key((Json.Member) sectionCursor.getValue())) ||
+                    documentCursor == null || !(documentCursor.getValue() instanceof Json.Document)) {
                     return m;
                 }
 
@@ -58,24 +61,21 @@ public final class UpgradeSelectedSwiperDependency extends Recipe {
 
             private boolean isPackageJson() {
                 Path sourcePath = getCursor().firstEnclosingOrThrow(Json.Document.class).getSourcePath();
-                return sourcePath.getFileName() != null && "package.json".equals(sourcePath.getFileName().toString());
+                return SwiperSupport.isProjectPath(sourcePath) && sourcePath.getFileName() != null &&
+                       "package.json".equals(sourcePath.getFileName().toString());
             }
         };
     }
 
     private static boolean isSelected(String declaration) {
         String candidate = declaration;
-        if (candidate.startsWith("^") || candidate.startsWith("~") || candidate.startsWith("=")) {
+        if (candidate.startsWith("^") || candidate.startsWith("~")) {
             candidate = candidate.substring(1);
         }
-        if (candidate.startsWith("v")) {
-            candidate = candidate.substring(1);
-        }
-        return VERSIONS.contains(candidate) &&
-                declaration.matches("(?:[~^=]?|\\^?v)" + java.util.regex.Pattern.quote(candidate));
+        return VERSIONS.contains(candidate) && declaration.matches("[~^]?\\d+\\.\\d+\\.\\d+");
     }
 
-    private static String key(Json.Member member) {
+    static String key(Json.Member member) {
         if (member.getKey() instanceof Json.Literal) {
             Object value = ((Json.Literal) member.getKey()).getValue();
             return value == null ? "" : value.toString();
