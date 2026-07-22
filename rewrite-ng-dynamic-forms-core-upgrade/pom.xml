@@ -11,12 +11,17 @@
   </parent>
   <artifactId>rewrite-ng-dynamic-forms-core-upgrade</artifactId>
   <name>OpenRewrite NG Dynamic Forms Core Upgrade</name>
-  <description>Configuration-based OpenRewrite recipe for upgrading @ng-dynamic-forms/core to 18.0.0.</description>
+  <description>OpenRewrite recipes for migrating spreadsheet-selected @ng-dynamic-forms/core versions to 18.0.0.</description>
   <url>https://github.com/ShijunDeng/openrewrite-migration-recipes/tree/main/rewrite-ng-dynamic-forms-core-upgrade</url>
   <dependencies>
     <dependency>
       <groupId>org.openrewrite</groupId>
       <artifactId>rewrite-json</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.openrewrite</groupId>
+      <artifactId>rewrite-javascript</artifactId>
+      <version>${rewrite.version}</version>
     </dependency>
     <dependency>
       <groupId>org.openrewrite</groupId>

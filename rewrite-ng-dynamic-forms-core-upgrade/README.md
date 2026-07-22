@@ -1,46 +1,77 @@
-# @ng-dynamic-forms/core upgrade to 18.0.0
+# @ng-dynamic-forms/core 升级到 18.0.0
 
-本模块对应 `开源软件升级.xlsx` 中的 `@ng-dynamic-forms/core`，覆盖 `14.0.0`、`15.0.0`、`16.0.0`，目标版本为 `18.0.0`。
+本模块对应 `开源软件升级.xlsx` 中的 `@ng-dynamic-forms/core`。它严格升级表格可见版本，自动清理一个可证明等价的遗留模块包装，并把 Angular 16、Untyped Forms、standalone renderer、Kendo 移除、模型/服务和模板作用域风险标记在具体 JSON value、import、call、constructor、class、metadata property 或 HTML opening tag 上。
 
-配方名称：
+## 表格边界
+
+| 可见源版本 | 目标版本 | 自动接受的声明 |
+| --- | --- | --- |
+| `14.0.0` | `18.0.0` | `14.0.0`、`^14.0.0`、`~14.0.0` |
+| `15.0.0` | `18.0.0` | `15.0.0`、`^15.0.0`、`~15.0.0` |
+| `16.0.0` | `18.0.0` | `16.0.0`、`^16.0.0`、`~16.0.0` |
+| `17.0.0` | `18.0.0` | `17.0.0`、`^17.0.0`、`~17.0.0` |
+
+补丁版本、wildcard、comparator/hyphen/OR range、`v`/`=` 前缀、prerelease、build metadata、tag、变量和 protocol 引用不在表格授权边界内，因此不自动改写。
+
+## 配方
+
+只升级依赖：
 
 ```text
 com.huawei.clouds.openrewrite.ngdynamicforms.UpgradeNgDynamicFormsCoreTo18_0_0
 ```
 
-## 自动处理范围
+推荐的完整迁移清单：
 
-配方只修改根目录或 workspace 子目录 `package.json` 的 `dependencies`、`devDependencies`、`peerDependencies`、`optionalDependencies` 中名为 `@ng-dynamic-forms/core` 的直接 npm registry 声明。它处理 14.x–17.x 的精确版本、caret、tilde、comparator range、major wildcard、`v` 前缀与 prerelease，统一设置为 `18.0.0`。
+```text
+com.huawei.clouds.openrewrite.ngdynamicforms.MigrateNgDynamicFormsCoreTo18_0_0
+```
 
-它不会降级 18.x+，不会覆盖 `workspace:`、npm alias、Git、file、URL、tag、无界范围，也不会修改 lockfile、Angular、RxJS、core-js、TypeScript 或任何 NG Dynamic Forms UI 包。升级后必须由原包管理器重新解析 peer dependency 并重建锁文件。
+推荐配方依次执行严格依赖升级、确定性源码清理、package 风险扫描、TypeScript/JavaScript 风险扫描和 HTML 模板风险扫描。
 
-`@ng-dynamic-forms/core@18.0.0` 的官方 peer 是 Angular common/core/forms `^16.0.0`、`core-js ^3.31.0`、`rxjs ^7.5.7`。这不是“只换一个版本号”就能安全完成的升级：旧 Angular 12/13/15 工程应先按 Angular 官方逐大版本迁移，再安装目标包。
+## AUTO / MARK / NO-OP 矩阵
+
+| 输入 | 行为 | 说明 |
+| --- | --- | --- |
+| 四个直接依赖区中的表格白名单 exact/`^`/`~` | **AUTO**：改为精确 `18.0.0` | 4 个可见基准、12 种声明均有参数化测试 |
+| 从 `@ng-dynamic-forms/core` 导入的无参数 `DynamicFormsCoreModule.forRoot()` | **AUTO**：改为 `DynamicFormsCoreModule` | 官方早已在 tree-shakeable root provider 改造后删除该 wrapper；import alias、NgModule 和 `importProvidersFrom` 均覆盖 |
+| 带参数/非标准 `DynamicFormsCoreModule.forRoot(...)` | **NO-OP + MARK** | 参数可能代表自定义 provider 约定，不能丢弃 |
+| Angular、RxJS、core-js、TypeScript、Node、UI renderer 与中央版本所有者 | **MARK**：标记具体 JSON value | 目标 core 的 peer 是 Angular 16、RxJS `^7.5.7`、core-js `^3.31.0`；Angular 16.1 compiler 约束 TypeScript `>=4.9.3 <5.2` |
+| `DynamicForms*UIModule` import | **NO-OP + MARK**：标记具体 import specifier | v18 renderer 改为 standalone components；必须按实际模板选择 form/container/control imports，不能把所有 module 机械替换成一个 component |
+| Kendo package/import/tag | **NO-OP + MARK**：标记 package value、module path 或 HTML tag | v18 明确停止 Kendo renderer，没有一一对应替代 |
+| core deep import | **NO-OP + MARK**：标记 module literal | 迁移到 public root entry 前先确认目标仍公开该 symbol |
+| `DynamicFormService` 的 create/mutate/find/fromJSON/detectChanges call | **NO-OP + MARK**：标记具体 call | UntypedFormGroup/Array、严格类型、序列化、OnPush、validators/relations 行为需业务回归 |
+| `new Dynamic*Model(...)` 与自定义 core base-class extension | **NO-OP + MARK**：标记具体 constructor/class | 配置 shape、renderer `additional`、抽象成员、queries、DI 和事件不能机械迁移 |
+| standalone core directive 仍放在 `declarations` | **NO-OP + MARK**：标记 metadata property | 需移动到对应 NgModule/TestBed 的 `imports`，但必须保留同数组其他 declarations 并处理重复 import |
+| `dynamic-*-form/control`、`[dynamicList]`、`ng-template[modelId/modelType]` | **NO-OP + MARK**：标记精确 opening tag | selector 本身没有确定性改名；迁移发生在 standalone scope、renderer peers、projection 和测试配置中 |
+| 未列出的 patch/range/protocol、central owner、nested metadata、lockfile/shrinkwrap、非 package JSON | **NO-OP**（推荐配方对可识别风险 MARK） | 不猜测授权范围，不覆盖集中版本策略，不修改生成文件 |
+| 本地或其他包的同名 module/service/model/base class；被局部参数/类型遮蔽的导入名；普通 HTML/TS 字符串、HTML 注释及 script/style 原始块 | **NO-OP** | import-aware、作用域和文件/可见区域反例防止误报/误改 |
+
+模板没有安全的字符串级 AUTO：v18 保留 selector，但删除 renderer NgModule 并把组件变成 standalone。正确修改依赖 TypeScript scope 和项目实际使用的 selector；配方因此保留模板，只在精确 tag 上生成迁移清单。
 
 ## 不兼容修改点
 
-| 版本跨度内的变化 | 影响与迁移建议 |
+| 变化 | 迁移建议 |
 | --- | --- |
-| v15 将工程迁到 Angular 13 | 从 v14/Angular 12 升级时同步升级 Angular framework、CLI、compiler-cli 与 CDK/Material；重新运行 AOT、strict template 和 production build |
-| v15 的 core peer 从 RxJS 6.6.3 升到 RxJS 7.5.5 | 检查废弃 operator/result selector、`toPromise()`、scheduler、Subscription teardown 以及测试 marble；目标 core 要求 RxJS `^7.5.7` |
-| v16 将库迁到 Angular 15，并在内部改用 Untyped Forms | `FormControl`/`FormGroup` typed-forms 泛型与 NG Dynamic Forms 的 `UntypedForm*` 边界可能需要显式类型收窄；检查自定义 model、validator、control mapper 和继承组件 |
-| v17 将 Material UI 迁到 Material 15 MDC | 使用 `ui-material` 时必须执行 Angular Material MDC migration；回归主题 Sass、DOM/CSS selector、密度、typography、form-field、checkbox/radio/slide-toggle 与 test harness |
-| v18 将库迁到 Angular 16 | 目标仓库使用 Angular 16.1.3、TypeScript 5.1.6、Zone.js 0.13.1；按 Angular 16 兼容矩阵使用受支持 Node/TypeScript，并处理 Angular 16 的构建器、SSR/hydration 与严格类型变化 |
-| v18 core peer 提升到 core-js 3.31.0、RxJS 7.5.7 | 旧 polyfill 和 RxJS 6 不能原样保留；在应用支持的浏览器矩阵上验证 Promise、iterator、structured APIs、async validator 和 relation observable 行为 |
-| v18 公开 standalone components/directives | standalone 应用应把实际使用的 UI component/directive 放进 `imports`；测试中的 TestBed 也应放到 `imports`，不能再放 standalone declaration 到 `declarations` |
-| `DynamicFormsCoreModule.forRoot()` 在 v18 删除 | 删除 `.forRoot()`，NgModule 应直接 import `DynamicFormsCoreModule`；核心 services 已 `providedIn: "root"`，自定义 matcher/validator token provider 仍需在合适 injector 提供 |
-| 各 UI 包的 `*FormUiModule` 在 v18 删除 | 例如 `DynamicBasicFormUiModule`、`DynamicMaterialFormUiModule`、`DynamicBootstrapFormUiModule` 不再导出；逐个改为导入 standalone form/container/control components，检查 shared module 和 lazy route |
-| v18 停止 `@ng-dynamic-forms/ui-kendo` | 必须选择自维护 renderer、迁移到仍支持的 UI 包，或直接使用 core 构建自定义动态控件；删除 Kendo UI module/component import 后做等价功能和许可核查 |
-| companion UI packages 必须配套到 18.x | `ui-basic`、`ui-bootstrap`、`ui-foundation`、`ui-ionic`、`ui-material`、`ui-ng-bootstrap`、`ui-ngx-bootstrap`、`ui-primeng` 都以 core `^18.0.0` 为 peer；本配方有意不跨模块改它们 |
-| UI 框架 peer 发生联动 | 官方 v18 分别面向 Material 16、Ionic 7、PrimeNG 16；basic/bootstrap/foundation 方案要求对应的 ngx-mask，Bootstrap 两个 renderer 的 Bootstrap/ngx-bootstrap peer 也不同，按实际所用包逐项核对 |
-| standalone 改造改变组件作用域 | 以前由 UI module 间接导出的 pipe/directive/component 不再天然可见；检查 feature module、route-level imports、storybook、dialog/overlay 动态创建与测试 fixture |
-| OnPush 与手工 model 更新语义仍然存在 | `value`、`disabled` setter 之外的 label/layout 等 model 修改通常仍需 `DynamicFormService.detectChanges()`；迁移后回归异步 validator、relations、数组增删和动态 template |
-| 自定义 `DYNAMIC_FORM_CONTROL_MAP_FN` 与 DI 范围 | standalone/lazy 环境中 provider 位置可能产生多实例或不可见；覆盖 root、lazy route、dialog、TestBed override 与 SSR 请求级 injector |
-| mask 支持与 `maskConfig` | v14 已从 angular2-text-mask 转到 ngx-mask，目标部分 UI 包要求 ngx-mask 16、部分仍声明 13；不要盲目统一，按所选 renderer 的 v18 manifest 与 Angular 版本验证 ControlValueAccessor |
-| 序列化模型和验证函数跨严格类型边界 | 对从 JSON 恢复的 model、日期、文件、option value、自定义 async validator 做运行期 schema 校验；配置式依赖配方不会修改业务模型或补类型转换 |
+| v15 迁移到 Angular 13 | 源为 v14 时按 Angular 官方流程先升级 framework、CLI、compiler-cli 和相关 UI；每个 major 分开构建/发布验证 |
+| v16 迁移到 Angular 15 Untyped Forms | core service 返回/操作 `UntypedFormGroup`、`UntypedFormArray` 和 `UntypedFormControl`；检查显式 `FormGroup<T>`、casts、disabled/raw values、validators、arrays 和 strict template |
+| v17 Material 15 MDC | 使用 `ui-material` 时完成 Material MDC migration；回归 theme Sass、DOM/CSS selectors、density、typography、form-field、checkbox/radio/slide-toggle、harness 和视觉快照 |
+| v18 迁移到 Angular 16 | core 18 的 Angular peer 是 `^16.0.0`，并非 Angular 18；Angular 17/18 工程同样会产生 peer mismatch，不能按包版本数字猜框架版本 |
+| Angular 16 工具链 | 固定 Angular 16.1.3 源码显示 Node `^16.14.0 || >=18.10.0`、compiler-cli TypeScript `>=4.9.3 <5.2`；统一本地、CI、IDE、test、SSR 和 image runtime |
+| core runtime peers | 目标 manifest 要求 Angular common/core/forms `^16.0.0`、RxJS `^7.5.7`、core-js `^3.31.0`；验证 relation streams、async validators、teardown、polyfills 和浏览器矩阵 |
+| standalone renderer | v18 UI source只导出 standalone form/container/control components，不再提供 `DynamicForms*UIModule`；按模板实际 selector 导入，覆盖 standalone component、NgModule、lazy route、TestBed、Storybook 和 SSR scope |
+| standalone core directives | `DynamicListDirective` 与 `DynamicTemplateDirective` 为 standalone，`DynamicFormsCoreModule` 仍可导入/导出它们；选择 direct import 或 core module，不能放在 declarations |
+| Kendo renderer 移除 | `@ng-dynamic-forms/ui-kendo` 不存在于 v18；选择支持的 renderer、自维护 fork 或基于 core 的 custom controls，并做功能、样式、a11y 和许可核查 |
+| renderer peers 不统一 | basic/bootstrap/foundation 使用 ngx-mask 16；ng-bootstrap/ngx-bootstrap 使用 ngx-mask 13；Material 16、Ionic 7、PrimeNG 16。必须读取实际 renderer manifest，不能统一升级一个版本 |
+| 模型与 strict mode | 检查 model config 的 value/disabled、validators/asyncValidators、relations、group/groupFactory、mask/maskConfig、`additional` renderer config、日期/文件/options 和泛型假设 |
+| JSON revival | `DynamicFormService.fromJSON()` 会构造运行期 model/date；对外部 JSON 做 schema 校验，验证 custom decorators、validators、relations、mask 与 round-trip，不把配置当可信代码 |
+| OnPush model update | value/disabled setter 与 label/layout/options 等 metadata 修改可见性不同；需要时调用 `DynamicFormService.detectChanges()`，并覆盖 lazy/destroyed component 和 async validation |
+| 自定义 renderer/base classes | 自定义 `DynamicFormComponent`/container subclass 需要核对 v18 abstract members、UntypedFormGroup inputs、ContentChildren/ViewChildren、events、standalone imports、OnPush 和 provider scope |
+| provider scope | matcher/validator tokens、`DYNAMIC_MATCHER_PROVIDERS` 和 custom control mapping 在 standalone/lazy/dialog/TestBed/SSR injector 中可能出现不可见或多实例，需逐 scope 测试 |
 
-目标包的 UI peer 配套如下；实际项目只需处理自己使用的 renderer：
+v18 renderer peer 摘要：
 
-| v18 UI 包 | 主要 peer 要求 |
+| renderer | 固定 v18 manifest 的主要 peer |
 | --- | --- |
 | `ui-basic` | core 18、ngx-mask 16 |
 | `ui-bootstrap` | core 18、Bootstrap 3、ngx-bootstrap 6、ngx-mask 16 |
@@ -49,31 +80,43 @@ com.huawei.clouds.openrewrite.ngdynamicforms.UpgradeNgDynamicFormsCoreTo18_0_0
 | `ui-material` | core 18、Angular Material 16 |
 | `ui-ng-bootstrap` | core 18、ng-bootstrap 11、Bootstrap 4、ngx-mask 13 |
 | `ui-ngx-bootstrap` | core 18、ngx-bootstrap 8、Bootstrap 4、ngx-mask 13 |
-| `ui-primeng` | core 18、PrimeNG 16；Quill 为 optional dependency |
+| `ui-primeng` | core 18、PrimeNG 16 |
 
-官方依据包括 [v18.0.0 release](https://github.com/udos86/ng-dynamic-forms/releases/tag/v18.0.0)、[v18 CHANGELOG](https://github.com/udos86/ng-dynamic-forms/blob/v18.0.0/CHANGELOG.md)、[core v18 manifest](https://github.com/udos86/ng-dynamic-forms/blob/v18.0.0/projects/ng-dynamic-forms/core/package.json)、[v17→v18 source diff](https://github.com/udos86/ng-dynamic-forms/compare/v17.0.0...v18.0.0) 和 [Angular 官方版本兼容表](https://angular.dev/reference/versions)。
+## 固定证据
 
-## 测试样本来源
+官方 `v18.0.0` 固定到提交 [`da1742ce051af5cebdcf905b189ab6b55fe365d7`](https://github.com/udos86/ng-dynamic-forms/commit/da1742ce051af5cebdcf905b189ab6b55fe365d7)：
 
-- [dhrn/electron-mailer-poc](https://github.com/dhrn/electron-mailer-poc/blob/51602c24bc36c400fe8d5a28a02d7a06188aa11f/package.json) 的 Angular 12 + core/ui-material 14 组合
-- [Patrick5078/Angular-form-builder](https://github.com/Patrick5078/Angular-form-builder/blob/1a5d5f64142c68bf869ccd75b312a24fbac7c181/package.json) 的 Angular 13 + core/ui-basic 15 组合
-- [umd-lib/mdsoar-angular](https://github.com/umd-lib/mdsoar-angular/blob/0e309c2b2aeba34c6815b5e4df56fc26fe1bbc4b/package.json) 的 workspace 应用 core 16 组合
-- [NG Dynamic Forms 官方 v18 core manifest](https://github.com/udos86/ng-dynamic-forms/blob/v18.0.0/projects/ng-dynamic-forms/core/package.json) 的目标 peer 边界
-- OpenRewrite 官方 [ChangeValueTest](https://github.com/openrewrite/rewrite/blob/1b1804a5af7692612398fcce034a846b48b5b8cf/rewrite-json/src/test/java/org/openrewrite/json/ChangeValueTest.java) 与 [JsonPathMatcherTest](https://github.com/openrewrite/rewrite/blob/1b1804a5af7692612398fcce034a846b48b5b8cf/rewrite-json/src/test/java/org/openrewrite/json/JsonPathMatcherTest.java) 的 JSONPath filter、格式保持和 no-op 测试结构
+- [CHANGELOG](https://github.com/udos86/ng-dynamic-forms/blob/da1742ce051af5cebdcf905b189ab6b55fe365d7/CHANGELOG.md)
+- [core package manifest](https://github.com/udos86/ng-dynamic-forms/blob/da1742ce051af5cebdcf905b189ab6b55fe365d7/projects/ng-dynamic-forms/core/package.json)
+- [core module（无 `forRoot`，导入 standalone directives）](https://github.com/udos86/ng-dynamic-forms/blob/da1742ce051af5cebdcf905b189ab6b55fe365d7/projects/ng-dynamic-forms/core/src/lib/core.module.ts)
+- [basic standalone form](https://github.com/udos86/ng-dynamic-forms/blob/da1742ce051af5cebdcf905b189ab6b55fe365d7/projects/ng-dynamic-forms/ui-basic/src/lib/dynamic-basic-form.component.ts)
+- [material standalone form](https://github.com/udos86/ng-dynamic-forms/blob/da1742ce051af5cebdcf905b189ab6b55fe365d7/projects/ng-dynamic-forms/ui-material/src/lib/dynamic-material-form.component.ts)
 
-38 个测试覆盖三个固定 commit 的真实工程、表格全部版本、14.x–17.x patch、常见 semver、四依赖区、多层 workspace、JSON5 格式保持、相邻 Angular/UI/RxJS 保持，以及目标/新版本、协议引用、URL、旧 13.x、tag、数字子串、lockfile、普通 JSON、相似包名和缺失依赖不修改。
+目标 Angular 16.1.3 固定到 [`angular/angular@d9d70f0`](https://github.com/angular/angular/commit/d9d70f0a6fcded2a6b8a2fcad152a201152749df)，其中 [compiler-cli manifest](https://github.com/angular/angular/blob/d9d70f0a6fcded2a6b8a2fcad152a201152749df/packages/compiler-cli/package.json) 给出 TypeScript 和 Node 边界。
+
+OpenRewrite 测试结构参考固定提交的 [ChangeValueTest](https://github.com/openrewrite/rewrite/blob/b3008cc4a1f0c43f562da16e5933a2a56d9bc568/rewrite-json/src/test/java/org/openrewrite/json/ChangeValueTest.java)、[JsonPathMatcherTest](https://github.com/openrewrite/rewrite/blob/b3008cc4a1f0c43f562da16e5933a2a56d9bc568/rewrite-json/src/test/java/org/openrewrite/json/JsonPathMatcherTest.java) 和 rewrite-javascript [ImportTest](https://github.com/openrewrite/rewrite-javascript/blob/9e3b820e6a44808b095bb7e3aab670fd67de99a5/rewrite-javascript/src/test/java/org/openrewrite/javascript/tree/ImportTest.java)，所有 AUTO 均包含 before/after、idempotence 与 import-aware no-op。
+
+## 真实仓库用例
+
+- [`dhrn/electron-mailer-poc@51602c24`](https://github.com/dhrn/electron-mailer-poc/tree/51602c24bc36c400fe8d5a28a02d7a06188aa11f) 使用 Angular 12、core/ui-material 14；[model/service source](https://github.com/dhrn/electron-mailer-poc/blob/51602c24bc36c400fe8d5a28a02d7a06188aa11f/apps/ng-mailer/src/app/mail-configuration/mail-configuration.component.ts)、[material template](https://github.com/dhrn/electron-mailer-poc/blob/51602c24bc36c400fe8d5a28a02d7a06188aa11f/apps/ng-mailer/src/app/mail-configuration/mail-configuration.component.html) 与 [UIModule](https://github.com/dhrn/electron-mailer-poc/blob/51602c24bc36c400fe8d5a28a02d7a06188aa11f/apps/ng-mailer/src/app/app.module.ts) 分别验证 model/service、template、standalone scope markers。
+- [`Patrick5078/Angular-form-builder@1a5d5f64`](https://github.com/Patrick5078/Angular-form-builder/tree/1a5d5f64142c68bf869ccd75b312a24fbac7c181) 使用 Angular 13、core/ui-basic 15；[component](https://github.com/Patrick5078/Angular-form-builder/blob/1a5d5f64142c68bf869ccd75b312a24fbac7c181/src/app/components/view-dynamic-form/view-dynamic-form.component.ts)、[basic template](https://github.com/Patrick5078/Angular-form-builder/blob/1a5d5f64142c68bf869ccd75b312a24fbac7c181/src/app/components/view-dynamic-form/view-dynamic-form.component.html) 和 [AppModule](https://github.com/Patrick5078/Angular-form-builder/blob/1a5d5f64142c68bf869ccd75b312a24fbac7c181/src/app/app.module.ts) 覆盖 models、service、selector 和 removed UIModule。
+- [`umd-lib/mdsoar-angular@0e309c2b`](https://github.com/umd-lib/mdsoar-angular/tree/0e309c2b2aeba34c6815b5e4df56fc26fe1bbc4b) 使用 Angular 17、core 16；其 [custom standalone renderer](https://github.com/umd-lib/mdsoar-angular/blob/0e309c2b2aeba34c6815b5e4df56fc26fe1bbc4b/src/app/shared/form/builder/ds-dynamic-form-ui/ds-dynamic-form.component.ts) 验证 base-class marker，而 [layout utility](https://github.com/umd-lib/mdsoar-angular/blob/0e309c2b2aeba34c6815b5e4df56fc26fe1bbc4b/src/app/shared/form/builder/parsers/parser.utils.ts) 作为 import-aware NO-OP；Angular 17/TS 5.4 package 则验证反向 peer mismatch。
+
+当前测试套件包含 71 个执行用例：49 个严格依赖/真实 package/复杂 spec/NO-OP 用例、4 个确定性源码 AUTO/幂等/误报用例、14 个 package/source/template 精确 MARK 与真实仓库/NO-OP 用例、4 个 YAML 发现与组合用例。
 
 ## 使用与验证
+
+推荐先 dry run：
 
 ```bash
 mvn -U org.openrewrite.maven:rewrite-maven-plugin:6.44.0:dryRun \
   -Drewrite.recipeArtifactCoordinates=com.huawei.clouds.openrewrite:rewrite-ng-dynamic-forms-core-upgrade:1.0.0-SNAPSHOT \
-  -Drewrite.activeRecipes=com.huawei.clouds.openrewrite.ngdynamicforms.UpgradeNgDynamicFormsCoreTo18_0_0
+  -Drewrite.activeRecipes=com.huawei.clouds.openrewrite.ngdynamicforms.MigrateNgDynamicFormsCoreTo18_0_0
 ```
 
-确认 patch 后，按 Angular 12→13→14→15→16 顺序完成官方 migrations；同步使用中的 NG Dynamic Forms UI 包，删除 `.forRoot()` 与旧 UI module import，再重建 lockfile。运行 production/AOT build、strict template/typecheck、unit/E2E、SSR/hydration、lazy route、动态 component、mask、async validation、relation、form array、Material MDC 视觉快照和可访问性测试。
+审查 AUTO patch 和每个 `~~(...)~~>` 标记后，按 Angular 官方流程逐 major 迁移到 Angular 16，选择并升级 renderer，重建 lockfile。运行 AOT/production build、strict template/typecheck、unit/component/E2E、SSR、lazy route、TestBed/Storybook、model JSON round-trip、mask、async validators、relations、form arrays、Material MDC 视觉快照和可访问性测试。
 
-本模块自身验证：
+模块验证：
 
 ```bash
 mvn -f rewrite-ng-dynamic-forms-core-upgrade/pom.xml clean verify
