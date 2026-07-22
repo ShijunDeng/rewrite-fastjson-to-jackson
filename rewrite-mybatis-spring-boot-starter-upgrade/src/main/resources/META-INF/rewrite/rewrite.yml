@@ -2,20 +2,750 @@
 type: specs.openrewrite.org/v1beta/category
 name: com.huawei.clouds.openrewrite.mybatisspringboot
 packageName: com.huawei.clouds.openrewrite.mybatisspringboot
-description: Upgrade MyBatis Spring Boot integration with explicit platform compatibility guidance.
+description: Upgrade MyBatis Spring Boot Starter with deterministic Spring Boot 4, MyBatis-Spring 4, configuration, XML, Batch, and test migrations.
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.mybatisspringboot.MigrateMyBatisSpringBootStarterTo4_0_0
+displayName: Migrate MyBatis Spring Boot Starter applications to 4.0.0
+description: Apply source and configuration changes proven by the 4.0.0 target, mark application-specific decisions, and strictly upgrade only the spreadsheet source versions.
+tags:
+  - mybatis
+  - mybatis-spring
+  - spring-boot
+  - spring-batch
+  - java
+  - migration
+recipeList:
+  - org.openrewrite.properties.ChangePropertyKey:
+      oldPropertyKey: mybatis.configuration.default-scripting-language
+      newPropertyKey: mybatis.default-scripting-language-driver
+      relaxedBinding: false
+      regex: false
+  - org.openrewrite.yaml.ChangePropertyKey:
+      oldPropertyKey: mybatis.configuration.default-scripting-language
+      newPropertyKey: mybatis.default-scripting-language-driver
+      relaxedBinding: true
+  - org.openrewrite.properties.ChangePropertyKey:
+      oldPropertyKey: mybatis.scripting-language-driver.velocity.userdirective
+      newPropertyKey: mybatis.scripting-language-driver.velocity.velocity-settings.runtime.custom_directives
+      relaxedBinding: false
+      regex: false
+  - org.openrewrite.yaml.ChangePropertyKey:
+      oldPropertyKey: mybatis.scripting-language-driver.velocity.userdirective
+      newPropertyKey: mybatis.scripting-language-driver.velocity.velocity-settings.runtime.custom_directives
+      relaxedBinding: true
+  - com.huawei.clouds.openrewrite.mybatisspringboot.MigrateMyBatisSpringXmlSchema
+  - org.openrewrite.java.ChangeType:
+      oldFullyQualifiedTypeName: org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+      newFullyQualifiedTypeName: org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration
+  - org.openrewrite.java.ChangeType:
+      oldFullyQualifiedTypeName: org.springframework.boot.autoconfigure.jdbc.EmbeddedDataSourceConfiguration
+      newFullyQualifiedTypeName: org.springframework.boot.jdbc.autoconfigure.EmbeddedDataSourceConfiguration
+  - org.openrewrite.java.ChangeType:
+      oldFullyQualifiedTypeName: org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration
+      newFullyQualifiedTypeName: org.springframework.boot.flyway.autoconfigure.FlywayAutoConfiguration
+  - org.openrewrite.java.ChangeType:
+      oldFullyQualifiedTypeName: org.springframework.boot.autoconfigure.flyway.FlywayMigrationInitializer
+      newFullyQualifiedTypeName: org.springframework.boot.flyway.autoconfigure.FlywayMigrationInitializer
+  - org.openrewrite.java.ChangeType:
+      oldFullyQualifiedTypeName: org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration
+      newFullyQualifiedTypeName: org.springframework.boot.liquibase.autoconfigure.LiquibaseAutoConfiguration
+  - org.openrewrite.java.ChangeType:
+      oldFullyQualifiedTypeName: org.springframework.boot.test.autoconfigure.core.AutoConfigureCache
+      newFullyQualifiedTypeName: org.springframework.boot.cache.test.autoconfigure.AutoConfigureCache
+  - org.openrewrite.java.ChangeType:
+      oldFullyQualifiedTypeName: org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase
+      newFullyQualifiedTypeName: org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase
+  - org.openrewrite.java.ChangeType:
+      oldFullyQualifiedTypeName: org.springframework.boot.test.autoconfigure.filter.AnnotationCustomizableTypeExcludeFilter
+      newFullyQualifiedTypeName: org.springframework.boot.test.context.filter.AnnotationCustomizableTypeExcludeFilter
+  - org.openrewrite.java.ChangeType:
+      oldFullyQualifiedTypeName: org.springframework.boot.test.autoconfigure.filter.TypeExcludeFilters
+      newFullyQualifiedTypeName: org.springframework.boot.test.context.filter.TypeExcludeFilters
+  - com.huawei.clouds.openrewrite.mybatisspringboot.MigrateSimpleMockBean
+  - org.openrewrite.java.ChangeType:
+      oldFullyQualifiedTypeName: org.springframework.boot.test.web.client.TestRestTemplate
+      newFullyQualifiedTypeName: org.springframework.boot.resttestclient.TestRestTemplate
+  - com.huawei.clouds.openrewrite.mybatisspringboot.AddAutoConfigureTestRestTemplate
+  - org.openrewrite.java.ChangePackage:
+      oldPackageName: org.springframework.batch.item
+      newPackageName: org.springframework.batch.infrastructure.item
+      recursive: true
+  - org.openrewrite.java.ChangePackage:
+      oldPackageName: org.springframework.batch.poller
+      newPackageName: org.springframework.batch.infrastructure.poller
+      recursive: true
+  - org.openrewrite.java.ChangePackage:
+      oldPackageName: org.springframework.batch.repeat
+      newPackageName: org.springframework.batch.infrastructure.repeat
+      recursive: true
+  - org.openrewrite.java.ChangePackage:
+      oldPackageName: org.springframework.batch.support
+      newPackageName: org.springframework.batch.infrastructure.support
+      recursive: true
+  - com.huawei.clouds.openrewrite.mybatisspringboot.FindMyBatisStarterJavaRisks
+  - com.huawei.clouds.openrewrite.mybatisspringboot.FindMyBatisStarterPropertiesRisks
+  - com.huawei.clouds.openrewrite.mybatisspringboot.FindMyBatisStarterYamlRisks
+  - com.huawei.clouds.openrewrite.mybatisspringboot.FindMyBatisStarterXmlRisks
+  - com.huawei.clouds.openrewrite.mybatisspringboot.FindMyBatisStarterMavenPlatformRisks
+  - com.huawei.clouds.openrewrite.mybatisspringboot.UpgradeMyBatisSpringBootStarterTo4_0_0
 ---
 type: specs.openrewrite.org/v1beta/recipe
 name: com.huawei.clouds.openrewrite.mybatisspringboot.UpgradeMyBatisSpringBootStarterTo4
 displayName: Upgrade MyBatis Spring Boot Starter to 4.0.0
-description: Upgrade org.mybatis.spring.boot:mybatis-spring-boot-starter declarations in Maven and Gradle builds to 4.0.0.
+description: Backward-compatible alias for the strict spreadsheet version upgrade.
+recipeList:
+  - com.huawei.clouds.openrewrite.mybatisspringboot.UpgradeMyBatisSpringBootStarterTo4_0_0
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.mybatisspringboot.UpgradeMyBatisSpringBootStarterTo4_0_0
+displayName: Strictly upgrade listed MyBatis Spring Boot Starter versions to 4.0.0
+description: Upgrade only the ten exact source versions visible in the spreadsheet in direct Maven or Gradle declarations and local Maven dependencyManagement entries, without guessing the two compressed values or overriding an external BOM.
 tags:
   - mybatis
   - spring-boot
-  - java
   - dependency-upgrade
+  - strict
+preconditions:
+  - com.huawei.clouds.openrewrite.mybatisspringboot.FindSafeMyBatisStarterDependencyUpgrade
 recipeList:
+  - com.huawei.clouds.openrewrite.mybatisspringboot.UpgradeMyBatisStarter1_1_1To4_0_0
+  - com.huawei.clouds.openrewrite.mybatisspringboot.UpgradeManagedMyBatisStarter1_1_1To4_0_0
+  - com.huawei.clouds.openrewrite.mybatisspringboot.UpgradeMyBatisStarter1_3_2To4_0_0
+  - com.huawei.clouds.openrewrite.mybatisspringboot.UpgradeManagedMyBatisStarter1_3_2To4_0_0
+  - com.huawei.clouds.openrewrite.mybatisspringboot.UpgradeMyBatisStarter2_0_0To4_0_0
+  - com.huawei.clouds.openrewrite.mybatisspringboot.UpgradeManagedMyBatisStarter2_0_0To4_0_0
+  - com.huawei.clouds.openrewrite.mybatisspringboot.UpgradeMyBatisStarter2_1_2To4_0_0
+  - com.huawei.clouds.openrewrite.mybatisspringboot.UpgradeManagedMyBatisStarter2_1_2To4_0_0
+  - com.huawei.clouds.openrewrite.mybatisspringboot.UpgradeMyBatisStarter2_1_3To4_0_0
+  - com.huawei.clouds.openrewrite.mybatisspringboot.UpgradeManagedMyBatisStarter2_1_3To4_0_0
+  - com.huawei.clouds.openrewrite.mybatisspringboot.UpgradeMyBatisStarter2_1_4To4_0_0
+  - com.huawei.clouds.openrewrite.mybatisspringboot.UpgradeManagedMyBatisStarter2_1_4To4_0_0
+  - com.huawei.clouds.openrewrite.mybatisspringboot.UpgradeMyBatisStarter2_2_0To4_0_0
+  - com.huawei.clouds.openrewrite.mybatisspringboot.UpgradeManagedMyBatisStarter2_2_0To4_0_0
+  - com.huawei.clouds.openrewrite.mybatisspringboot.UpgradeMyBatisStarter2_2_2To4_0_0
+  - com.huawei.clouds.openrewrite.mybatisspringboot.UpgradeManagedMyBatisStarter2_2_2To4_0_0
+  - com.huawei.clouds.openrewrite.mybatisspringboot.UpgradeMyBatisStarter2_3_0To4_0_0
+  - com.huawei.clouds.openrewrite.mybatisspringboot.UpgradeManagedMyBatisStarter2_3_0To4_0_0
+  - com.huawei.clouds.openrewrite.mybatisspringboot.UpgradeMyBatisStarter2_3_1To4_0_0
+  - com.huawei.clouds.openrewrite.mybatisspringboot.UpgradeManagedMyBatisStarter2_3_1To4_0_0
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.mybatisspringboot.UpgradeMyBatisStarter1_1_1To4_0_0
+displayName: Upgrade MyBatis Spring Boot Starter 1.1.1 to 4.0.0
+description: Upgrade only direct Starter 1.1.1 declarations and align explicit companion modules in the same build file.
+preconditions:
+  - org.openrewrite.java.dependencies.FindDependency:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-starter
+      version: 1.1.1
+recipeList:
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-autoconfigure
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-test-autoconfigure
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-starter-test
+      newVersion: 4.0.0
+      overrideManagedVersion: false
   - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
       groupId: org.mybatis.spring.boot
       artifactId: mybatis-spring-boot-starter
       newVersion: 4.0.0
-      overrideManagedVersion: true
+      overrideManagedVersion: false
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.mybatisspringboot.UpgradeManagedMyBatisStarter1_1_1To4_0_0
+displayName: Upgrade managed MyBatis Spring Boot Starter 1.1.1 to 4.0.0
+description: Upgrade only local Maven dependencyManagement entries for Starter 1.1.1 and align explicit companion modules in the same POM.
+preconditions:
+  - org.openrewrite.maven.search.FindManagedDependency:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-starter
+      version: 1.1.1
+recipeList:
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-autoconfigure
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-test-autoconfigure
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-starter-test
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-starter
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.mybatisspringboot.UpgradeMyBatisStarter1_3_2To4_0_0
+displayName: Upgrade MyBatis Spring Boot Starter 1.3.2 to 4.0.0
+description: Upgrade only direct Starter 1.3.2 declarations and align explicit companion modules in the same build file.
+preconditions:
+  - org.openrewrite.java.dependencies.FindDependency:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-starter
+      version: 1.3.2
+recipeList:
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-autoconfigure
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-test-autoconfigure
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-starter-test
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-starter
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.mybatisspringboot.UpgradeManagedMyBatisStarter1_3_2To4_0_0
+displayName: Upgrade managed MyBatis Spring Boot Starter 1.3.2 to 4.0.0
+description: Upgrade only local Maven dependencyManagement entries for Starter 1.3.2 and align explicit companion modules in the same POM.
+preconditions:
+  - org.openrewrite.maven.search.FindManagedDependency:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-starter
+      version: 1.3.2
+recipeList:
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-autoconfigure
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-test-autoconfigure
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-starter-test
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-starter
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.mybatisspringboot.UpgradeMyBatisStarter2_0_0To4_0_0
+displayName: Upgrade MyBatis Spring Boot Starter 2.0.0 to 4.0.0
+description: Upgrade only direct Starter 2.0.0 declarations and align explicit companion modules in the same build file.
+preconditions:
+  - org.openrewrite.java.dependencies.FindDependency:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-starter
+      version: 2.0.0
+recipeList:
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-autoconfigure
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-test-autoconfigure
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-starter-test
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-starter
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.mybatisspringboot.UpgradeManagedMyBatisStarter2_0_0To4_0_0
+displayName: Upgrade managed MyBatis Spring Boot Starter 2.0.0 to 4.0.0
+description: Upgrade only local Maven dependencyManagement entries for Starter 2.0.0 and align explicit companion modules in the same POM.
+preconditions:
+  - org.openrewrite.maven.search.FindManagedDependency:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-starter
+      version: 2.0.0
+recipeList:
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-autoconfigure
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-test-autoconfigure
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-starter-test
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-starter
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.mybatisspringboot.UpgradeMyBatisStarter2_1_2To4_0_0
+displayName: Upgrade MyBatis Spring Boot Starter 2.1.2 to 4.0.0
+description: Upgrade only direct Starter 2.1.2 declarations and align explicit companion modules in the same build file.
+preconditions:
+  - org.openrewrite.java.dependencies.FindDependency:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-starter
+      version: 2.1.2
+recipeList:
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-autoconfigure
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-test-autoconfigure
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-starter-test
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-starter
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.mybatisspringboot.UpgradeManagedMyBatisStarter2_1_2To4_0_0
+displayName: Upgrade managed MyBatis Spring Boot Starter 2.1.2 to 4.0.0
+description: Upgrade only local Maven dependencyManagement entries for Starter 2.1.2 and align explicit companion modules in the same POM.
+preconditions:
+  - org.openrewrite.maven.search.FindManagedDependency:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-starter
+      version: 2.1.2
+recipeList:
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-autoconfigure
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-test-autoconfigure
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-starter-test
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-starter
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.mybatisspringboot.UpgradeMyBatisStarter2_1_3To4_0_0
+displayName: Upgrade MyBatis Spring Boot Starter 2.1.3 to 4.0.0
+description: Upgrade only direct Starter 2.1.3 declarations and align explicit companion modules in the same build file.
+preconditions:
+  - org.openrewrite.java.dependencies.FindDependency:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-starter
+      version: 2.1.3
+recipeList:
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-autoconfigure
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-test-autoconfigure
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-starter-test
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-starter
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.mybatisspringboot.UpgradeManagedMyBatisStarter2_1_3To4_0_0
+displayName: Upgrade managed MyBatis Spring Boot Starter 2.1.3 to 4.0.0
+description: Upgrade only local Maven dependencyManagement entries for Starter 2.1.3 and align explicit companion modules in the same POM.
+preconditions:
+  - org.openrewrite.maven.search.FindManagedDependency:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-starter
+      version: 2.1.3
+recipeList:
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-autoconfigure
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-test-autoconfigure
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-starter-test
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-starter
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.mybatisspringboot.UpgradeMyBatisStarter2_1_4To4_0_0
+displayName: Upgrade MyBatis Spring Boot Starter 2.1.4 to 4.0.0
+description: Upgrade only direct Starter 2.1.4 declarations and align explicit companion modules in the same build file.
+preconditions:
+  - org.openrewrite.java.dependencies.FindDependency:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-starter
+      version: 2.1.4
+recipeList:
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-autoconfigure
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-test-autoconfigure
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-starter-test
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-starter
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.mybatisspringboot.UpgradeManagedMyBatisStarter2_1_4To4_0_0
+displayName: Upgrade managed MyBatis Spring Boot Starter 2.1.4 to 4.0.0
+description: Upgrade only local Maven dependencyManagement entries for Starter 2.1.4 and align explicit companion modules in the same POM.
+preconditions:
+  - org.openrewrite.maven.search.FindManagedDependency:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-starter
+      version: 2.1.4
+recipeList:
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-autoconfigure
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-test-autoconfigure
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-starter-test
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-starter
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.mybatisspringboot.UpgradeMyBatisStarter2_2_0To4_0_0
+displayName: Upgrade MyBatis Spring Boot Starter 2.2.0 to 4.0.0
+description: Upgrade only direct Starter 2.2.0 declarations and align explicit companion modules in the same build file.
+preconditions:
+  - org.openrewrite.java.dependencies.FindDependency:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-starter
+      version: 2.2.0
+recipeList:
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-autoconfigure
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-test-autoconfigure
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-starter-test
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-starter
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.mybatisspringboot.UpgradeManagedMyBatisStarter2_2_0To4_0_0
+displayName: Upgrade managed MyBatis Spring Boot Starter 2.2.0 to 4.0.0
+description: Upgrade only local Maven dependencyManagement entries for Starter 2.2.0 and align explicit companion modules in the same POM.
+preconditions:
+  - org.openrewrite.maven.search.FindManagedDependency:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-starter
+      version: 2.2.0
+recipeList:
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-autoconfigure
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-test-autoconfigure
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-starter-test
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-starter
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.mybatisspringboot.UpgradeMyBatisStarter2_2_2To4_0_0
+displayName: Upgrade MyBatis Spring Boot Starter 2.2.2 to 4.0.0
+description: Upgrade only direct Starter 2.2.2 declarations and align explicit companion modules in the same build file.
+preconditions:
+  - org.openrewrite.java.dependencies.FindDependency:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-starter
+      version: 2.2.2
+recipeList:
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-autoconfigure
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-test-autoconfigure
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-starter-test
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-starter
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.mybatisspringboot.UpgradeManagedMyBatisStarter2_2_2To4_0_0
+displayName: Upgrade managed MyBatis Spring Boot Starter 2.2.2 to 4.0.0
+description: Upgrade only local Maven dependencyManagement entries for Starter 2.2.2 and align explicit companion modules in the same POM.
+preconditions:
+  - org.openrewrite.maven.search.FindManagedDependency:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-starter
+      version: 2.2.2
+recipeList:
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-autoconfigure
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-test-autoconfigure
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-starter-test
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-starter
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.mybatisspringboot.UpgradeMyBatisStarter2_3_0To4_0_0
+displayName: Upgrade MyBatis Spring Boot Starter 2.3.0 to 4.0.0
+description: Upgrade only direct Starter 2.3.0 declarations and align explicit companion modules in the same build file.
+preconditions:
+  - org.openrewrite.java.dependencies.FindDependency:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-starter
+      version: 2.3.0
+recipeList:
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-autoconfigure
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-test-autoconfigure
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-starter-test
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-starter
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.mybatisspringboot.UpgradeManagedMyBatisStarter2_3_0To4_0_0
+displayName: Upgrade managed MyBatis Spring Boot Starter 2.3.0 to 4.0.0
+description: Upgrade only local Maven dependencyManagement entries for Starter 2.3.0 and align explicit companion modules in the same POM.
+preconditions:
+  - org.openrewrite.maven.search.FindManagedDependency:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-starter
+      version: 2.3.0
+recipeList:
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-autoconfigure
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-test-autoconfigure
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-starter-test
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-starter
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.mybatisspringboot.UpgradeMyBatisStarter2_3_1To4_0_0
+displayName: Upgrade MyBatis Spring Boot Starter 2.3.1 to 4.0.0
+description: Upgrade only direct Starter 2.3.1 declarations and align explicit companion modules in the same build file.
+preconditions:
+  - org.openrewrite.java.dependencies.FindDependency:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-starter
+      version: 2.3.1
+recipeList:
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-autoconfigure
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-test-autoconfigure
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-starter-test
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-starter
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.mybatisspringboot.UpgradeManagedMyBatisStarter2_3_1To4_0_0
+displayName: Upgrade managed MyBatis Spring Boot Starter 2.3.1 to 4.0.0
+description: Upgrade only local Maven dependencyManagement entries for Starter 2.3.1 and align explicit companion modules in the same POM.
+preconditions:
+  - org.openrewrite.maven.search.FindManagedDependency:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-starter
+      version: 2.3.1
+recipeList:
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-autoconfigure
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-test-autoconfigure
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-starter-test
+      newVersion: 4.0.0
+      overrideManagedVersion: false
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.mybatis.spring.boot
+      artifactId: mybatis-spring-boot-starter
+      newVersion: 4.0.0
+      overrideManagedVersion: false
