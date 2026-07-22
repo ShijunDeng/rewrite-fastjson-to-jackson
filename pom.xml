@@ -80,6 +80,7 @@
     <module>rewrite-i18next-upgrade</module>
     <module>rewrite-diagram-js-minimap-upgrade</module>
     <module>rewrite-jetbrains-annotations-upgrade</module>
+    <module>rewrite-gridstack-upgrade</module>
   </modules>
 
   <dependencyManagement>

@@ -1,0 +1,36 @@
+---
+type: specs.openrewrite.org/v1beta/category
+name: com.huawei.clouds.openrewrite.gridstack
+packageName: com.huawei.clouds.openrewrite.gridstack
+description: Upgrade GridStack with explicit API, event, type, drag-and-drop, nested-grid, responsive, CSS, and framework migration guidance.
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.gridstack.UpgradeGridStackTo12_3_3
+displayName: Upgrade GridStack to 12.3.3
+description: Update only spreadsheet-selected direct gridstack declarations in package.json to 12.3.3 without changing other versions, ranges, aliases, protocols, overrides, lockfiles, or source code.
+tags:
+  - gridstack
+  - dashboard
+  - javascript
+  - typescript
+  - dependency-upgrade
+preconditions:
+  - org.openrewrite.FindSourceFiles:
+      filePattern: package.json;**/package.json
+recipeList:
+  - org.openrewrite.json.ChangeValue:
+      oldKeyPath: >-
+        $.dependencies['gridstack'][?(@ == '4.2.6' || @ == '^4.2.6' || @ == '~4.2.6' || @ == '=4.2.6' || @ == '5.1.1' || @ == '^5.1.1' || @ == '~5.1.1' || @ == '=5.1.1' || @ == '6.0.0' || @ == '^6.0.0' || @ == '~6.0.0' || @ == '=6.0.0' || @ == '6.0.3' || @ == '^6.0.3' || @ == '~6.0.3' || @ == '=6.0.3' || @ == '7.1.1' || @ == '^7.1.1' || @ == '~7.1.1' || @ == '=7.1.1')]
+      value: '"12.3.3"'
+  - org.openrewrite.json.ChangeValue:
+      oldKeyPath: >-
+        $.devDependencies['gridstack'][?(@ == '4.2.6' || @ == '^4.2.6' || @ == '~4.2.6' || @ == '=4.2.6' || @ == '5.1.1' || @ == '^5.1.1' || @ == '~5.1.1' || @ == '=5.1.1' || @ == '6.0.0' || @ == '^6.0.0' || @ == '~6.0.0' || @ == '=6.0.0' || @ == '6.0.3' || @ == '^6.0.3' || @ == '~6.0.3' || @ == '=6.0.3' || @ == '7.1.1' || @ == '^7.1.1' || @ == '~7.1.1' || @ == '=7.1.1')]
+      value: '"12.3.3"'
+  - org.openrewrite.json.ChangeValue:
+      oldKeyPath: >-
+        $.peerDependencies['gridstack'][?(@ == '4.2.6' || @ == '^4.2.6' || @ == '~4.2.6' || @ == '=4.2.6' || @ == '5.1.1' || @ == '^5.1.1' || @ == '~5.1.1' || @ == '=5.1.1' || @ == '6.0.0' || @ == '^6.0.0' || @ == '~6.0.0' || @ == '=6.0.0' || @ == '6.0.3' || @ == '^6.0.3' || @ == '~6.0.3' || @ == '=6.0.3' || @ == '7.1.1' || @ == '^7.1.1' || @ == '~7.1.1' || @ == '=7.1.1')]
+      value: '"12.3.3"'
+  - org.openrewrite.json.ChangeValue:
+      oldKeyPath: >-
+        $.optionalDependencies['gridstack'][?(@ == '4.2.6' || @ == '^4.2.6' || @ == '~4.2.6' || @ == '=4.2.6' || @ == '5.1.1' || @ == '^5.1.1' || @ == '~5.1.1' || @ == '=5.1.1' || @ == '6.0.0' || @ == '^6.0.0' || @ == '~6.0.0' || @ == '=6.0.0' || @ == '6.0.3' || @ == '^6.0.3' || @ == '~6.0.3' || @ == '=6.0.3' || @ == '7.1.1' || @ == '^7.1.1' || @ == '~7.1.1' || @ == '=7.1.1')]
+      value: '"12.3.3"'

@@ -57,6 +57,7 @@
 | [`rewrite-i18next-upgrade`](rewrite-i18next-upgrade) | `com.huawei.clouds.openrewrite.i18next.UpgradeI18nextTo25_10_10` | 将表格指定的 i18next 21.x/22.x 声明升级到 25.10.10，并说明 TypeScript、JSON v4、语言切换、selector 与模块解析变化 |
 | [`rewrite-diagram-js-minimap-upgrade`](rewrite-diagram-js-minimap-upgrade) | `com.huawei.clouds.openrewrite.diagramjsminimap.UpgradeDiagramJsMinimapTo5_2_0` | 将 diagram-js-minimap 2.1.0 升级到 5.2.0，并说明 diagram-js、CSS、触摸、焦点、键盘与多实例兼容边界 |
 | [`rewrite-jetbrains-annotations-upgrade`](rewrite-jetbrains-annotations-upgrade) | `com.huawei.clouds.openrewrite.jetbrainsannotations.UpgradeJetBrainsAnnotationsTo26_0_2_1` | 将 org.jetbrains:annotations 23/24 升级到 26.0.2-1，并说明 Java/JPMS、KMP、nullability 与静态分析兼容边界 |
+| [`rewrite-gridstack-upgrade`](rewrite-gridstack-upgrade) | `com.huawei.clouds.openrewrite.gridstack.UpgradeGridStackTo12_3_3` | 将表格指定的 GridStack 4/5/6/7 声明升级到 12.3.3，并说明 API、事件、序列化、拖拽、nested grid、CSS 与框架集成变化 |
 
 后续迁移应新增独立模块，例如：
 
