@@ -35,7 +35,7 @@
 | [`rewrite-vue-router-upgrade`](rewrite-vue-router-upgrade) | `com.huawei.clouds.openrewrite.vuerouter.MigrateVueRouterTo5_0_3` | 严格升级 Vue Router，自动迁移 unplugin/路由/滚动/配置的确定性变化并精确标记 Vue 2、导航与 SSR 风险 |
 | [`rewrite-okhttp-upgrade`](rewrite-okhttp-upgrade) | `com.huawei.clouds.openrewrite.okhttp.MigrateOkHttpTo5_3_0` | 严格升级 OkHttp，迁移 `OkHttpClient.clone()`，并标记 internal、Kotlin、MockWebServer、alpha 与连接行为风险 |
 | [`rewrite-d3-upgrade`](rewrite-d3-upgrade) | `com.huawei.clouds.openrewrite.d3.MigrateD3To7_9_0` | 严格升级 D3 7.9.0，自动迁移 `histogram`/`bin` 与 `scan`/`leastIndex`，并标记 event、pointer、collections、Voronoi、ESM、格式及渲染语义风险 |
-| [`rewrite-vue-i18n-upgrade`](rewrite-vue-i18n-upgrade) | `com.huawei.clouds.openrewrite.vuei18n.UpgradeVueI18nTo11_3_0` | 将 Vue I18n 7.x–10.x/早期 11.x 声明升级到 11.3.0，且不降级后续版本 |
+| [`rewrite-vue-i18n-upgrade`](rewrite-vue-i18n-upgrade) | `com.huawei.clouds.openrewrite.vuei18n.MigrateVueI18nTo11_3_0` | 严格升级 Vue I18n，自动迁移确定性的 options、plural 和 translation component，并精确标记 Vue 2、Legacy、message compiler、JIT 与 SSR 风险 |
 | [`rewrite-kafka-clients-upgrade`](rewrite-kafka-clients-upgrade) | `com.huawei.clouds.openrewrite.kafka.MigrateKafkaClientsTo4_1_2` | 将 Kafka Clients 升级到 4.1.2，并迁移明确移除的 Admin API 与 JMX 配置键 |
 | [`rewrite-jakarta-servlet-api-upgrade`](rewrite-jakarta-servlet-api-upgrade) | `com.huawei.clouds.openrewrite.jakartaservlet.MigrateJakartaServletApiTo6_1_0` | 将 Jakarta Servlet API 升级到 6.1.0，并迁移 javax namespace 与有明确替代的删除 API |
 | [`rewrite-mybatis-spring-upgrade`](rewrite-mybatis-spring-upgrade) | `com.huawei.clouds.openrewrite.mybatisspring.MigrateMyBatisSpringTo4_0_0` | 严格升级 MyBatis-Spring 4.0.0，迁移 Batch 6 包、XSD、scanner XML 与确定性异常构造，并标记平台/API 风险 |
