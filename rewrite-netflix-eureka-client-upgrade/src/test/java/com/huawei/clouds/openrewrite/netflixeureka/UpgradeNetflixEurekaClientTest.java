@@ -117,20 +117,12 @@ class UpgradeNetflixEurekaClientTest implements RewriteTest {
     }
 
     @Test
-    void upgradesGradleVersionVariable() {
+    void leavesGradleVersionVariableForItsOwningDeclaration() {
         rewriteRun(buildGradle(
                 """
                 plugins { id 'java' }
                 repositories { mavenCentral() }
                 def eurekaVersion = '1.10.18'
-                dependencies {
-                    implementation "com.netflix.eureka:eureka-client:${eurekaVersion}"
-                }
-                """,
-                """
-                plugins { id 'java' }
-                repositories { mavenCentral() }
-                def eurekaVersion = '2.0.4'
                 dependencies {
                     implementation "com.netflix.eureka:eureka-client:${eurekaVersion}"
                 }
@@ -198,12 +190,20 @@ class UpgradeNetflixEurekaClientTest implements RewriteTest {
     }
 
     @Test
-    void leavesKotlinDslWithoutGradleSemanticModelUntouched() {
-        rewriteRun(buildGradleKts("""
+    void upgradesKotlinDslLiteral() {
+        rewriteRun(buildGradleKts(
+                """
                 plugins { java }
                 repositories { mavenCentral() }
                 dependencies {
                     implementation("com.netflix.eureka:eureka-client:1.10.18")
+                }
+                """,
+                """
+                plugins { java }
+                repositories { mavenCentral() }
+                dependencies {
+                    implementation("com.netflix.eureka:eureka-client:2.0.4")
                 }
                 """));
     }
@@ -314,7 +314,17 @@ class UpgradeNetflixEurekaClientTest implements RewriteTest {
         // https://github.com/apache/dubbo-spi-extensions/blob/705910bd9bdd9e8f42c436c2a5d1927d5f7a2876/dubbo-extensions-dependencies-bom/pom.xml#L134
         rewriteRun(pomXml(
                 sharedCompanionPropertyPom("1.10.18"),
-                sharedCompanionPropertyPom("2.0.4")
+                """
+                <project>
+                  <modelVersion>4.0.0</modelVersion>
+                  <groupId>org.apache.dubbo</groupId><artifactId>dubbo-extensions-dependencies-bom</artifactId><version>1</version>
+                  <properties><eureka.version>1.10.18</eureka.version></properties>
+                  <dependencyManagement><dependencies>
+                    <dependency><groupId>com.netflix.eureka</groupId><artifactId>eureka-client</artifactId><version>2.0.4</version></dependency>
+                    <dependency><groupId>com.netflix.eureka</groupId><artifactId>eureka-core</artifactId><version>${eureka.version}</version></dependency>
+                  </dependencies></dependencyManagement>
+                </project>
+                """
         ));
     }
 
@@ -428,7 +438,7 @@ class UpgradeNetflixEurekaClientTest implements RewriteTest {
 
                         class EurekaServiceDiscovery {
                             DiscoveryClient start(ApplicationInfoManager info, EurekaClientConfig config) {
-                                return /*~~>*/new DiscoveryClient(info, config);
+                                return /*~~(Eureka 2.0.4 requires an explicit TransportClientFactories before optional args; choose Jersey3TransportClientFactories, Spring Cloud's transport, or a custom implementation and preserve TLS/filter settings)~~>*/new DiscoveryClient(info, config);
                             }
                         }
                         """
@@ -469,7 +479,7 @@ class UpgradeNetflixEurekaClientTest implements RewriteTest {
 
                         class EurekaConsumer {
                             DiscoveryClient connect(ApplicationInfoManager info, EurekaClientConfig config) {
-                                DiscoveryClient client = /*~~>*/new DiscoveryClient(info, config);
+                                DiscoveryClient client = /*~~(Eureka 2.0.4 requires an explicit TransportClientFactories before optional args; choose Jersey3TransportClientFactories, Spring Cloud's transport, or a custom implementation and preserve TLS/filter settings)~~>*/new DiscoveryClient(info, config);
                                 client.getApplication("inventory");
                                 return client;
                             }
@@ -512,7 +522,7 @@ class UpgradeNetflixEurekaClientTest implements RewriteTest {
                         class LegacyFactory {
                             DiscoveryClient create(InstanceInfo info, EurekaClientConfig config,
                                                    AbstractDiscoveryClientOptionalArgs args) {
-                                return /*~~>*/new DiscoveryClient(info, config, args);
+                                return /*~~(Eureka 2.0.4 requires an explicit TransportClientFactories before optional args; choose Jersey3TransportClientFactories, Spring Cloud's transport, or a custom implementation and preserve TLS/filter settings)~~>*/new DiscoveryClient(info, config, args);
                             }
                         }
                         """
@@ -549,7 +559,7 @@ class UpgradeNetflixEurekaClientTest implements RewriteTest {
 
                         class Bootstrap {
                             void start(EurekaInstanceConfig instanceConfig, EurekaClientConfig clientConfig) {
-                                /*~~>*/DiscoveryManager.getInstance().initComponent(instanceConfig, clientConfig);
+                                /*~~(DiscoveryManager.initComponent now requires TransportClientFactories before optional args; select a transport and preserve startup order explicitly)~~>*/DiscoveryManager.getInstance().initComponent(instanceConfig, clientConfig);
                             }
                         }
                         """
@@ -589,10 +599,10 @@ class UpgradeNetflixEurekaClientTest implements RewriteTest {
 
                         class OptionalArgsConfigurer {
                             void configure(AbstractDiscoveryClientOptionalArgs args,
-                                           /*~~>*/EurekaJerseyClient client,
+                                           /*~~(This Jersey 1 Eureka transport type was removed; port filters/providers/TLS/proxy/auth/pooling to Jersey 3 or the chosen custom transport)~~>*/EurekaJerseyClient client,
                                            TransportClientFactories factories) {
-                                /*~~>*/args.setEurekaJerseyClient(client);
-                                /*~~>*/args.setTransportClientFactories(factories);
+                                /*~~(setEurekaJerseyClient and the Jersey 1 client were removed; move TLS, proxy, auth, filters, and connection management to the selected transport factory)~~>*/args.setEurekaJerseyClient(client);
+                                /*~~(TransportClientFactories is now a DiscoveryClient/DiscoveryManager constructor argument, not mutable optional-args state; preserve initialization ordering)~~>*/args.setTransportClientFactories(factories);
                             }
                         }
                         """
@@ -637,11 +647,11 @@ class UpgradeNetflixEurekaClientTest implements RewriteTest {
 
                         import com.netflix.discovery.EurekaClientConfig;
                         import com.netflix.discovery.shared.transport.jersey.Jersey1TransportClientFactories;
-                        import javax.ws.rs.ext.MessageBodyReader;
+                        import jakarta.ws.rs.ext.MessageBodyReader;
 
-                        class CustomTransport implements /*~~>*/MessageBodyReader<Object> {
+                        class CustomTransport implements MessageBodyReader<Object> {
                             EurekaClientConfig config;
-                            /*~~>*/Jersey1TransportClientFactories factories;
+                            /*~~(This Jersey 1 Eureka transport type was removed; port filters/providers/TLS/proxy/auth/pooling to Jersey 3 or the chosen custom transport)~~>*/Jersey1TransportClientFactories factories;
                         }
                         """
                 )
@@ -690,9 +700,9 @@ class UpgradeNetflixEurekaClientTest implements RewriteTest {
                         <project><modelVersion>4.0.0</modelVersion><groupId>example</groupId><artifactId>legacy-stack</artifactId><version>1</version>
                           <dependencies>
                             <dependency><groupId>com.netflix.eureka</groupId><artifactId>eureka-client</artifactId><version>2.0.4</version></dependency>
-                            <!--~~>--><dependency><groupId>com.netflix.eureka</groupId><artifactId>eureka-client-jersey2</artifactId><version>1.10.18</version></dependency>
-                            <!--~~>--><dependency><groupId>com.netflix.eureka</groupId><artifactId>eureka-server-governator</artifactId><version>1.10.18</version></dependency>
-                            <!--~~>--><dependency><groupId>com.sun.jersey</groupId><artifactId>jersey-client</artifactId><version>1.19.4</version></dependency>
+                            <!--~~(This Eureka 1.x Jersey 2/Governator module is absent from 2.0.4; choose Jersey 3, Spring Cloud, or a custom transport/server bootstrap before removing it)~~>--><dependency><groupId>com.netflix.eureka</groupId><artifactId>eureka-client-jersey2</artifactId><version>1.10.18</version></dependency>
+                            <!--~~(This Eureka 1.x Jersey 2/Governator module is absent from 2.0.4; choose Jersey 3, Spring Cloud, or a custom transport/server bootstrap before removing it)~~>--><dependency><groupId>com.netflix.eureka</groupId><artifactId>eureka-server-governator</artifactId><version>1.10.18</version></dependency>
+                            <!--~~(Jersey 1 is no longer the built-in Eureka transport; migrate filters, TLS, proxy, authentication, and pooling to the selected transport before removing this dependency)~~>--><dependency><groupId>com.sun.jersey</groupId><artifactId>jersey-client</artifactId><version>1.19.4</version></dependency>
                           </dependencies>
                         </project>
                         """
@@ -710,8 +720,8 @@ class UpgradeNetflixEurekaClientTest implements RewriteTest {
                         client.filter=com.netflix.discovery.EurekaIdentityHeaderFilter
                         """,
                         """
-                        bootstrap.module=~~(com.netflix.discovery.guice.EurekaModule)~~>com.netflix.discovery.guice.EurekaModule
-                        client.filter=~~(com.netflix.discovery.EurekaIdentityHeaderFilter)~~>com.netflix.discovery.EurekaIdentityHeaderFilter
+                        ~~(Eureka 2.0.4 removed built-in Guice/Governator bootstrap classes; replace this descriptor with explicit application, transport, and lifecycle wiring)~~>bootstrap.module=com.netflix.discovery.guice.EurekaModule
+                        client.filter=com.netflix.discovery.EurekaIdentityHeaderFilter
                         """,
                         source -> source.path("src/main/resources/eureka-bootstrap.properties")
                 ),
@@ -787,7 +797,7 @@ class UpgradeNetflixEurekaClientTest implements RewriteTest {
         Recipe recipe = environment().activateRecipes(RECIPE_NAME);
         Recipe migrationRecipe = environment().activateRecipes(MIGRATION_RECIPE_NAME);
         assertEquals("Upgrade Netflix Eureka Client to 2.0.4", recipe.getDisplayName());
-        assertTrue(recipe.getDescription().contains("explicitly versioned"));
+        assertTrue(recipe.getDescription().contains("1.10.18"));
         assertTrue(recipe.getTags().contains("netflix-eureka"));
         assertEquals("Migrate Netflix Eureka Client applications to 2.0.4", migrationRecipe.getDisplayName());
         assertTrue(migrationRecipe.validate().isValid(), () -> migrationRecipe.validate().failures().toString());

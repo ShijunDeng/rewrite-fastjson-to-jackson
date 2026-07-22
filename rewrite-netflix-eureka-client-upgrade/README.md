@@ -24,12 +24,14 @@ com.huawei.clouds.openrewrite.netflixeureka.UpgradeNetflixEurekaClientTo2_0_4
 
 ## 配方会做什么
 
-- 把 Maven、`dependencyManagement`、profile、Maven 属性和 Gradle Groovy DSL 中显式声明的 `eureka-client` 1.x 升级到 `2.0.4`；
-- 保留 scope、classifier、optional、exclusions、Gradle configuration 及相邻依赖，不覆盖父 POM、BOM 或 Gradle platform 管理的无版本依赖；
-- 在源码中用 OpenRewrite `SearchResult` 精准标记 2.x 已删除的构造器、初始化方法、transport setter、Jersey 1/Guice 类型；
-- 只在同时使用原生 Eureka API 的 Java 编译单元中标记 `javax.ws.rs`、`javax.inject`、`javax.annotation` 和 `com.sun.jersey` 类型，避免全工程误报；
-- 标记已移除的 Jersey 2、Governator、Jersey 1 client 依赖，以及配置/服务描述符中的已删除类名；
-- 保持 wire-compatible 的原生 Eureka 属性不变，并验证已经显式传入 `TransportClientFactories` 的 2.x 构造代码不被误报。
+- **AUTO**：只把当前 Maven/POM 或 Gradle 文件中可见的精确版本 `1.10.18` 升级到 `2.0.4`；不把“1.x”推断成表格输入；
+- **AUTO**：支持 Maven 直接依赖、`dependencyManagement`、profile、局部版本属性，以及 Gradle Groovy/Kotlin 字符串字面量和 Groovy map；保留 scope、classifier、optional、exclusions、configuration 和相邻依赖；
+- **AUTO**：Maven 属性只由目标 client 使用时更新属性；与 `eureka-core` 等坐标共享时只在 client 上内联 `2.0.4`，保持属性和其他消费者不变；
+- **AUTO**：仅在使用原生 Eureka API 的 Java 编译单元中，将确定性的 `javax.ws.rs..*`、`javax.inject..*` 迁移到 Jakarta；
+- **MARK**：以带具体原因的 `SearchResult` 标记已删除的构造器、初始化方法、transport setter、Jersey 1/Guice/Servo 内部类型和 API；
+- **MARK**：标记已移除的 Jersey 2/Governator/Jersey 1 build 依赖、未对齐 companion/Jersey 3 模块、外部管理的 client，以及配置/服务描述符中的旧实现类；
+- **MARK**：`javax.annotation` 需要区分 Jakarta lifecycle 注解和仍可能来自 JSR-305 的 nullness 注解，因此不做全包替换；
+- **NO-OP**：保持 wire-compatible 的原生 Eureka 属性不变，并验证已经显式传入 `TransportClientFactories` 的 2.x 构造代码不被误报。
 
 SearchResult 是迁移待办标记，不会擅自选择 Jersey 3、Spring Cloud transport 或项目自定义 transport。Eureka 2.x 的网络协议保持兼容，但 Java API 和默认 HTTP transport 的变化必须结合实际架构处理。
 
@@ -50,17 +52,18 @@ recipeList:
 
 | 不兼容点或安全边界 | 推荐配方的确定性行为 | 覆盖测试 |
 | --- | --- | --- |
-| 显式声明的 `eureka-client` 1.x | Maven/Gradle 版本升级为 `2.0.4`，保留 scope、exclusions 和相邻依赖 | `upgradesDirectMavenDependency`、`upgradesEveryExplicitGradleOccurrence`、Dubbo/Seata/Zuul 真实快照测试 |
-| BOM/platform 管理的无版本依赖 | 不补版本、不覆盖管理来源 | `leavesBomManagedMavenDependencyVersionless`、`leavesPlatformManagedGradleDependencyVersionless` |
-| `DiscoveryClient` 旧二参数构造器，以及 `InstanceInfo`/`AbstractDiscoveryClientOptionalArgs` 旧构造器 | 按完整方法类型签名标记调用点，要求显式选择 `TransportClientFactories` | `migrationUpgradesGraviteeAndMarksRemovedTwoArgumentConstructor`、`migrationMarksCorneastConsumerConstructorAndPreservesLookup`、`marksRemovedInstanceInfoAndOptionalArgsConstructor` |
-| `DiscoveryManager.initComponent` 旧重载 | 按完整方法类型签名标记调用点 | `marksRemovedDiscoveryManagerInitializationOverload` |
-| `setEurekaJerseyClient`、`setTransportClientFactories` 旧 setter | 标记方法调用及已删除的 Jersey 1 类型 | `marksRemovedOptionalArgsTransportSetters` |
-| Jersey 1、旧 Guice、identity filter 等已删除类型 | 按完整类型名标记源码引用 | `marksJersey1TransportTypesAndJavaxJaxRsInEurekaExtension`、descriptor 检测测试 |
-| Eureka 扩展中的 Java EE → Jakarta 迁移 | 仅在含 `com.netflix.discovery..*` 引用的编译单元中标记相关 `javax`/Jersey 1 类型 | `marksJersey1TransportTypesAndJavaxJaxRsInEurekaExtension`、`doesNotMarkJavaxTypesInUnrelatedCompilationUnit` |
-| 已移除的 `eureka-client-jersey2`、`eureka-core-jersey2`、`eureka-server-governator` 和 Jersey 1 client | 精确标记依赖声明，不擅自删除或替换 | `marksRemovedTransportAndGovernatorDependencies` |
-| properties/YAML/XML/JSON/conf/service-loader 中的旧 Eureka 实现类名 | 在限定文件类型中按全限定类名标记 | `marksRemovedClassNamesInDescriptorsButNotStableRawProperties` |
-| 原生 `eureka-client.properties` 的稳定 wire/config 键 | 保持不变，不做推测性改名 | `leavesRawEurekaPropertiesForManualValidation`、`marksRemovedClassNamesInDescriptorsButNotStableRawProperties` |
-| 已使用三参数 2.x transport 构造器 | 不标记，确保迁移配方可重复运行 | `leavesAlreadyMigratedTransportConstructorUnmarked` |
+| 表格唯一源版本 `1.10.18` | AUTO：Maven/Gradle 字面量升到 `2.0.4`；其他 1.x、范围、动态、目标和未来版本均 NO-OP | `upgradesDirectMavenDependency`、`leavesEveryUnlistedRangeDynamicTargetAndFutureVersionUntouched` |
+| 局部/共享 Maven 属性 | AUTO：独占属性原位更新；共享属性隔离为 client 字面量，不改变 companion | `upgradesMavenVersionProperty`、Dubbo 固定快照、`updatesTheNearestProfilePropertyOnly` |
+| BOM/platform/catalog/变量管理 | NO-OP/MARK：不补版本、不覆盖或猜测管理来源 | `leavesBomManagedMavenDependencyVersionless`、`leavesGradleInterpolationAndCatalogAliasesUntouched`、`buildAuditMarksExternalManagementWithoutInventingAVersion` |
+| `DiscoveryClient` 旧构造器 | MARK：按归因后的构造器参数标记，要求显式选择 `TransportClientFactories` | Gravitee/Corneast 固定源码、`marksRemovedInstanceInfoAndOptionalArgsConstructor` |
+| `DiscoveryManager.initComponent` 旧重载 | MARK：要求在 optional args 前传入 transport factories | `marksRemovedDiscoveryManagerInitializationOverload` |
+| `setEurekaJerseyClient`、`setTransportClientFactories` | MARK：分别说明 Jersey 1 状态迁移及构造期注入顺序 | `marksRemovedOptionalArgsTransportSetters` |
+| `javax.ws.rs`、`javax.inject` | AUTO：只在使用 Eureka 类型的编译单元中迁到 Jakarta | `marksJersey1TransportTypesAndJavaxJaxRsInEurekaExtension`、`migratesInjectOnlyInsideAnEurekaCompilationUnit` |
+| `javax.annotation` | MARK：逐个区分 lifecycle 与 JSR-305 nullness；无 Eureka 的 CU 为 NO-OP | `marksAnnotationForClassificationInsteadOfBlindPackageChange`、`doesNotMarkJavaxTypesInUnrelatedCompilationUnit` |
+| Jersey 1、Guice、Servo 和删除的内部 API | MARK：按类型/方法给出 transport、bootstrap 或 Spectator 迁移原因 | `marksJersey1TransportTypesAndJavaxJaxRsInEurekaExtension`、`marksRemovedRegistryAndInternalMetricAccess`、`marksCustomDiscoveryClientSubclass` |
+| 删除/错配的 build 模块 | MARK：Jersey 2/Governator/Jersey 1、旧 companion 和错配 Jersey 3；不自动选 transport | `marksRemovedTransportAndGovernatorDependencies`、`marksMisalignedCompanionAndJersey3Modules` |
+| 配置/descriptor 旧类名及 URL 凭据 | MARK：跨 properties/YAML/XML/JSON/conf/service-loader 检测；稳定原生键 NO-OP | `marksRemovedClassNamesInDescriptorsButNotStableRawProperties`、`configurationAuditMarksRemovedBootstrapAndEmbeddedCredentials` |
+| 已使用目标 transport 构造器 | NO-OP，推荐配方两周期幂等 | `leavesAlreadyMigratedTransportConstructorUnmarked`、`recommendedRecipeIsIdempotentForASafeLiteralUpgrade` |
 
 ## 2.x 需要处理的不兼容点
 
@@ -68,9 +71,9 @@ recipeList:
 
 2.0.0 是新的正式 2.x 主线，不是历史上的实验性 `2.x-archive`。官方说明服务端 HTTP API 和 wire format 未改变，但 Java 客户端 API **不向后兼容**。
 
-- JAX-RS、Inject、Annotation 等 API 向 Jakarta 迁移，使用自定义 client filter、provider、resource 或注入扩展的代码要检查 `javax.ws.rs.*`、`javax.inject.*`、`javax.annotation.*` 到相应 `jakarta.*` 的编译影响；
+- JAX-RS、Inject、Annotation 等 API 向 Jakarta 迁移；配方只自动处理官方差异中无歧义的 `javax.ws.rs.*` 和 `javax.inject.*`。`javax.annotation.Nullable/Nonnull` 可能来自 JSR-305，必须逐个分类；
 - 不要全局替换所有 `javax.*`。例如业务使用的旧 Servlet、JPA 或其他 Java EE API 是否迁移，取决于应用容器和框架版本；
-- Eureka 2.0.4 artifact 仍以 Java 8 bytecode 为目标，但官方源码构建要求 JDK 11。应用实际最低 JDK 还受 Spring Boot、Spring Cloud、Jakarta Servlet 和部署容器约束，应以完整依赖树验证为准；
+- Eureka 1.10.18 与 2.0.4 官方构建都设置 Java 8 source/target；本配方不会臆造 Java 基线升级。应用实际最低 JDK 仍受 Spring Boot、Spring Cloud、Jakarta Servlet 和部署容器约束，应以完整依赖树验证；
 - `eureka-server-governator` 已移除，旧 Governator/Jakarta `@Inject` 启动方式不能依赖本配方修复。
 
 ### 2. Jersey / HTTP transport 不再内置
@@ -103,7 +106,7 @@ recipeList:
 - 不要仅因升级到 Eureka 2.x 就批量改名原生属性；
 - 若切换到 Archaius 2，应单独迁移动态配置初始化、层级和刷新语义；
 - 检查 service URL、zone、注册开关、registry fetch、超时、heartbeat 和 cache refresh 的最终解析值；
-- Maven 属性被多个 Eureka artifact 共用时，OpenRewrite 更新该属性会同步影响这些 artifact。应审阅 `eureka-core`、旧 Jersey 模块和 server 依赖是否也需要成套调整。
+- Maven 属性被多个 Eureka artifact 共用时，低层配方会隔离 client 为 `2.0.4`，不修改共享属性；推荐配方随后标记仍为 `1.10.18` 的 companion，要求审阅 `eureka-core`、旧 Jersey 模块和 server 依赖是否应成套调整。
 
 ### 4. `DiscoveryClient` 构造与生命周期
 
@@ -184,7 +187,7 @@ Jersey 3 transport factories 可接收 `SSLContext` 和 `HostnameVerifier`。迁
 
 ## 推荐验证清单
 
-1. 运行配方并检查所有被更新的 Maven 属性，特别是共享版本属性。
+1. 运行配方并检查独占属性更新及共享属性隔离结果，确认 companion 模块没有被意外联动升级。
 2. 执行 `mvn dependency:tree` 或 Gradle dependency insight，确认 Jersey 1、JAX-RS、Jackson、Jettison、Woodstox、Servlet API 没有冲突。
 3. 搜索 `new DiscoveryClient`、`TransportClientFactories`、`javax.ws.rs`、自定义 filter/provider、`shutdown`。
 4. 在测试 Eureka server 上验证注册、续约、registry delta、健康状态、metadata、cancel 和优雅停机。
@@ -200,7 +203,7 @@ Jersey 3 transport factories 可接收 `SSLContext` 和 `HostnameVerifier`。迁
 - [Gravitee Eureka discovery @ ad52ed9](https://github.com/gravitee-io-community/gravitee-service-discovery-eureka/blob/ad52ed93c38dc7d3200040bc183aa9010518000a/src/main/java/io/gravitee/discovery/eureka/EurekaServiceDiscovery.java#L55-L100)：Maven 属性和直接 `DiscoveryClient` 生命周期代码；对应测试同时验证真实 before→after 版本升级及旧二参数构造器检测；
 - [Corneast client @ 4e94c5b](https://github.com/Alioth4J/corneast/blob/4e94c5be23b28a91f107e65811322fdfde906d30/corneast-client/src/main/java/com/alioth4j/corneast/client/eureka/EurekaConsumer.java#L123-L149)：显式 Maven 版本和 client 构造/服务查找代码；对应测试验证旧构造器检测不会破坏后续 lookup；
 - [Zuul @ 3d5a5fd](https://github.com/gridgentoo/zuul/blob/3d5a5fdf9f3cc8c3866ac2b3f6ed058202c6f1ad/zuul-core/build.gradle#L18-L24)：Gradle Groovy DSL 与相邻 Ribbon/RxJava 依赖。
-- [OpenRewrite `RewriteTest`、`FindMethodsTest` 和 `FindTypesTest` @ v8.87.5](https://github.com/openrewrite/rewrite/tree/b3008cc4a1f0c43f562da16e5933a2a56d9bc568/rewrite-java-test/src/test/java/org/openrewrite/java/search)：作为 before→after、类型归因、精准匹配和 no-op 负例的测试结构参考。
+- OpenRewrite 固定提交 `b3008cc...` 的 [`RewriteTest`](https://github.com/openrewrite/rewrite/blob/b3008cc4a1f0c43f562da16e5933a2a56d9bc568/rewrite-test/src/main/java/org/openrewrite/test/RewriteTest.java)、[`FindMethodsTest`](https://github.com/openrewrite/rewrite/blob/b3008cc4a1f0c43f562da16e5933a2a56d9bc568/rewrite-java-test/src/test/java/org/openrewrite/java/search/FindMethodsTest.java) 和 [`FindTypesTest`](https://github.com/openrewrite/rewrite/blob/b3008cc4a1f0c43f562da16e5933a2a56d9bc568/rewrite-java-test/src/test/java/org/openrewrite/java/search/FindTypesTest.java)：作为 before→after、类型归因、精准匹配、幂等和 no-op 的结构参考。
 
 真实代码只保留复现迁移行为所需的最小片段，并在测试注释中记录仓库、commit 和原文件。其余签名测试使用与 Eureka `v1.10.18` API 等价的 type-attributed fixture，保证 `FindMethods` 依赖真实类型而不是文本碰巧匹配。
 
@@ -209,13 +212,14 @@ Jersey 3 transport factories 可接收 `SSLContext` 和 `HostnameVerifier`。迁
 - [Netflix Eureka v2.0.0 release notes](https://github.com/Netflix/eureka/releases/tag/v2.0.0)
 - [Netflix Eureka v2.0.4 release notes](https://github.com/Netflix/eureka/releases/tag/v2.0.4)
 - [Understanding Eureka Client/Server Communication](https://github.com/Netflix/eureka/wiki/Understanding-eureka-client-server-communication)
+- [Netflix Eureka 1.10.18 fixed source](https://github.com/Netflix/eureka/tree/191cc407cac86afe6633ddf44de3c37166fd318f)
 - [Netflix Eureka 2.0.4 source tree](https://github.com/Netflix/eureka/tree/f4c8ed1d3f1f24d6a3aac653af489e1c2984a659)
 
 ## 明确不自动改写的内容
 
 - 不新增或删除 `eureka-client-jersey3`、`eureka-client-archaius2`、`eureka-core`；
 - 不替用户决定 `DiscoveryClient` 应采用 Jersey 3、Spring Cloud 还是自定义 transport；旧构造器和 transport API 会被精准标记；
-- 不做全局 `javax`→`jakarta`；仅标记与 Eureka 扩展相关的编译单元；
+- 不做全局 `javax`→`jakarta`；只在 Eureka 编译单元自动迁移无歧义的 JAX-RS/Inject，`javax.annotation` 与 Jersey 1 类型会被精准标记；
 - 不修改 Eureka/Spring Cloud 配置键与默认值；
 - 不修改 TLS、hostname verification、认证、代理或连接池；
 - 不调整 server self-preservation、lease、eviction、peer replication；

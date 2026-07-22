@@ -7,18 +7,37 @@ description: Upgrade recipes for the raw Netflix Eureka client, separate from Sp
 type: specs.openrewrite.org/v1beta/recipe
 name: com.huawei.clouds.openrewrite.netflixeureka.UpgradeNetflixEurekaClientTo2_0_4
 displayName: Upgrade Netflix Eureka Client to 2.0.4
-description: Upgrade explicitly versioned com.netflix.eureka:eureka-client dependencies from 1.x to 2.0.4 without overriding BOM-managed versions or guessing a transport implementation.
+description: Upgrade only visible com.netflix.eureka:eureka-client 1.10.18 literals to 2.0.4 without overriding BOM-managed versions, shared properties, dynamic versions, or Gradle variables.
 tags:
   - netflix-eureka
   - service-discovery
   - java
   - dependency-upgrade
 recipeList:
-  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
-      groupId: com.netflix.eureka
-      artifactId: eureka-client
-      newVersion: 2.0.4
-      overrideManagedVersion: false
+  - com.huawei.clouds.openrewrite.netflixeureka.UpgradeSelectedNetflixEurekaClientDependency
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.netflixeureka.MigrateEurekaExtensionJakartaNamespaces
+displayName: Migrate Eureka extension JAX-RS and Inject namespaces
+description: In Java compilation units that use raw Netflix Eureka APIs, migrate the unambiguous javax.ws.rs and javax.inject packages required by Eureka 2.0.4 to Jakarta; leave javax.annotation for classification because JSR-305 nullness types remain distinct.
+tags:
+  - netflix-eureka
+  - jakarta-ee-9
+  - jersey3
+  - java
+preconditions:
+  - org.openrewrite.java.search.FindTypes:
+      fullyQualifiedTypeName: com.netflix.discovery..*
+      checkAssignability: false
+recipeList:
+  - org.openrewrite.java.ChangePackage:
+      oldPackageName: javax.ws.rs
+      newPackageName: jakarta.ws.rs
+      recursive: true
+  - org.openrewrite.java.ChangePackage:
+      oldPackageName: javax.inject
+      newPackageName: jakarta.inject
+      recursive: true
 ---
 type: specs.openrewrite.org/v1beta/recipe
 name: com.huawei.clouds.openrewrite.netflixeureka.AuditEurekaExtensionJakartaNamespaces
@@ -78,62 +97,7 @@ tags:
   - migration
 recipeList:
   - com.huawei.clouds.openrewrite.netflixeureka.UpgradeNetflixEurekaClientTo2_0_4
-  - org.openrewrite.java.search.FindMethods:
-      methodPattern: com.netflix.discovery.DiscoveryClient <constructor>(com.netflix.appinfo.ApplicationInfoManager,com.netflix.discovery.EurekaClientConfig)
-      matchOverrides: false
-  - org.openrewrite.java.search.FindMethods:
-      methodPattern: com.netflix.discovery.DiscoveryClient <constructor>(com.netflix.appinfo.InstanceInfo,com.netflix.discovery.EurekaClientConfig)
-      matchOverrides: false
-  - org.openrewrite.java.search.FindMethods:
-      methodPattern: com.netflix.discovery.DiscoveryClient <constructor>(com.netflix.appinfo.ApplicationInfoManager,com.netflix.discovery.EurekaClientConfig,com.netflix.discovery.AbstractDiscoveryClientOptionalArgs)
-      matchOverrides: false
-  - org.openrewrite.java.search.FindMethods:
-      methodPattern: com.netflix.discovery.DiscoveryClient <constructor>(com.netflix.appinfo.InstanceInfo,com.netflix.discovery.EurekaClientConfig,com.netflix.discovery.AbstractDiscoveryClientOptionalArgs)
-      matchOverrides: false
-  - org.openrewrite.java.search.FindMethods:
-      methodPattern: com.netflix.discovery.DiscoveryManager initComponent(com.netflix.appinfo.EurekaInstanceConfig,com.netflix.discovery.EurekaClientConfig)
-      matchOverrides: false
-  - org.openrewrite.java.search.FindMethods:
-      methodPattern: com.netflix.discovery.DiscoveryManager initComponent(com.netflix.appinfo.EurekaInstanceConfig,com.netflix.discovery.EurekaClientConfig,com.netflix.discovery.AbstractDiscoveryClientOptionalArgs)
-      matchOverrides: false
-  - org.openrewrite.java.search.FindMethods:
-      methodPattern: com.netflix.discovery.AbstractDiscoveryClientOptionalArgs setEurekaJerseyClient(..)
-      matchOverrides: false
-  - org.openrewrite.java.search.FindMethods:
-      methodPattern: com.netflix.discovery.AbstractDiscoveryClientOptionalArgs setTransportClientFactories(..)
-      matchOverrides: false
-  - org.openrewrite.java.search.FindTypes:
-      fullyQualifiedTypeName: com.netflix.discovery.DiscoveryClient$DiscoveryClientOptionalArgs
-      checkAssignability: false
-  - org.openrewrite.java.search.FindTypes:
-      fullyQualifiedTypeName: com.netflix.discovery.shared.transport.jersey.Jersey1DiscoveryClientOptionalArgs
-      checkAssignability: true
-  - org.openrewrite.java.search.FindTypes:
-      fullyQualifiedTypeName: com.netflix.discovery.shared.transport.jersey.Jersey1TransportClientFactories
-      checkAssignability: true
-  - org.openrewrite.java.search.FindTypes:
-      fullyQualifiedTypeName: com.netflix.discovery.shared.transport.jersey.EurekaJerseyClient
-      checkAssignability: true
-  - org.openrewrite.java.search.FindTypes:
-      fullyQualifiedTypeName: com.netflix.discovery.EurekaIdentityHeaderFilter
-      checkAssignability: true
-  - org.openrewrite.java.search.FindTypes:
-      fullyQualifiedTypeName: com.netflix.discovery.guice..*
-      checkAssignability: false
-  - org.openrewrite.java.search.FindTypes:
-      fullyQualifiedTypeName: com.netflix.discovery.InternalEurekaStatusModule
-      checkAssignability: true
-  - org.openrewrite.java.dependencies.FindDependency:
-      groupId: com.netflix.eureka
-      artifactId: eureka-client-jersey2
-  - org.openrewrite.java.dependencies.FindDependency:
-      groupId: com.netflix.eureka
-      artifactId: eureka-core-jersey2
-  - org.openrewrite.java.dependencies.FindDependency:
-      groupId: com.netflix.eureka
-      artifactId: eureka-server-governator
-  - org.openrewrite.java.dependencies.FindDependency:
-      groupId: com.sun.jersey
-      artifactId: jersey-client
-  - com.huawei.clouds.openrewrite.netflixeureka.AuditEurekaExtensionJakartaNamespaces
-  - com.huawei.clouds.openrewrite.netflixeureka.AuditLegacyEurekaConfigurationReferences
+  - com.huawei.clouds.openrewrite.netflixeureka.FindNetflixEurekaBuildRisks
+  - com.huawei.clouds.openrewrite.netflixeureka.MigrateEurekaExtensionJakartaNamespaces
+  - com.huawei.clouds.openrewrite.netflixeureka.FindNetflixEurekaJavaRisks
+  - com.huawei.clouds.openrewrite.netflixeureka.FindNetflixEurekaConfigurationRisks
