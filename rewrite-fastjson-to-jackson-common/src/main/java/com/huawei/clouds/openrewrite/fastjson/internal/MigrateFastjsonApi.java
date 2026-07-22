@@ -1,5 +1,8 @@
-package com.huawei.clouds.openrewrite.fastjson;
+package com.huawei.clouds.openrewrite.fastjson.internal;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.openrewrite.ExecutionContext;
 import org.openrewrite.Recipe;
 import org.openrewrite.java.JavaParser;
@@ -14,15 +17,21 @@ import java.util.List;
 import java.util.Set;
 
 final class MigrateFastjsonApi extends Recipe {
-    private static final String JSON = "com.alibaba.fastjson.JSON";
-    private static final String JSON_OBJECT = "com.alibaba.fastjson.JSONObject";
-    private static final String JSON_ARRAY = "com.alibaba.fastjson.JSONArray";
-
     private static final Set<String> OBJECT_GETTERS = Set.of(
             "get", "getString", "getInteger", "getIntValue", "getLong", "getLongValue",
             "getBoolean", "getBooleanValue", "getDouble", "getDoubleValue",
             "getJSONObject", "getJSONArray"
     );
+
+    private final FastjsonMigrationConfiguration configuration;
+    @JsonIgnore
+    private final JacksonJsonSupport support;
+
+    @JsonCreator
+    MigrateFastjsonApi(@JsonProperty("configuration") FastjsonMigrationConfiguration configuration) {
+        this.configuration = configuration;
+        this.support = new JacksonJsonSupport(configuration);
+    }
 
     @Override
     public String getDisplayName() {
@@ -31,7 +40,8 @@ final class MigrateFastjsonApi extends Recipe {
 
     @Override
     public String getDescription() {
-        return "Replace common Fastjson JSON, JSONObject, and JSONArray operations with calls to the generated Jackson facade.";
+        return "Replace common " + configuration.sourceName() +
+               " JSON, JSONObject, and JSONArray operations with calls to the generated Jackson facade.";
     }
 
     @Override
@@ -41,7 +51,7 @@ final class MigrateFastjsonApi extends Recipe {
             public J visitMethodInvocation(J.MethodInvocation method, ExecutionContext ctx) {
                 J.MethodInvocation m = (J.MethodInvocation) super.visitMethodInvocation(method, ctx);
                 JavaType.Method methodType = m.getMethodType();
-                if (methodType == null || !isSupported(methodType, m.getArguments().size())) {
+                if (methodType == null || !isSupported(m)) {
                     return m;
                 }
 
@@ -55,7 +65,8 @@ final class MigrateFastjsonApi extends Recipe {
                 boolean isStatic = methodType.hasFlags(Flag.Static);
                 List<org.openrewrite.java.tree.Expression> args = m.getArguments();
 
-                if (JSON.equals(owner) || isStatic && JSON_OBJECT.equals(owner)) {
+                if (configuration.jsonType().equals(owner) ||
+                    isStatic && configuration.jsonObjectType().equals(owner)) {
                     switch (name) {
                         case "toJSONString":
                             return replace(m, "JacksonJson.toJson(#{any()})", args.get(0));
@@ -84,7 +95,8 @@ final class MigrateFastjsonApi extends Recipe {
                     return m;
                 }
 
-                if (JSON_OBJECT.equals(owner) || JSON_ARRAY.equals(owner)) {
+                String selectType = fullyQualifiedName(m.getSelect().getType());
+                if (isContainerType(owner) || isContainerType(selectType)) {
                     if ("toJSONString".equals(name)) {
                         return replace(m, "JacksonJson.toJson(#{any()})", m.getSelect());
                     }
@@ -134,12 +146,12 @@ final class MigrateFastjsonApi extends Recipe {
 
                 String fqn = type.getFullyQualifiedName();
                 boolean noArguments = n.getArguments().isEmpty() || n.getArguments().get(0) instanceof J.Empty;
-                if (JSON_OBJECT.equals(fqn)) {
+                if (configuration.jsonObjectType().equals(fqn)) {
                     return noArguments ?
                             replace(n, "JacksonJson.emptyObject()") :
                             replace(n, "JacksonJson.objectFrom(#{any()})", n.getArguments().get(0));
                 }
-                if (JSON_ARRAY.equals(fqn)) {
+                if (configuration.jsonArrayType().equals(fqn)) {
                     return noArguments ?
                             replace(n, "JacksonJson.emptyArray()") :
                             replace(n, "JacksonJson.arrayFrom(#{any()})", n.getArguments().get(0));
@@ -148,19 +160,23 @@ final class MigrateFastjsonApi extends Recipe {
             }
 
             private J.MethodInvocation replace(J.MethodInvocation original, String source, Object... parameters) {
-                maybeAddImport(JacksonJsonSupport.HELPER_FQN);
-                maybeRemoveImport(JSON);
+                maybeAddImport(support.helperFqn());
+                maybeRemoveImport(configuration.jsonType());
                 return template(source).apply(updateCursor(original), original.getCoordinates().replace(), parameters);
             }
 
             private J replace(J.NewClass original, String source, Object... parameters) {
-                maybeAddImport(JacksonJsonSupport.HELPER_FQN);
+                maybeAddImport(support.helperFqn());
                 return template(source).apply(updateCursor(original), original.getCoordinates().replace(), parameters);
             }
         };
     }
 
-    static boolean isSupported(JavaType.Method methodType, int argumentCount) {
+    boolean isSupported(J.MethodInvocation method) {
+        JavaType.Method methodType = method.getMethodType();
+        if (methodType == null) {
+            return false;
+        }
         JavaType.FullyQualified declaringType = TypeUtils.asFullyQualified(methodType.getDeclaringType());
         if (declaringType == null) {
             return false;
@@ -168,15 +184,18 @@ final class MigrateFastjsonApi extends Recipe {
         String owner = declaringType.getFullyQualifiedName();
         String name = methodType.getName();
         boolean isStatic = methodType.hasFlags(Flag.Static);
+        int argumentCount = method.getArguments().size();
 
-        if (JSON.equals(owner) || isStatic && JSON_OBJECT.equals(owner)) {
+        if (configuration.jsonType().equals(owner) ||
+            isStatic && configuration.jsonObjectType().equals(owner)) {
             return switch (name) {
                 case "toJSONString", "toJSONBytes", "parse", "toJSON" -> argumentCount == 1;
                 case "parseObject", "parseArray" -> argumentCount == 1 || argumentCount == 2;
                 default -> false;
             };
         }
-        if (!JSON_OBJECT.equals(owner) && !JSON_ARRAY.equals(owner)) {
+        String selectType = fullyQualifiedName(method.getSelect() == null ? null : method.getSelect().getType());
+        if (!isContainerType(owner) && !isContainerType(selectType)) {
             return false;
         }
         return switch (name) {
@@ -187,12 +206,22 @@ final class MigrateFastjsonApi extends Recipe {
         };
     }
 
-    private static JavaTemplate template(String source) {
+    private boolean isContainerType(String fullyQualifiedName) {
+        return configuration.jsonObjectType().equals(fullyQualifiedName) ||
+               configuration.jsonArrayType().equals(fullyQualifiedName);
+    }
+
+    private static String fullyQualifiedName(JavaType type) {
+        JavaType.FullyQualified fullyQualified = TypeUtils.asFullyQualified(type);
+        return fullyQualified == null ? null : fullyQualified.getFullyQualifiedName();
+    }
+
+    private JavaTemplate template(String source) {
         return JavaTemplate.builder(source)
-                .imports(JacksonJsonSupport.HELPER_FQN)
+                .imports(support.helperFqn())
                 .javaParser(JavaParser.fromJavaVersion()
                         .classpath(JavaParser.runtimeClasspath())
-                        .dependsOn(JacksonJsonSupport.TEMPLATE_STUB))
+                        .dependsOn(support.templateStub()))
                 .build();
     }
 }

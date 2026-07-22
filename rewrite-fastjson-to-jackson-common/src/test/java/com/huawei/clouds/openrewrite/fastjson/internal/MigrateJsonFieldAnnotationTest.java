@@ -1,4 +1,4 @@
-package com.huawei.clouds.openrewrite.fastjson;
+package com.huawei.clouds.openrewrite.fastjson.internal;
 
 import org.junit.jupiter.api.Test;
 import org.openrewrite.java.JavaParser;
@@ -10,7 +10,7 @@ import static org.openrewrite.java.Assertions.java;
 class MigrateJsonFieldAnnotationTest implements RewriteTest {
     @Override
     public void defaults(RecipeSpec spec) {
-        spec.recipe(new MigrateJsonFieldAnnotation())
+        spec.recipe(new MigrateJsonFieldAnnotation(FastjsonMigrationConfiguration.fastjson1()))
                 .parser(JavaParser.fromJavaVersion().classpath("fastjson", "jackson-annotations"));
     }
 

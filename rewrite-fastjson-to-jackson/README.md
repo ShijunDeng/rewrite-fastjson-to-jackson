@@ -42,7 +42,7 @@ src/main/java/com/huawei/clouds/openrewrite/fastjson/JacksonJson.java
 - `SerializerFeature`、`Feature`、Filter、自定义序列化器/反序列化器
 - `JSONPath`、AutoType、ParserConfig、SerializeConfig
 - `@JSONType` 的高级选项
-- Fastjson 2.x（`com.alibaba.fastjson2`）
+- Fastjson2 请使用独立的 [`rewrite-fastjson2-to-jackson`](../rewrite-fastjson2-to-jackson) 模块
 
 运行后应执行项目完整测试，并搜索剩余引用：
 

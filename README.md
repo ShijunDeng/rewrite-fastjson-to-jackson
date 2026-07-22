@@ -8,14 +8,18 @@
 
 | Module | Recipe | Description |
 | --- | --- | --- |
+| `rewrite-fastjson-to-jackson-common` | 内部模块 | Fastjson 1.x / Fastjson2 共用迁移引擎，不直接激活 |
 | [`rewrite-fastjson-to-jackson`](rewrite-fastjson-to-jackson) | `com.huawei.clouds.openrewrite.fastjson.MigrateFastjsonToJackson` | 将 Fastjson 1.x Java 工程迁移到 Jackson 2.x |
+| [`rewrite-fastjson2-to-jackson`](rewrite-fastjson2-to-jackson) | `com.huawei.clouds.openrewrite.fastjson2.MigrateFastjson2ToJackson` | 将 Fastjson2 Java 工程迁移到 Jackson 2.x |
 
 后续迁移应新增独立模块，例如：
 
 ```text
 openrewrite-migration-recipes/
 ├── pom.xml
+├── rewrite-fastjson-to-jackson-common/
 ├── rewrite-fastjson-to-jackson/
+├── rewrite-fastjson2-to-jackson/
 ├── rewrite-foo-to-bar/
 └── rewrite-legacy-framework-to-modern-framework/
 ```
@@ -38,6 +42,7 @@ mvn clean verify
 
 ```bash
 mvn -pl rewrite-fastjson-to-jackson -am clean verify
+mvn -pl rewrite-fastjson2-to-jackson -am clean verify
 ```
 
 具体配方能力与使用方法见各模块 README。
@@ -48,7 +53,7 @@ mvn -pl rewrite-fastjson-to-jackson -am clean verify
 - Java package 使用 `com.huawei.clouds.openrewrite.<domain>`。
 - artifact ID 使用 `rewrite-<source>-to-<target>`。
 - 每个模块独立声明公开 recipe，并包含源码、依赖和安全回退测试。
-- 通用能力成熟后再抽取到共享模块，避免提前制造不必要的耦合。
+- 同一迁移族的稳定公共能力放入 `-common` 内部模块，公开模块只保留版本入口和版本差异。
 
 ## License
 

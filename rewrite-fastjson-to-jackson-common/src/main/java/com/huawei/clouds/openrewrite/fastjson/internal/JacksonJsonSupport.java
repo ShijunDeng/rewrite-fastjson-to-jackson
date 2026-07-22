@@ -1,12 +1,12 @@
-package com.huawei.clouds.openrewrite.fastjson;
+package com.huawei.clouds.openrewrite.fastjson.internal;
 
-final class JacksonJsonSupport {
-    static final String HELPER_PACKAGE = "com.huawei.clouds.openrewrite.fastjson";
-    static final String HELPER_SIMPLE_NAME = "JacksonJson";
-    static final String HELPER_FQN = HELPER_PACKAGE + "." + HELPER_SIMPLE_NAME;
-    static final String HELPER_RELATIVE_PATH = "com/huawei/clouds/openrewrite/fastjson/JacksonJson.java";
+public final class JacksonJsonSupport {
+    private static final String BASE_HELPER_PACKAGE = "com.huawei.clouds.openrewrite.fastjson";
+    private static final String HELPER_SIMPLE_NAME = "JacksonJson";
 
-    static final String TEMPLATE_STUB = """
+    private final FastjsonMigrationConfiguration configuration;
+
+    private static final String TEMPLATE_STUB = """
             package com.huawei.clouds.openrewrite.fastjson;
 
             import com.fasterxml.jackson.core.type.TypeReference;
@@ -54,7 +54,7 @@ final class JacksonJsonSupport {
             }
             """;
 
-    static final String HELPER_SOURCE = """
+    private static final String HELPER_SOURCE = """
             package com.huawei.clouds.openrewrite.fastjson;
 
             import com.fasterxml.jackson.core.JsonProcessingException;
@@ -326,6 +326,30 @@ final class JacksonJsonSupport {
             }
             """;
 
-    private JacksonJsonSupport() {
+    public JacksonJsonSupport(FastjsonMigrationConfiguration configuration) {
+        this.configuration = configuration;
+    }
+
+    public String helperFqn() {
+        return configuration.helperPackage() + "." + HELPER_SIMPLE_NAME;
+    }
+
+    public String helperRelativePath() {
+        return configuration.helperPackage().replace('.', '/') + "/" + HELPER_SIMPLE_NAME + ".java";
+    }
+
+    public String templateStub() {
+        return withConfiguredPackage(TEMPLATE_STUB);
+    }
+
+    public String helperSource() {
+        return withConfiguredPackage(HELPER_SOURCE);
+    }
+
+    private String withConfiguredPackage(String source) {
+        return source.replace(
+                "package " + BASE_HELPER_PACKAGE + ";",
+                "package " + configuration.helperPackage() + ";"
+        );
     }
 }

@@ -1,0 +1,5 @@
+---
+type: specs.openrewrite.org/v1beta/category
+name: com.huawei.clouds.openrewrite.fastjson2
+packageName: com.huawei.clouds.openrewrite.fastjson2
+description: Migrate projects from Alibaba Fastjson2 to FasterXML Jackson.

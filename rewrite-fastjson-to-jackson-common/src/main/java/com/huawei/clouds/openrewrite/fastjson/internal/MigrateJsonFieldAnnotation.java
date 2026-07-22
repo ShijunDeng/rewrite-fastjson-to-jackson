@@ -1,5 +1,7 @@
-package com.huawei.clouds.openrewrite.fastjson;
+package com.huawei.clouds.openrewrite.fastjson.internal;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.openrewrite.ExecutionContext;
 import org.openrewrite.Recipe;
 import org.openrewrite.java.AnnotationMatcher;
@@ -15,12 +17,17 @@ import java.util.Map;
 import java.util.Set;
 
 final class MigrateJsonFieldAnnotation extends Recipe {
-    private static final String JSON_FIELD = "com.alibaba.fastjson.annotation.JSONField";
     private static final String JSON_PROPERTY = "com.fasterxml.jackson.annotation.JsonProperty";
     private static final String JSON_FORMAT = "com.fasterxml.jackson.annotation.JsonFormat";
     private static final String JSON_IGNORE = "com.fasterxml.jackson.annotation.JsonIgnore";
-    private static final AnnotationMatcher JSON_FIELD_MATCHER = new AnnotationMatcher("@" + JSON_FIELD);
     private static final Set<String> SUPPORTED_ATTRIBUTES = Set.of("name", "format", "serialize", "deserialize");
+
+    private final FastjsonMigrationConfiguration configuration;
+
+    @JsonCreator
+    MigrateJsonFieldAnnotation(@JsonProperty("configuration") FastjsonMigrationConfiguration configuration) {
+        this.configuration = configuration;
+    }
 
     @Override
     public String getDisplayName() {
@@ -29,7 +36,8 @@ final class MigrateJsonFieldAnnotation extends Recipe {
 
     @Override
     public String getDescription() {
-        return "Replace Fastjson JSONField names, access directions, and date formats with Jackson annotations.";
+        return "Replace " + configuration.sourceName() +
+               " JSONField names, access directions, and date formats with Jackson annotations.";
     }
 
     @Override
@@ -40,7 +48,8 @@ final class MigrateJsonFieldAnnotation extends Recipe {
                                                                      ExecutionContext ctx) {
                 J.Annotation original = findJsonField(multiVariable.getLeadingAnnotations());
                 Expression format = original == null ? null : attributes(original).get("format");
-                boolean addFormat = format != null && hasJsonPropertySemantics(original) && !ignored(original);
+                boolean addFormat = original != null && isSupported(original) && format != null &&
+                                    hasJsonPropertySemantics(original) && !ignored(original);
 
                 J.VariableDeclarations v = super.visitVariableDeclarations(multiVariable, ctx);
                 if (addFormat) {
@@ -55,7 +64,8 @@ final class MigrateJsonFieldAnnotation extends Recipe {
             public J.MethodDeclaration visitMethodDeclaration(J.MethodDeclaration method, ExecutionContext ctx) {
                 J.Annotation original = findJsonField(method.getLeadingAnnotations());
                 Expression format = original == null ? null : attributes(original).get("format");
-                boolean addFormat = format != null && hasJsonPropertySemantics(original) && !ignored(original);
+                boolean addFormat = original != null && isSupported(original) && format != null &&
+                                    hasJsonPropertySemantics(original) && !ignored(original);
 
                 J.MethodDeclaration m = super.visitMethodDeclaration(method, ctx);
                 if (addFormat) {
@@ -69,7 +79,10 @@ final class MigrateJsonFieldAnnotation extends Recipe {
             @Override
             public J.Annotation visitAnnotation(J.Annotation annotation, ExecutionContext ctx) {
                 J.Annotation a = super.visitAnnotation(annotation, ctx);
-                if (!JSON_FIELD_MATCHER.matches(a)) {
+                if (!isJsonField(a)) {
+                    return a;
+                }
+                if (!isSupported(a)) {
                     return a;
                 }
 
@@ -79,7 +92,7 @@ final class MigrateJsonFieldAnnotation extends Recipe {
                 Boolean serialize = booleanValue(attrs.get("serialize"));
                 Boolean deserialize = booleanValue(attrs.get("deserialize"));
 
-                maybeRemoveImport(JSON_FIELD);
+                maybeRemoveImport(configuration.jsonFieldType());
                 if (Boolean.FALSE.equals(serialize) && Boolean.FALSE.equals(deserialize)) {
                     maybeAddImport(JSON_IGNORE);
                     J.Annotation replacement = JavaTemplate.builder("@JsonIgnore")
@@ -139,13 +152,17 @@ final class MigrateJsonFieldAnnotation extends Recipe {
         };
     }
 
-    private static J.Annotation findJsonField(Iterable<J.Annotation> annotations) {
+    private J.Annotation findJsonField(Iterable<J.Annotation> annotations) {
         for (J.Annotation annotation : annotations) {
-            if (JSON_FIELD_MATCHER.matches(annotation)) {
+            if (isJsonField(annotation)) {
                 return annotation;
             }
         }
         return null;
+    }
+
+    private boolean isJsonField(J.Annotation annotation) {
+        return new AnnotationMatcher("@" + configuration.jsonFieldType()).matches(annotation);
     }
 
     private static boolean hasJsonPropertySemantics(J.Annotation annotation) {
@@ -179,7 +196,7 @@ final class MigrateJsonFieldAnnotation extends Recipe {
         return attrs;
     }
 
-    static boolean isSupported(J.Annotation annotation) {
+    boolean isSupported(J.Annotation annotation) {
         return SUPPORTED_ATTRIBUTES.containsAll(attributes(annotation).keySet());
     }
 

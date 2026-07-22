@@ -1,5 +1,8 @@
-package com.huawei.clouds.openrewrite.fastjson;
+package com.huawei.clouds.openrewrite.fastjson.internal;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.openrewrite.ExecutionContext;
 import org.openrewrite.ScanningRecipe;
 import org.openrewrite.SourceFile;
@@ -20,6 +23,19 @@ import java.util.List;
 import java.util.Set;
 
 final class GenerateJacksonJsonHelper extends ScanningRecipe<GenerateJacksonJsonHelper.Accumulator> {
+    private final FastjsonMigrationConfiguration configuration;
+    @JsonIgnore
+    private final JacksonJsonSupport support;
+    @JsonIgnore
+    private final MigrateFastjsonApi apiMigration;
+
+    @JsonCreator
+    GenerateJacksonJsonHelper(@JsonProperty("configuration") FastjsonMigrationConfiguration configuration) {
+        this.configuration = configuration;
+        this.support = new JacksonJsonSupport(configuration);
+        this.apiMigration = new MigrateFastjsonApi(configuration);
+    }
+
     @Override
     public String getDisplayName() {
         return "Generate Jackson migration facade";
@@ -27,7 +43,8 @@ final class GenerateJacksonJsonHelper extends ScanningRecipe<GenerateJacksonJson
 
     @Override
     public String getDescription() {
-        return "Generate one Jackson facade per source module when migrated Fastjson calls need unchecked JSON operations.";
+        return "Generate one Jackson facade per source module when migrated " + configuration.sourceName() +
+               " calls need unchecked JSON operations.";
     }
 
     @Override
@@ -40,7 +57,7 @@ final class GenerateJacksonJsonHelper extends ScanningRecipe<GenerateJacksonJson
         return new JavaIsoVisitor<ExecutionContext>() {
             @Override
             public J.CompilationUnit visitCompilationUnit(J.CompilationUnit cu, ExecutionContext ctx) {
-                if (cu.getSourcePath().toString().replace('\\', '/').endsWith(JacksonJsonSupport.HELPER_RELATIVE_PATH)) {
+                if (cu.getSourcePath().toString().replace('\\', '/').endsWith(support.helperRelativePath())) {
                     acc.existing.add(cu.getSourcePath());
                 }
                 return super.visitCompilationUnit(cu, ctx);
@@ -49,8 +66,7 @@ final class GenerateJacksonJsonHelper extends ScanningRecipe<GenerateJacksonJson
             @Override
             public J.MethodInvocation visitMethodInvocation(J.MethodInvocation method, ExecutionContext ctx) {
                 J.MethodInvocation m = super.visitMethodInvocation(method, ctx);
-                JavaType.Method methodType = m.getMethodType();
-                if (methodType != null && MigrateFastjsonApi.isSupported(methodType, m.getArguments().size())) {
+                if (apiMigration.isSupported(m)) {
                     acc.required.add(helperPath(sourcePath()));
                 }
                 return m;
@@ -61,8 +77,8 @@ final class GenerateJacksonJsonHelper extends ScanningRecipe<GenerateJacksonJson
                 J.NewClass n = super.visitNewClass(newClass, ctx);
                 JavaType.FullyQualified type = TypeUtils.asFullyQualified(n.getType());
                 if (type != null && n.getArguments().size() <= 1 &&
-                    ("com.alibaba.fastjson.JSONObject".equals(type.getFullyQualifiedName()) ||
-                     "com.alibaba.fastjson.JSONArray".equals(type.getFullyQualifiedName()))) {
+                    (configuration.jsonObjectType().equals(type.getFullyQualifiedName()) ||
+                     configuration.jsonArrayType().equals(type.getFullyQualifiedName()))) {
                     acc.required.add(helperPath(sourcePath()));
                 }
                 return n;
@@ -83,7 +99,7 @@ final class GenerateJacksonJsonHelper extends ScanningRecipe<GenerateJacksonJson
             JavaParser.fromJavaVersion()
                     .classpath(JavaParser.runtimeClasspath())
                     .build()
-                    .parse(ctx, JacksonJsonSupport.HELPER_SOURCE)
+                    .parse(ctx, support.helperSource())
                     .map(source -> (SourceFile) source.withSourcePath(path))
                     .forEach(generated::add);
         }
@@ -95,23 +111,23 @@ final class GenerateJacksonJsonHelper extends ScanningRecipe<GenerateJacksonJson
         return TreeVisitor.noop();
     }
 
-    private static Path helperPath(Path sourcePath) {
+    private Path helperPath(Path sourcePath) {
         String normalized = sourcePath.toString().replace('\\', '/');
         for (String marker : List.of("/src/main/java/", "/src/test/java/")) {
             int markerIndex = normalized.indexOf(marker);
             if (markerIndex >= 0) {
                 String root = normalized.substring(0, markerIndex + marker.length() - 1);
-                return Paths.get(root, JacksonJsonSupport.HELPER_RELATIVE_PATH);
+                return Paths.get(root, support.helperRelativePath());
             }
 
             String leadingMarker = marker.substring(1);
             if (normalized.startsWith(leadingMarker)) {
                 return Paths.get(leadingMarker.substring(0, leadingMarker.length() - 1),
-                        JacksonJsonSupport.HELPER_RELATIVE_PATH);
+                        support.helperRelativePath());
             }
         }
 
-        return Paths.get("src/main/java", JacksonJsonSupport.HELPER_RELATIVE_PATH);
+        return Paths.get("src/main/java", support.helperRelativePath());
     }
 
     static final class Accumulator {

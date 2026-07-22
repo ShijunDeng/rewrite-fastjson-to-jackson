@@ -11,15 +11,30 @@
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <artifactId>rewrite-fastjson-to-jackson</artifactId>
-  <name>OpenRewrite Fastjson to Jackson</name>
-  <description>OpenRewrite recipes for migrating Fastjson 1.x applications to Jackson.</description>
-  <url>https://github.com/ShijunDeng/openrewrite-migration-recipes/tree/main/rewrite-fastjson-to-jackson</url>
+  <artifactId>rewrite-fastjson-to-jackson-common</artifactId>
+  <name>OpenRewrite Fastjson to Jackson Common</name>
+  <description>Internal shared migration engine for Fastjson 1.x and Fastjson2 recipes.</description>
 
   <dependencies>
     <dependency>
-      <groupId>com.huawei.clouds.openrewrite</groupId>
-      <artifactId>rewrite-fastjson-to-jackson-common</artifactId>
+      <groupId>org.openrewrite</groupId>
+      <artifactId>rewrite-java</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.openrewrite</groupId>
+      <artifactId>rewrite-maven</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.openrewrite</groupId>
+      <artifactId>rewrite-gradle</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.openrewrite.recipe</groupId>
+      <artifactId>rewrite-java-dependencies</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
     </dependency>
 
     <dependency>

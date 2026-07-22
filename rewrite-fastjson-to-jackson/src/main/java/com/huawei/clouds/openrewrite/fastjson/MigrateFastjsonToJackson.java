@@ -1,8 +1,8 @@
 package com.huawei.clouds.openrewrite.fastjson;
 
+import com.huawei.clouds.openrewrite.fastjson.internal.FastjsonMigrationConfiguration;
+import com.huawei.clouds.openrewrite.fastjson.internal.FastjsonMigrationRecipes;
 import org.openrewrite.Recipe;
-import org.openrewrite.java.ChangeType;
-import org.openrewrite.java.dependencies.AddDependency;
 
 import java.util.List;
 
@@ -25,42 +25,6 @@ public final class MigrateFastjsonToJackson extends Recipe {
 
     @Override
     public List<Recipe> getRecipeList() {
-        return List.of(
-                new AddDependency(
-                        "com.fasterxml.jackson.core",
-                        "jackson-databind",
-                        JACKSON_VERSION,
-                        null,
-                        "com.alibaba.fastjson..*",
-                        null,
-                        "com.fasterxml.jackson*",
-                        null,
-                        null,
-                        null,
-                        true,
-                        null,
-                        null,
-                        true
-                ),
-                new GenerateJacksonJsonHelper(),
-                new MigrateJsonFieldAnnotation(),
-                new MigrateFastjsonApi(),
-                new ChangeType(
-                        "com.alibaba.fastjson.TypeReference",
-                        "com.fasterxml.jackson.core.type.TypeReference",
-                        false
-                ),
-                new ChangeType(
-                        "com.alibaba.fastjson.JSONObject",
-                        "com.fasterxml.jackson.databind.node.ObjectNode",
-                        false
-                ),
-                new ChangeType(
-                        "com.alibaba.fastjson.JSONArray",
-                        "com.fasterxml.jackson.databind.node.ArrayNode",
-                        false
-                ),
-                new RemoveFastjsonDependency()
-        );
+        return FastjsonMigrationRecipes.create(FastjsonMigrationConfiguration.fastjson1(), JACKSON_VERSION);
     }
 }

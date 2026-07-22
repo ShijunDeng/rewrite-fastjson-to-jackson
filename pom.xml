@@ -26,15 +26,23 @@
     <rewrite.java.dependencies.version>1.59.0</rewrite.java.dependencies.version>
     <jackson.version>2.22.1</jackson.version>
     <fastjson.version>1.2.83</fastjson.version>
+    <fastjson2.version>2.0.62</fastjson2.version>
     <junit.version>5.14.2</junit.version>
   </properties>
 
   <modules>
+    <module>rewrite-fastjson-to-jackson-common</module>
     <module>rewrite-fastjson-to-jackson</module>
+    <module>rewrite-fastjson2-to-jackson</module>
   </modules>
 
   <dependencyManagement>
     <dependencies>
+      <dependency>
+        <groupId>com.huawei.clouds.openrewrite</groupId>
+        <artifactId>rewrite-fastjson-to-jackson-common</artifactId>
+        <version>${project.version}</version>
+      </dependency>
       <dependency>
         <groupId>org.openrewrite</groupId>
         <artifactId>rewrite-java</artifactId>
@@ -74,6 +82,11 @@
         <groupId>com.alibaba</groupId>
         <artifactId>fastjson</artifactId>
         <version>${fastjson.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.alibaba.fastjson2</groupId>
+        <artifactId>fastjson2</artifactId>
+        <version>${fastjson2.version}</version>
       </dependency>
       <dependency>
         <groupId>org.junit.jupiter</groupId>
