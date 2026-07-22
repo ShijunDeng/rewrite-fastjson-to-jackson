@@ -2,35 +2,82 @@
 type: specs.openrewrite.org/v1beta/category
 name: com.huawei.clouds.openrewrite.tweenjs
 packageName: com.huawei.clouds.openrewrite.tweenjs
-description: Upgrade Tween.js with explicit module-resolution, timing, group, and animation-behavior migration guidance.
+description: Upgrade Tween.js with deterministic dependency, public-entry and group configuration changes plus precise compatibility review markers.
 ---
 type: specs.openrewrite.org/v1beta/recipe
 name: com.huawei.clouds.openrewrite.tweenjs.UpgradeTweenJsTo23_1_1
-displayName: Upgrade @tweenjs/tween.js to 23.1.1
-description: Update the spreadsheet-selected direct @tweenjs/tween.js declarations in package.json to 23.1.1 without changing aliases, workspace references, lockfiles, tags, or other versions.
+displayName: Upgrade spreadsheet-selected @tweenjs/tween.js declarations to 23.1.1
+description: Upgrade only exact, caret or tilde 19.0.0 and 20.0.3 direct dependency declarations in package.json.
 tags:
   - tweenjs
   - animation
   - javascript
   - typescript
   - dependency-upgrade
-preconditions:
-  - org.openrewrite.FindSourceFiles:
-      filePattern: package.json;**/package.json
 recipeList:
-  - org.openrewrite.json.ChangeValue:
-      oldKeyPath: >-
-        $.dependencies[?(@['@tweenjs/tween.js'] =~ '^[<>=~^ ]*v?(?:19\.0\.0|20\.0\.3)(?:[-+ <>=~^|].*)?$')]['@tweenjs/tween.js']
-      value: '"23.1.1"'
-  - org.openrewrite.json.ChangeValue:
-      oldKeyPath: >-
-        $.devDependencies[?(@['@tweenjs/tween.js'] =~ '^[<>=~^ ]*v?(?:19\.0\.0|20\.0\.3)(?:[-+ <>=~^|].*)?$')]['@tweenjs/tween.js']
-      value: '"23.1.1"'
-  - org.openrewrite.json.ChangeValue:
-      oldKeyPath: >-
-        $.peerDependencies[?(@['@tweenjs/tween.js'] =~ '^[<>=~^ ]*v?(?:19\.0\.0|20\.0\.3)(?:[-+ <>=~^|].*)?$')]['@tweenjs/tween.js']
-      value: '"23.1.1"'
-  - org.openrewrite.json.ChangeValue:
-      oldKeyPath: >-
-        $.optionalDependencies[?(@['@tweenjs/tween.js'] =~ '^[<>=~^ ]*v?(?:19\.0\.0|20\.0\.3)(?:[-+ <>=~^|].*)?$')]['@tweenjs/tween.js']
-      value: '"23.1.1"'
+  - com.huawei.clouds.openrewrite.tweenjs.UpgradeSelectedTweenJsDependency
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.tweenjs.MigrateDeterministicTweenJsTo23
+displayName: Apply deterministic Tween.js 23 source and configuration migrations
+description: Normalize known physical dist imports/require calls to the public root and remove only a proven redundant exported main-group constructor argument.
+tags:
+  - tweenjs
+  - javascript
+  - typescript
+  - deterministic-migration
+recipeList:
+  - com.huawei.clouds.openrewrite.tweenjs.MigrateDeterministicTweenJsSource
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.tweenjs.AuditTweenJs23Source
+displayName: Audit Tween.js 23 JavaScript and TypeScript compatibility
+description: Mark exact source nodes affected by exports, dynamic targets, started retargeting, clocks, groups, repeat/callback flow, negative timing and frozen easing.
+tags:
+  - tweenjs
+  - javascript
+  - typescript
+  - migration-audit
+recipeList:
+  - com.huawei.clouds.openrewrite.tweenjs.FindTweenJsJavaScriptRisks
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.tweenjs.AuditTweenJs23Project
+displayName: Audit Tween.js 23 manifests and JSON configuration
+description: Mark unresolved declarations, legacy package/type ownership, old module tooling and physical dist paths in JSON configuration.
+tags:
+  - tweenjs
+  - json
+  - migration-audit
+recipeList:
+  - com.huawei.clouds.openrewrite.tweenjs.FindTweenJsJsonRisks
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.tweenjs.AuditTweenJs23TemplatesAndConfig
+displayName: Audit Tween.js 23 templates and deployment configuration
+description: Mark physical Tween.js CDN, vendor, node_modules and dist paths in templates and text configuration.
+tags:
+  - tweenjs
+  - html
+  - configuration
+  - migration-audit
+recipeList:
+  - com.huawei.clouds.openrewrite.tweenjs.FindTweenJsTemplateConfigRisks
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.tweenjs.MigrateTweenJsTo23_1_1
+displayName: Migrate spreadsheet-selected Tween.js projects to 23.1.1
+description: Recommended safe migration recipe that applies deterministic changes and leaves exact review markers for behavior and configuration choices.
+tags:
+  - tweenjs
+  - animation
+  - javascript
+  - typescript
+  - dependency-upgrade
+  - migration-audit
+recipeList:
+  - com.huawei.clouds.openrewrite.tweenjs.UpgradeTweenJsTo23_1_1
+  - com.huawei.clouds.openrewrite.tweenjs.MigrateDeterministicTweenJsTo23
+  - com.huawei.clouds.openrewrite.tweenjs.AuditTweenJs23Source
+  - com.huawei.clouds.openrewrite.tweenjs.AuditTweenJs23Project
+  - com.huawei.clouds.openrewrite.tweenjs.AuditTweenJs23TemplatesAndConfig
