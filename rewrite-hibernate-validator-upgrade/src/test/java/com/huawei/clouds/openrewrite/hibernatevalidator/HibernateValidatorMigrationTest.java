@@ -128,6 +128,55 @@ class HibernateValidatorMigrationTest implements RewriteTest {
     }
 
     @Test
+    void supportDependencyMigrationIsIdempotent() {
+        rewriteRun(
+                spec -> spec.recipe(new MigrateValidationAndExpressionLanguageDependencies())
+                        .cycles(2).expectedCyclesThatMakeChanges(1),
+                buildGradle(
+                        "plugins { id 'java' }\ndependencies { implementation 'javax.validation:validation-api:2.0.1.Final' }",
+                        "plugins { id 'java' }\ndependencies { implementation 'jakarta.validation:jakarta.validation-api:3.0.2' }"
+                )
+        );
+    }
+
+    @Test
+    void preservesUnsafeBuildContextsAndGeneratedDescriptors() {
+        rewriteRun(
+                spec -> spec.recipe(new MigrateValidationAndExpressionLanguageDependencies()),
+                xml("""
+                        <project><modelVersion>4.0.0</modelVersion><groupId>example</groupId><artifactId>unsafe</artifactId><version>1</version>
+                          <dependencies>
+                            <dependency><groupId>javax.validation</groupId><artifactId>validation-api</artifactId><version>2.0.1.Final</version><classifier>sources</classifier></dependency>
+                            <dependency><groupId>javax.el</groupId><artifactId>javax.el-api</artifactId><version>[3.0,4.0)</version></dependency>
+                          </dependencies>
+                          <build><plugins><plugin><groupId>example</groupId><artifactId>codegen</artifactId>
+                            <dependencies><dependency><groupId>org.glassfish</groupId><artifactId>javax.el</artifactId><version>3.0.1-b12</version></dependency></dependencies>
+                          </plugin></plugins></build>
+                        </project>
+                        """, source -> source.path("unsafe/pom.xml")),
+                buildGradle("""
+                        plugins { id 'java' }
+                        void implementation(String coordinate) { println coordinate }
+                        implementation('javax.validation:validation-api:2.0.1.Final')
+                        dependencies {
+                            implementation 'javax.validation:validation-api:+'
+                            implementation 'javax.validation:validation-api:2.0.1.Final:sources'
+                        }
+                        """, source -> source.path("unsafe/build.gradle")),
+                buildGradleKts("""
+                        plugins { java }
+                        fun implementation(coordinate: String) = println(coordinate)
+                        implementation("javax.el:javax.el-api:3.0.1-b06")
+                        """, source -> source.path("unsafe/build.gradle.kts")),
+                xml("""
+                        <project><modelVersion>4.0.0</modelVersion><dependencies><dependency>
+                          <groupId>javax.validation</groupId><artifactId>validation-api</artifactId><version>2.0.1.Final</version>
+                        </dependency></dependencies></project>
+                        """, source -> source.path("target/generated/pom.xml"))
+        );
+    }
+
+    @Test
     void migratesValidationAndElJavaPackages() {
         rewriteRun(
                 spec -> spec.parser(JavaParser.fromJavaVersion().dependsOn(

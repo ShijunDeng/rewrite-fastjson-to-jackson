@@ -27,11 +27,12 @@ com.huawei.clouds.openrewrite.hibernatevalidator.MigrateHibernateValidatorTo8_0_
 
 | 不兼容点/边界 | 状态 | 配方行为 | 主要测试 |
 | --- | --- | --- | --- |
-| 表格列出的 8 个 Hibernate Validator 版本 | AUTO | Maven、Maven `dependencyManagement`、Gradle Groovy 直接字符串声明精确升级到 `8.0.3.Final`；Kotlin Gradle、变量或动态表达式保守 NO-OP | `upgradesEverySpreadsheetMavenVersion`、`upgradesEverySpreadsheetManagedVersion`、`upgradesEverySpreadsheetGradleVersion`、`leavesDynamicGradleVersionExpressionUntouched`、`leavesKotlinGradleCoreDependencyForManualReview` |
-| `hibernate-validator-cdi` 与 annotation processor 版本对齐 | AUTO | 仅在同一构建文件中实际存在时同步到 `8.0.3.Final` | `upgradesOnlyPresentCompanionArtifactsFromDremioStyleManagement` |
-| 属性承载的版本 | AUTO / NO-OP | 本地 Maven 属性的全部引用都属于 HV core/CDI/annotation processor 时自动修改；被无关组件共享或来自父 POM 时整文件 NO-OP | `upgradesAResolvedMavenVersionProperty`、`leavesAmbiguouslySharedVersionPropertyUntouched` |
+| 表格列出的 8 个 Hibernate Validator 版本 | AUTO | 单个确定性 Java 配方处理 Maven 项目/profile 的直接依赖和 `dependencyManagement`，以及 Gradle `dependencies {}` 内 Groovy/Kotlin DSL 的直接字符串；Groovy named/map notation 同样精确升级到 `8.0.3.Final` | `upgradesEverySpreadsheetMavenVersion`、`upgradesEverySpreadsheetManagedVersion`、`upgradesEverySpreadsheetGradleVersion`、`upgradesEverySpreadsheetKotlinGradleVersion`、`alignsGroovyNamedAndMapLiteralFamilyDeclarations` |
+| `hibernate-validator-cdi` 与 annotation processor 版本对齐 | AUTO / NO-OP | 只有同一构建文件已精确选择白名单 core 版本时，才把实际存在且同样命中白名单的家族成员对齐；processor `<path>` 仅限 `maven-compiler-plugin/annotationProcessorPaths`。无 core、插件依赖、classifier/非 jar、任意 `<path>`、未列版本、目标版和新版不推断也不降级 | `alignsOnlyListedLiteralFamilyMembersWhenCoreIsSelected`、`alignsLiteralFamilyInKotlinGradle`、`companionWithoutSelectedCoreIsNoOp`、`doesNotDowngradeOrInferUnlistedCompanionVersions`、`preservesPluginDependenciesClassifiersNonJarArtifactsAndUnownedPaths` |
+| 属性承载的版本 | AUTO / NO-OP | Maven root/profile 属性必须只定义一次，值精确命中白名单，并且全部 `${...}` 引用都位于 HV core/CDI/annotation processor 块中才自动修改；元数据/无关依赖共享、重复定义或父 POM 属性整文件 NO-OP | `upgradesAResolvedMavenVersionProperty`、`upgradesAnExclusiveProfilePropertyAndFamilyDeclarations`、`leavesAmbiguouslySharedVersionPropertyUntouched`、`leavesPropertyReferencedByProjectMetadataUntouched`、`leavesDuplicatePropertyDefinitionsUntouched` |
 | 未列版本、目标版、新版、错误 groupId | NO-OP | 不做范围推断、不降级、不迁移 `org.hibernate:hibernate-validator` | `leavesUnlistedTargetAndNewerVersionsUntouched`、`leavesSameArtifactInLegacyGroupUntouched` |
 | 外部 BOM 管理且无本地版本 | NO-OP | 不写入版本，也不覆盖平台决策 | `keepsExternalBomManagedVersionlessDependencyUntouched` |
+| 动态/范围/生成输出中的构建声明 | NO-OP | Gradle 变量、字符串插值、版本范围、`dependencies {}` 外的同名方法，以及 `target`、`build`、`out`、`dist`、`generated`、`.gradle`、`.idea`、`node_modules` 下的副本保持不变 | `leavesDynamicGradleVersionExpressionUntouched`、`leavesGradleRangesAndKotlinInterpolationUntouched`、`doesNotTreatGroovyAndKotlinMethodsOutsideDependenciesAsDeclarations`、`ignoresGeneratedBuildDescriptors` |
 | Bean Validation API 2.0 → Jakarta Validation 3.0 | AUTO | `javax.validation:validation-api` → `jakarta.validation:jakarta.validation-api:3.0.2`；属性承载的版本改为依赖内字面量，不改共享属性；Java 类型递归迁移到 `jakarta.validation` | `migratesValidationAndElDependenciesWithoutForcingExternalBomVersions`、`doesNotRepurposeAValidationApiVersionPropertySharedWithProjectMetadata`、`migratesValidationAndElJavaPackages` |
 | EL API/实现进入 Jakarta EE 10 代际 | AUTO | `javax.el-api` → `jakarta.el-api:5.0.0`，GlassFish `javax.el`/`jakarta.el` 实现 → `org.glassfish.expressly:expressly:5.0.0`；支持 Maven 及直接字符串 Gradle 声明，Java 类型迁移到 `jakarta.el` | `migratesValidationAndElDependenciesWithoutForcingExternalBomVersions`、`migratesDirectGradleValidationAndExpresslyCoordinates`、`migratesDirectKotlinGradleElApiCoordinate`、`migratesValidationAndElJavaPackages` |
 | Bean Validation `validation.xml` 2.0 | AUTO | 只修改 `validation-config` 根元素的 namespace、完整或相对 schemaLocation 和版本为 Jakarta 3.0 | `migratesSignalServerStyleValidationXmlWithRelativeSchemaLocation` |
@@ -102,7 +103,7 @@ rg 'SafeHtml|ScriptAssert|GetterPropertySelectionStrategy|addExpressionVariable|
 
 ## 模块验证
 
-本模块包含 61 个 JUnit 执行项（含参数化的全部表格版本）以及 OpenRewrite 多 cycle 幂等检查：
+本模块包含 84 个 JUnit 执行项（含参数化的全部表格版本）以及 OpenRewrite 多 cycle 幂等检查：
 
 ```bash
 mvn -pl rewrite-hibernate-validator-upgrade -am clean verify

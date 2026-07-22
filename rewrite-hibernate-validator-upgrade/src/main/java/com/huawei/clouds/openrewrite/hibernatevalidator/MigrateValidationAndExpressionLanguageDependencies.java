@@ -17,6 +17,7 @@ import org.openrewrite.xml.tree.Xml;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 /** Migrates the validation and EL coordinates needed by Hibernate Validator 8 without repurposing shared properties. */
 public final class MigrateValidationAndExpressionLanguageDependencies extends Recipe {
@@ -32,6 +33,8 @@ public final class MigrateValidationAndExpressionLanguageDependencies extends Re
             "testRuntimeOnly", "testFixturesApi", "testFixturesImplementation", "testFixturesRuntimeOnly",
             "kapt", "ksp"
     );
+    private static final Pattern PROPERTY_REFERENCE = Pattern.compile("\\$\\{[^}]+}");
+    private static final Pattern LITERAL_VERSION = Pattern.compile("[A-Za-z0-9][A-Za-z0-9._-]*");
 
     @Override
     public String getDisplayName() {
@@ -50,7 +53,8 @@ public final class MigrateValidationAndExpressionLanguageDependencies extends Re
         return new TreeVisitor<Tree, ExecutionContext>() {
             @Override
             public Tree visit(Tree tree, ExecutionContext ctx) {
-                if (!(tree instanceof SourceFile source)) {
+                if (!(tree instanceof SourceFile source) ||
+                    !UpgradeSelectedHibernateValidatorDependency.isProjectPath(source.getSourcePath())) {
                     return tree;
                 }
                 Path path = source.getSourcePath();
@@ -60,13 +64,17 @@ public final class MigrateValidationAndExpressionLanguageDependencies extends Re
                         @Override
                         public Xml.Tag visitTag(Xml.Tag tag, ExecutionContext executionContext) {
                             Xml.Tag t = super.visitTag(tag, executionContext);
-                            if (!"dependency".equals(t.getName())) {
+                            if (!isProjectDependency(getCursor(), t) || hasNonMainArtifactMetadata(t)) {
                                 return t;
                             }
                             String key = t.getChildValue("groupId").orElse("") + ":" +
                                          t.getChildValue("artifactId").orElse("");
                             Target target = TARGETS.get(key);
                             if (target == null) {
+                                return t;
+                            }
+                            String version = t.getChildValue("version").map(String::trim).orElse("");
+                            if (!version.isEmpty() && !isSafeExplicitVersion(version)) {
                                 return t;
                             }
                             Xml.Tag migrated = t.withChildValue("groupId", target.groupId())
@@ -104,8 +112,54 @@ public final class MigrateValidationAndExpressionLanguageDependencies extends Re
 
     private static boolean isDirectDependencyLiteral(Cursor cursor) {
         Cursor parent = cursor.getParentTreeCursor();
-        return parent.getValue() instanceof J.MethodInvocation invocation &&
-               GRADLE_CONFIGURATIONS.contains(invocation.getSimpleName());
+        return parent != null && parent.getValue() instanceof J.MethodInvocation invocation &&
+               GRADLE_CONFIGURATIONS.contains(invocation.getSimpleName()) && isInsideDependenciesBlock(parent);
+    }
+
+    private static boolean isInsideDependenciesBlock(Cursor cursor) {
+        for (Cursor ancestor = cursor.getParent(); ancestor != null; ancestor = ancestor.getParent()) {
+            if (ancestor.getValue() instanceof J.MethodInvocation invocation &&
+                "dependencies".equals(invocation.getSimpleName())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean isProjectDependency(Cursor cursor, Xml.Tag tag) {
+        if (!"dependency".equals(tag.getName())) {
+            return false;
+        }
+        Cursor dependenciesCursor = cursor.getParentTreeCursor();
+        if (dependenciesCursor == null || !(dependenciesCursor.getValue() instanceof Xml.Tag dependencies) ||
+            !"dependencies".equals(dependencies.getName())) {
+            return false;
+        }
+        Cursor ownerCursor = dependenciesCursor.getParentTreeCursor();
+        if (ownerCursor == null || !(ownerCursor.getValue() instanceof Xml.Tag owner)) {
+            return false;
+        }
+        if ("project".equals(owner.getName()) || "profile".equals(owner.getName())) {
+            return true;
+        }
+        if (!"dependencyManagement".equals(owner.getName())) {
+            return false;
+        }
+        Cursor managedOwnerCursor = ownerCursor.getParentTreeCursor();
+        return managedOwnerCursor != null && managedOwnerCursor.getValue() instanceof Xml.Tag managedOwner &&
+               ("project".equals(managedOwner.getName()) || "profile".equals(managedOwner.getName()));
+    }
+
+    private static boolean hasNonMainArtifactMetadata(Xml.Tag dependency) {
+        return dependency.getChildValue("classifier").map(String::trim).filter(value -> !value.isEmpty()).isPresent() ||
+               dependency.getChildValue("type").map(String::trim)
+                       .filter(value -> !value.isEmpty() && !"jar".equals(value)).isPresent();
+    }
+
+    private static boolean isSafeExplicitVersion(String version) {
+        return PROPERTY_REFERENCE.matcher(version).matches() ||
+               LITERAL_VERSION.matcher(version).matches() &&
+               !"LATEST".equalsIgnoreCase(version) && !"RELEASE".equalsIgnoreCase(version);
     }
 
     private static J.Literal migrateCoordinate(J.Literal literal) {
@@ -113,7 +167,7 @@ public final class MigrateValidationAndExpressionLanguageDependencies extends Re
             return literal;
         }
         String[] parts = value.split(":", -1);
-        if (parts.length < 3) {
+        if (parts.length != 3 || !LITERAL_VERSION.matcher(parts[2]).matches()) {
             return literal;
         }
         Target target = TARGETS.get(parts[0] + ":" + parts[1]);
