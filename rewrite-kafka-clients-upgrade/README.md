@@ -1,72 +1,89 @@
-# Apache Kafka Clients upgrade to 4.1.2
+# Apache Kafka Clients 迁移到 4.1.2
 
-本模块对应 `开源软件升级.xlsx` 中的 `org.apache.kafka:kafka-clients`，合并处理 `2.4.1`、`2.5.1`、`3.1.2`、`3.4.0`、`3.4.1`、`3.5.1`、`3.6.0`、`3.6.1`、`3.6.2` 以及 `3.7.0 …（共 16 个版本）`，目标版本为 `4.1.2`。
-
-提供两个配方：
+本模块对应 `开源软件升级.xlsx` 中的 `org.apache.kafka:kafka-clients`。推荐入口是：
 
 ```text
-com.huawei.clouds.openrewrite.kafka.UpgradeKafkaClientsDependencyTo4_1_2
 com.huawei.clouds.openrewrite.kafka.MigrateKafkaClientsTo4_1_2
 ```
 
-## 自动处理范围
+只修改依赖版本、不修改源码和配置时使用：
 
-`UpgradeKafkaClientsDependencyTo4_1_2` 只升级 Maven/Gradle 中的 `org.apache.kafka:kafka-clients`，包含直接声明、Maven property、`dependencyManagement` 和 OpenRewrite 能解析的 Gradle 声明。它不会升级 `kafka-streams`、broker/server artifact、Spring Kafka 或其他第三方客户端，也不会降级已是 4.1.2 及更高的版本。
+```text
+com.huawei.clouds.openrewrite.kafka.UpgradeKafkaClientsDependencyTo4_1_2
+```
 
-`MigrateKafkaClientsTo4_1_2` 在依赖升级之上自动处理 Kafka 4.0 官方明确删除的三个兼容点：
+## 表格版本边界
 
-- `DescribeTopicsResult.values()` → `topicNameValues()`；
-- `DescribeTopicsResult.all()` → `allTopicNames()`；
-- Java properties 中 `metrics.jmx.blacklist` → `metrics.jmx.exclude`、`metrics.jmx.whitelist` → `metrics.jmx.include`。
+目标版本固定为 `4.1.2`。工作簿当前仍能读取到以下 10 个精确源版本，配方只接受这些可证明值：
 
-方法迁移依赖 OpenRewrite 类型归因，不会修改普通 `Map.values()` 或业务类的 `all()`。本模块有意不删除 `auto.include.jmx.reporter`、不修改 consumer group protocol，也不自动迁移 broker/KRaft、Streams、Connect 或 Log4j 配置，因为这些操作需要部署拓扑和业务语义判断。
+```text
+2.4.1  2.5.1  3.1.2  3.4.0  3.4.1  3.5.1  3.6.0  3.6.1  3.6.2  3.7.0
+```
 
-## 不兼容修改点
+表格用 `3.7.0 ...（共16个版本）` 压缩显示了总数，但文件没有保留其余 6 个精确值。Maven Central 的发布列表只能证明版本存在，不能证明它被本次表格选中，因此本模块不臆测补全。`3.7.1`、`4.1.1`、`2.7.0` 等未明确保存的版本、版本范围、`LATEST`、Gradle 插值/变量、version catalog、无显式版本的外部 BOM 声明、目标版本及更新版本均不升级；取得剩余精确清单后再加入集合和参数化测试。
 
-| 版本跨度内的变化 | 影响与迁移建议 |
-| --- | --- |
-| Kafka 4.x Java client 的最低 Java 版本从 8 提高到 11 | 构建、运行镜像、测试工具和 agent 均至少使用 Java 11；broker、Connect 和 tools 需要 Java 17，但不属于本 artifact 的自动范围 |
-| 4.0 删除 2.1 以前的旧协议版本 | 官方要求 client/Streams/Connect 先达到 2.1+ 再升 4.x，并确认 broker 也不早于 2.1；本表最旧 2.4.1 满足这个前提，但仍须在真实集群验证 |
-| 大量在 3.6 或更早版本已 deprecated 的 API 被移除 | 先用旧版本开启 deprecation/compiler warning 清零；尤其检查 Admin、consumer/producer callbacks、metrics、security extension 与自定义 interceptor |
-| `DescribeTopicsResult.values()`/`all()` 被删除 | 本组合配方可分别改到 `topicNameValues()`/`allTopicNames()`；检查返回 future map 的异常传播、timeout 和 topic ID/name 两种查询模式 |
-| JMX include/exclude 配置重命名 | 本组合配方迁移 blacklist/whitelist；`auto.include.jmx.reporter` 已删除且 JmxReporter 成为 `metric.reporters` 默认值，部署配置需人工删除旧键并避免重复 reporter |
-| 部分旧 client metrics 被删除或重命名 | `bufferpool-wait-time-total`、`io-waittime-total`、`iotime-total` 等不再存在；同步更新 Prometheus/JMX exporter rules、dashboard、SLO 和告警 |
-| 新 consumer rebalance protocol 在 4.0 GA | 只有显式选择新 protocol 才应切换；混部、assignor、static membership、rebalance listener 和 max-poll 行为必须做滚动升级与故障注入测试 |
-| 4.0 transactional protocol 增强并在每个事务 bump producer epoch | 验证 fencing、abort/retry、长事务、跨版本 broker 和 exactly-once 语义；监控 produce latency 与 concurrent transaction 重试 |
-| SASL OAUTHBEARER URL 默认受 allow-list 限制 | 使用 token/JWKS endpoint 时显式设置 JVM system property `org.apache.kafka.sasl.oauthbearer.allowed.urls`，否则认证可能在升级后失败 |
-| 4.x 与旧 broker/client 通常双向协商，但并非所有组合完整兼容 | 按官方矩阵规划 broker 与 client 顺序；第三方语言客户端、代理、schema registry 和 managed Kafka 服务需要分别确认协议窗口 |
-| 4.0 server 只支持 KRaft，ZooKeeper 被移除 | 这不是 `kafka-clients` 依赖修改的一部分；若同时升级集群，必须先完成受支持的 ZooKeeper→KRaft 迁移并独立演练回退 |
-| Kafka Streams 跨 2.x/3.x→4.x 还有状态格式和 API 变化 | 不要用本模块替代 Streams upgrade guide；从 3.4 或更早升级到 4.1.2 通常需要按 `upgrade.from` 执行两次 rolling bounce |
-| 4.0 日志体系迁到 Log4j2，旧 KafkaLog4jAppender 被移除 | 仅影响同时部署 Kafka tools/server/Connect 或使用旧 appender 的工程；用官方 transform tool 迁移并检查安全配置 |
-| 4.1 引入 Queues/Share Consumer 等预览能力 | 不应因升级依赖而默认启用；preview API、配置和语义不承诺与后续版本稳定兼容 |
-| 4.1.2 修复 producer 极少数情况下把 record 发到错误 topic 的问题 | 这是目标补丁的重要正确性修复；上线后重点核对 topic routing、custom partitioner、metadata refresh 和 audit 指标 |
-| Maven/Gradle 可能由 Spring Boot、BOM 或平台统一管理 Kafka | `overrideManagedVersion` 会更新可定位的管理版本；仍需确认 framework 的受支持 Kafka 矩阵，避免脱离 Spring/Quarkus 等平台测试窗口 |
+Maven property 只有在值属于上表时才处理：若只服务于 `kafka-clients`，更新 property；若同时服务于 `kafka-streams` 等其他坐标，仅在 `kafka-clients` 上内联 `4.1.2`，不改变共享 property。Maven `dependencyManagement`、Gradle Groovy/Kotlin 字符串坐标和 Groovy map notation 均覆盖；不会修改 `kafka-streams`、broker/server、Spring Kafka 或其他客户端。
 
-升级和兼容结论以 Apache Kafka 官方 [4.1 upgrade guide](https://kafka.apache.org/41/getting-started/upgrade/)、[compatibility matrix](https://kafka.apache.org/41/getting-started/compatibility/)、[4.1.2 API](https://kafka.apache.org/41/apis/) 与 [Streams upgrade guide](https://kafka.apache.org/41/streams/upgrade-guide/) 为准。
+## 处理状态
 
-## 测试样本来源
+| 状态 | 不兼容点 | 配方行为 |
+| --- | --- | --- |
+| AUTO | `DescribeTopicsResult.values()` / `all()` 删除 | 改为 `topicNameValues()` / `allTopicNames()` |
+| AUTO | `DeleteTopicsResult.values()` 删除 | 改为 `topicNameValues()`；仍有效的 `all()` 不动 |
+| AUTO | `MockConsumer.setException(KafkaException)` 删除 | 改为 `setPollException(...)` |
+| AUTO | `UpdateFeaturesOptions.dryRun(boolean)` 删除 | 改为 `validateOnly(boolean)` |
+| AUTO | secured 包中的 OAuth login/validator callback handler 删除 | 迁移到 `org.apache.kafka.common.security.oauthbearer` 包 |
+| AUTO | `metrics.jmx.blacklist` / `whitelist` 重命名 | 精确改为 `metrics.jmx.exclude` / `include` |
+| AUTO | `auto.include.jmx.reporter` 删除且 JMX reporter 默认启用 | 从 `.properties` 精确删除该键 |
+| MARK | `Admin.alterConfigs(...)` 删除 | 标记；需将完整 Config 语义拆成 `incrementalAlterConfigs` 的 `AlterConfigOp` |
+| MARK | `Producer.sendOffsetsToTransaction(Map,String)` 删除 | 标记；需取得匹配的 `ConsumerGroupMetadata` |
+| MARK | `TopicListing(String,boolean)`、`FeatureUpdate(short,boolean)`、`allowDowngrade()` 删除 | 标记；真实 topic UUID 和 upgrade type 不能从语法推断 |
+| MARK | `ListConsumerGroupOffsetsOptions.topicPartitions(...)` 删除 | 标记；partition 选择要迁到 Admin 调用的 Map 参数 |
+| MARK | `JmxReporter(String)` 删除 | 标记；改用无参构造并复核 include/exclude 配置 |
+| MARK | `describeConsumerGroups` 对不存在 group 的行为变化 | 标记；4.x 抛 `GroupIdNotFoundException`，不再返回 DEAD group |
+| MARK | OAuth token/JWKS endpoint URL | 标记；JVM 必须通过 `org.apache.kafka.sasl.oauthbearer.allowed.urls` 放行 |
+| MARK | idempotence 默认开启且 `max.in.flight.requests.per.connection > 5` | 仅在 `enable.idempotence` 缺失或为 true 时标记；显式 false、值不大于 5、占位符均不误报 |
+| MARK | properties 值中出现被删除的 metrics | 标记 `bufferpool-wait-time-total`、`io-waittime-total`、`iotime-total`；新指标为 ns 单位，阈值不可机械替换 |
+| NO-OP | 表格外版本、范围、动态/未解析版本、外部 BOM、其他 Kafka artifact | 保持不变，防止越权升级或脱离平台兼容矩阵 |
+| MANUAL | Java 11 最低版本、producer 默认 `linger.ms` 从 0 变 5、rebalance/transaction 行为 | 配方无法从局部源码安全判断，必须做构建和集成验证 |
+| MANUAL | broker KRaft、Kafka Streams/Connect、Log4j2、dashboard/yaml/json | 不属于 `kafka-clients` 模块或当前 properties AST 范围，按对应升级指南独立处理 |
 
-- [zendesk/maxwell](https://github.com/zendesk/maxwell/blob/b600e5190c3cd6051a498dd443910d30860b78f5/pom.xml) 的多 Kafka 版本 Maven dependency 形态；测试抽取其中 2.7.0 坐标为普通直接依赖，以覆盖 recipe 实际支持的 Maven 模型
-- [conductor-oss/conductor](https://github.com/conductor-oss/conductor/blob/54f8369fa8875a2bad4ed5baa8a66f89720b1594/kafka/build.gradle) 的 Gradle `implementation` 声明
-- [codingmiao/hppt](https://github.com/codingmiao/hppt/blob/509da821a3cc33e8049d6037d90637e2274a0016/addons-kafka/src/main/java/org/wowtools/hppt/addons/kafka/KafkaUtil.java) 的 `DescribeTopicsResult.values()` 真实调用形态
-- [linkedin/cruise-control](https://github.com/linkedin/cruise-control/blob/bc63c3067b8ec4cddfd363dccbfd30651ac3808d/build.gradle) 的共享 `kafkaVersion` 与多个 Kafka artifact 组合，用于明确只升级 `kafka-clients` 的边界
-- OpenRewrite 官方 `rewrite-java-dependencies` Maven/Gradle 依赖测试、`ChangeMethodNameTest` 与 `ChangePropertyKeyTest` 的类型安全和 no-op 测试结构
+Java 迁移依赖类型归因，因此普通 `Map.values()`、业务类 `all()` 和其他 Admin result 的同名方法不会被修改。SearchResult 只提示人工决策，不伪造可能错误的替换。
 
-13 个测试覆盖真实 Maven/Gradle/Java 形态、Maven property、dependency management、Gradle string/map notation、两项 removed Admin API、两项 JMX property、组合运行，以及目标/新版本、相似 artifact、普通 `values/all`、相似/已迁移配置不修改。
+## 官方依据
+
+目标 `4.1.2` annotated tag 固定到 Apache Kafka commit [`c82fd9b934b4c1e6fa799e3f1dcc8f08d997740c`](https://github.com/apache/kafka/tree/c82fd9b934b4c1e6fa799e3f1dcc8f08d997740c)。实现和测试对照以下固定源码与官方指南：
+
+- [Kafka 4.1 upgrade guide（固定 commit）](https://github.com/apache/kafka/blob/c82fd9b934b4c1e6fa799e3f1dcc8f08d997740c/docs/upgrade.html)
+- [Kafka compatibility guide（固定 commit）](https://github.com/apache/kafka/blob/c82fd9b934b4c1e6fa799e3f1dcc8f08d997740c/docs/compatibility.html)
+- [DescribeTopicsResult 4.1.2](https://github.com/apache/kafka/blob/c82fd9b934b4c1e6fa799e3f1dcc8f08d997740c/clients/src/main/java/org/apache/kafka/clients/admin/DescribeTopicsResult.java)
+- [DeleteTopicsResult 4.1.2](https://github.com/apache/kafka/blob/c82fd9b934b4c1e6fa799e3f1dcc8f08d997740c/clients/src/main/java/org/apache/kafka/clients/admin/DeleteTopicsResult.java)
+- [MockConsumer 4.1.2](https://github.com/apache/kafka/blob/c82fd9b934b4c1e6fa799e3f1dcc8f08d997740c/clients/src/main/java/org/apache/kafka/clients/consumer/MockConsumer.java)
+- [UpdateFeaturesOptions 4.1.2](https://github.com/apache/kafka/blob/c82fd9b934b4c1e6fa799e3f1dcc8f08d997740c/clients/src/main/java/org/apache/kafka/clients/admin/UpdateFeaturesOptions.java)
+
+## 真实仓库与测试证据
+
+测试采用 OpenRewrite 官方固定提交中的 [`ChangeMethodNameTest`](https://github.com/openrewrite/rewrite/blob/1b1804a5af7692612398fcce034a846b48b5b8cf/rewrite-java-test/src/test/java/org/openrewrite/java/ChangeMethodNameTest.java) 与 [`ChangePropertyKeyTest`](https://github.com/openrewrite/rewrite/blob/1b1804a5af7692612398fcce034a846b48b5b8cf/rewrite-properties/src/test/java/org/openrewrite/properties/ChangePropertyKeyTest.java) 的 before/after、no-op、marker 和 recipe validation 结构，并从固定公共 commit 抽取形态：
+
+- [codingmiao/hppt@509da821](https://github.com/codingmiao/hppt/blob/509da821a3cc33e8049d6037d90637e2274a0016/addons-kafka/src/main/java/org/wowtools/hppt/addons/kafka/KafkaUtil.java)：真实 `DescribeTopicsResult.values()`，验证类型安全的自动迁移。
+- [conductor-oss/conductor@54f8369f](https://github.com/conductor-oss/conductor/blob/54f8369fa8875a2bad4ed5baa8a66f89720b1594/kafka/build.gradle)：`${revKafka}` 动态 Gradle 坐标，验证严格 no-op 门禁。
+- [jhipster/generator-jhipster@41d71af1](https://github.com/jhipster/generator-jhipster/blob/41d71af1eb85ae7c94e0e9b05acab968c4d047e3/generators/spring-boot/resources/spring-boot-dependencies.pom)：共享 `kafka.version` 形态，验证只内联 client、不改其他消费者。
+- [openGauss datachecker@3099b9db](https://github.com/opengauss-mirror/openGauss-tools-datachecker-performance/blob/3099b9db802cf0b09d4f1ad1a556b1cd5f5c6988/datachecker-extract/src/main/java/org/opengauss/datachecker/extract/kafka/KafkaAdminService.java)：已使用 `topicNameValues()`，验证幂等。
+- [vert-x3/vertx-kafka-client@57cdfd5e](https://github.com/vert-x3/vertx-kafka-client/tree/57cdfd5e63cb45dccc18cacb0d19d69972675a90)：其他 result 的 `values()` 与仍有效的删除等待形态，验证不误改。
+
+当前 33 个测试执行项包括 10 个可证明源版本逐项正例，以及两个处于压缩区间但精确值未知的负例、未列版本、目标/更新版本、范围、动态版本、BOM、共享属性、相邻 artifact、普通同名方法、安全配置、marker 精度、幂等和 recipe discovery/validation。
 
 ## 使用与验证
-
-先运行仅依赖版本入口：
 
 ```bash
 mvn -U org.openrewrite.maven:rewrite-maven-plugin:6.44.0:dryRun \
   -Drewrite.recipeArtifactCoordinates=com.huawei.clouds.openrewrite:rewrite-kafka-clients-upgrade:1.0.0-SNAPSHOT \
-  -Drewrite.activeRecipes=com.huawei.clouds.openrewrite.kafka.UpgradeKafkaClientsDependencyTo4_1_2
+  -Drewrite.activeRecipes=com.huawei.clouds.openrewrite.kafka.MigrateKafkaClientsTo4_1_2
 ```
 
-需要已覆盖的 API/config 迁移时，将 active recipe 换为 `com.huawei.clouds.openrewrite.kafka.MigrateKafkaClientsTo4_1_2`。确认 patch 后运行 Java 11+ 编译、producer/consumer/admin integration tests、Testcontainers 或真实 broker 跨版本矩阵、TLS/SASL、rebalance、transaction、retry/idempotence、metrics/dashboard 与 rolling restart/failure-injection 测试。
+应用 patch 后至少运行 Java 11+ 编译、producer/consumer/admin 集成测试、Testcontainers 或真实 broker 跨版本矩阵、TLS/SASL、rebalance、transaction/fencing、retry/idempotence、metrics/告警和滚动升级故障注入测试。
 
-本模块自身验证：
+模块自检：
 
 ```bash
 mvn -pl rewrite-kafka-clients-upgrade -am clean verify

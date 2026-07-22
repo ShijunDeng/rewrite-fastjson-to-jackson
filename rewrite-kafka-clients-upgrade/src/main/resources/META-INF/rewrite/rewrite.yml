@@ -2,28 +2,24 @@
 type: specs.openrewrite.org/v1beta/category
 name: com.huawei.clouds.openrewrite.kafka
 packageName: com.huawei.clouds.openrewrite.kafka
-description: Upgrade Apache Kafka clients with source and configuration migrations for removed 4.x APIs.
+description: Upgrade spreadsheet-selected Apache Kafka clients to 4.1.2 with deterministic source/configuration migrations and review markers.
 ---
 type: specs.openrewrite.org/v1beta/recipe
 name: com.huawei.clouds.openrewrite.kafka.UpgradeKafkaClientsDependencyTo4_1_2
 displayName: Upgrade kafka-clients to 4.1.2
-description: Upgrade org.apache.kafka:kafka-clients declarations in Maven and Gradle builds without changing application source or configuration.
+description: Upgrade only exact spreadsheet-selected org.apache.kafka:kafka-clients versions in direct Maven and Gradle declarations; leave ranges, dynamic versions, BOM-managed declarations, unlisted versions, and other Kafka artifacts unchanged.
 tags:
   - apache-kafka
   - kafka-clients
   - java
   - dependency-upgrade
 recipeList:
-  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
-      groupId: org.apache.kafka
-      artifactId: kafka-clients
-      newVersion: 4.1.2
-      overrideManagedVersion: true
+  - com.huawei.clouds.openrewrite.kafka.UpgradeSelectedKafkaClientsDependency
 ---
 type: specs.openrewrite.org/v1beta/recipe
 name: com.huawei.clouds.openrewrite.kafka.MigrateKafkaClientsTo4_1_2
 displayName: Migrate Apache Kafka clients to 4.1.2
-description: Upgrade kafka-clients and migrate removed DescribeTopicsResult methods and JMX reporter property names.
+description: Upgrade selected kafka-clients declarations, apply one-to-one Kafka 4.1 API and property replacements, and mark behavior-sensitive migration work.
 tags:
   - apache-kafka
   - kafka-clients
@@ -37,6 +33,21 @@ recipeList:
   - org.openrewrite.java.ChangeMethodName:
       methodPattern: org.apache.kafka.clients.admin.DescribeTopicsResult all()
       newMethodName: allTopicNames
+  - org.openrewrite.java.ChangeMethodName:
+      methodPattern: org.apache.kafka.clients.admin.DeleteTopicsResult values()
+      newMethodName: topicNameValues
+  - org.openrewrite.java.ChangeMethodName:
+      methodPattern: org.apache.kafka.clients.consumer.MockConsumer setException(org.apache.kafka.common.KafkaException)
+      newMethodName: setPollException
+  - org.openrewrite.java.ChangeMethodName:
+      methodPattern: org.apache.kafka.clients.admin.UpdateFeaturesOptions dryRun(boolean)
+      newMethodName: validateOnly
+  - org.openrewrite.java.ChangeType:
+      oldFullyQualifiedTypeName: org.apache.kafka.common.security.oauthbearer.secured.OAuthBearerLoginCallbackHandler
+      newFullyQualifiedTypeName: org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginCallbackHandler
+  - org.openrewrite.java.ChangeType:
+      oldFullyQualifiedTypeName: org.apache.kafka.common.security.oauthbearer.secured.OAuthBearerValidatorCallbackHandler
+      newFullyQualifiedTypeName: org.apache.kafka.common.security.oauthbearer.OAuthBearerValidatorCallbackHandler
   - org.openrewrite.properties.ChangePropertyKey:
       oldPropertyKey: metrics.jmx.blacklist
       newPropertyKey: metrics.jmx.exclude
@@ -47,3 +58,8 @@ recipeList:
       newPropertyKey: metrics.jmx.include
       relaxedBinding: false
       regex: false
+  - org.openrewrite.properties.DeleteProperty:
+      propertyKey: auto.include.jmx.reporter
+      relaxedBinding: false
+  - com.huawei.clouds.openrewrite.kafka.FindKafkaClientJavaMigrationRisks
+  - com.huawei.clouds.openrewrite.kafka.FindKafkaClientPropertiesRisks
