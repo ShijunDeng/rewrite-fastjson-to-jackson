@@ -9,17 +9,16 @@ import org.openrewrite.json.tree.Json;
 
 import java.nio.file.Path;
 import java.util.Set;
-import java.util.regex.Pattern;
 
 /**
  * Upgrades only selected scalar direct dependency declarations. The explicit parent checks avoid
  * matching lockfile entries, package-manager metadata, and strings nested in array-shaped values.
  */
 public final class UpgradeSelectedNgxTranslateCoreDependency extends Recipe {
-    private static final Set<String> SECTIONS = Set.of(
+    static final Set<String> SECTIONS = Set.of(
             "dependencies", "devDependencies", "peerDependencies", "optionalDependencies"
     );
-    private static final Set<String> VERSIONS = Set.of("11.0.1", "13.0.0", "14.0.0", "15.0.0");
+    static final Set<String> VERSIONS = Set.of("11.0.1", "13.0.0", "14.0.0", "15.0.0");
 
     @Override
     public String getDisplayName() {
@@ -48,6 +47,12 @@ public final class UpgradeSelectedNgxTranslateCoreDependency extends Recipe {
                         !SECTIONS.contains(key((Json.Member) sectionCursor.getValue()))) {
                     return m;
                 }
+                Cursor rootObjectCursor = sectionCursor.getParentTreeCursor();
+                Cursor documentCursor = rootObjectCursor == null ? null : rootObjectCursor.getParentTreeCursor();
+                if (rootObjectCursor == null || !(rootObjectCursor.getValue() instanceof Json.JsonObject) ||
+                    documentCursor == null || !(documentCursor.getValue() instanceof Json.Document)) {
+                    return m;
+                }
 
                 Json.Literal value = (Json.Literal) m.getValue();
                 if (!(value.getValue() instanceof String) || !isSelected((String) value.getValue())) {
@@ -58,24 +63,21 @@ public final class UpgradeSelectedNgxTranslateCoreDependency extends Recipe {
 
             private boolean isPackageJson() {
                 Path sourcePath = getCursor().firstEnclosingOrThrow(Json.Document.class).getSourcePath();
-                return sourcePath.getFileName() != null && "package.json".equals(sourcePath.getFileName().toString());
+                return NgxTranslateSupport.isProjectPath(sourcePath) && sourcePath.getFileName() != null &&
+                       "package.json".equals(sourcePath.getFileName().toString());
             }
         };
     }
 
     private static boolean isSelected(String declaration) {
         String candidate = declaration;
-        if (candidate.startsWith("^") || candidate.startsWith("~") || candidate.startsWith("=")) {
+        if (candidate.startsWith("^") || candidate.startsWith("~")) {
             candidate = candidate.substring(1);
         }
-        if (candidate.startsWith("v")) {
-            candidate = candidate.substring(1);
-        }
-        return VERSIONS.contains(candidate) &&
-                declaration.matches("(?:[~^=]?|\\^?v)" + Pattern.quote(candidate));
+        return VERSIONS.contains(candidate) && declaration.matches("[~^]?\\d+\\.\\d+\\.\\d+");
     }
 
-    private static String key(Json.Member member) {
+    static String key(Json.Member member) {
         if (member.getKey() instanceof Json.Literal) {
             Object value = ((Json.Literal) member.getKey()).getValue();
             return value == null ? "" : value.toString();
