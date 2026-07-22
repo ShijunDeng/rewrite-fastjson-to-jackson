@@ -73,6 +73,7 @@
     <module>rewrite-mssql-jdbc-upgrade</module>
     <module>rewrite-react-router-dom-upgrade</module>
     <module>rewrite-lossless-json-upgrade</module>
+    <module>rewrite-shedlock-jdbc-template-upgrade</module>
   </modules>
 
   <dependencyManagement>

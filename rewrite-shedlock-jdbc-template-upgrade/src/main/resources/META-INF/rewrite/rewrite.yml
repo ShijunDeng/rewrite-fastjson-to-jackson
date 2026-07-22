@@ -1,0 +1,22 @@
+---
+type: specs.openrewrite.org/v1beta/category
+name: com.huawei.clouds.openrewrite.shedlockjdbc
+packageName: com.huawei.clouds.openrewrite.shedlockjdbc
+description: Upgrade the ShedLock JdbcTemplate provider with explicit Java, Spring, SQL, and locking-semantics guidance.
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.shedlockjdbc.UpgradeShedLockJdbcTemplateTo7_2_1
+displayName: Upgrade ShedLock JdbcTemplate provider to 7.2.1
+description: Upgrade net.javacrumbs.shedlock:shedlock-provider-jdbc-template Maven and Gradle dependency declarations to 7.2.1 without changing provider configuration or database schema.
+tags:
+  - shedlock
+  - spring
+  - jdbc
+  - distributed-lock
+  - dependency-upgrade
+recipeList:
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: net.javacrumbs.shedlock
+      artifactId: shedlock-provider-jdbc-template
+      newVersion: 7.2.1
+      overrideManagedVersion: true
