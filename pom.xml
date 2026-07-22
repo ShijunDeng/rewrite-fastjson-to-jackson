@@ -82,6 +82,7 @@
     <module>rewrite-jetbrains-annotations-upgrade</module>
     <module>rewrite-gridstack-upgrade</module>
     <module>rewrite-react-dom-upgrade</module>
+    <module>rewrite-react-upgrade</module>
   </modules>
 
   <dependencyManagement>
