@@ -2,258 +2,79 @@
 type: specs.openrewrite.org/v1beta/category
 name: com.huawei.clouds.openrewrite.hibernate
 packageName: com.huawei.clouds.openrewrite.hibernate
-description: Upgrade selected Hibernate ORM declarations, migrate deterministic Jakarta and Hibernate APIs, and mark behavior-changing code for review.
+description: Strictly upgrade workbook-selected Hibernate Core declarations, migrate deterministic Jakarta/Hibernate APIs and configuration, and mark exact Hibernate 7.2 compatibility decisions.
 ---
 type: specs.openrewrite.org/v1beta/recipe
 name: com.huawei.clouds.openrewrite.hibernate.UpgradeHibernateCoreDependencyTo7_2_12
-displayName: Upgrade selected Hibernate Core declarations to 7.2.12.Final
-description: Upgrade only direct Maven and Gradle Hibernate Core declarations whose literal or safely isolated Maven-property version is explicitly visible in the spreadsheet.
-tags:
-  - hibernate
-  - hibernate-orm
-  - java
-  - dependency-upgrade
+displayName: Upgrade workbook-selected Hibernate Core declarations to 7.2.12.Final
+description: Upgrade only standard Maven/Gradle Hibernate Core declarations whose complete literal or safely isolated Maven-property value is one of the ten workbook-visible source versions.
+tags: [hibernate, hibernate-orm, java, dependency-upgrade]
 recipeList:
   - com.huawei.clouds.openrewrite.hibernate.UpgradeSelectedHibernateCoreDependency
 ---
 type: specs.openrewrite.org/v1beta/recipe
 name: com.huawei.clouds.openrewrite.hibernate.MigrateJakartaPersistenceConfigurationTo3_2
 displayName: Migrate Java Persistence configuration to Jakarta Persistence 3.2
-description: Migrate legacy JPA setting prefixes, persistence.xml and orm.xml namespaces and schemas, and PersistenceProvider service-loader paths.
-tags:
-  - hibernate
-  - jakarta-persistence
-  - xml
-  - configuration
+description: Migrate parsed JPA setting names, persistence.xml/orm.xml namespace/schema/version values, and the PersistenceProvider service-loader path without rewriting comments.
+tags: [hibernate, jakarta-persistence, xml, configuration]
 recipeList:
-  - org.openrewrite.RenameFile:
-      fileMatcher: "**/META-INF/services/javax.persistence.spi.PersistenceProvider"
-      fileName: jakarta.persistence.spi.PersistenceProvider
-  - org.openrewrite.text.FindAndReplace:
-      find: javax.persistence.
-      replace: jakarta.persistence.
-      filePattern: "**/*.properties;**/*.yml;**/*.yaml;**/*.xml"
-      plaintextOnly: false
-  - org.openrewrite.text.FindAndReplace:
-      find: 'http://(?:java\.sun\.com|xmlns\.jcp\.org)/xml/ns/persistence(?!/orm)'
-      replace: https://jakarta.ee/xml/ns/persistence
-      regex: true
-      filePattern: "**/persistence.xml"
-      plaintextOnly: false
-  - org.openrewrite.text.FindAndReplace:
-      find: 'persistence_(?:1_0|2_[012]|3_[01])\.xsd'
-      replace: persistence_3_2.xsd
-      regex: true
-      filePattern: "**/persistence.xml"
-      plaintextOnly: false
-  - org.openrewrite.text.FindAndReplace:
-      find: '(?<prefix><persistence\b(?:(?!>).)*?\bversion\s*=\s*["''])(?:1\.0|2\.[012]|3\.[01])(?<quote>["''])'
-      replace: '${prefix}3.2${quote}'
-      regex: true
-      caseSensitive: true
-      multiline: true
-      dotAll: true
-      filePattern: "**/persistence.xml"
-      plaintextOnly: false
-  - org.openrewrite.text.FindAndReplace:
-      find: 'http://(?:java\.sun\.com|xmlns\.jcp\.org)/xml/ns/persistence/orm'
-      replace: https://jakarta.ee/xml/ns/persistence/orm
-      regex: true
-      filePattern: "**/orm.xml"
-      plaintextOnly: false
-  - org.openrewrite.text.FindAndReplace:
-      find: 'orm_(?:1_0|2_[012]|3_[01])\.xsd'
-      replace: orm_3_2.xsd
-      regex: true
-      filePattern: "**/orm.xml"
-      plaintextOnly: false
-  - org.openrewrite.text.FindAndReplace:
-      find: '(?<prefix><entity-mappings\b(?:(?!>).)*?\bversion\s*=\s*["''])(?:1\.0|2\.[012]|3\.[01])(?<quote>["''])'
-      replace: '${prefix}3.2${quote}'
-      regex: true
-      caseSensitive: true
-      multiline: true
-      dotAll: true
-      filePattern: "**/orm.xml"
-      plaintextOnly: false
+  - com.huawei.clouds.openrewrite.hibernate.MigrateLegacyPersistenceConfiguration
+  - com.huawei.clouds.openrewrite.hibernate.MigratePersistenceProviderServiceFile
 ---
 type: specs.openrewrite.org/v1beta/recipe
 name: com.huawei.clouds.openrewrite.hibernate.MigrateDeterministicHibernateSourceTo7
 displayName: Migrate deterministic Hibernate source APIs to version 7
-description: Migrate Java Persistence packages and string names, the two type-descriptor contract renames, semantically identical Session.load calls, and CascadeType.DELETE.
-tags:
-  - hibernate
-  - jakarta-persistence
-  - java
-  - source-migration
+description: Migrate Java Persistence packages/string names, two official descriptor contract moves, semantically identical two-argument Session.load calls, and CascadeType.DELETE.
+tags: [hibernate, jakarta-persistence, java, source-migration]
 recipeList:
-  - org.openrewrite.java.ChangePackage:
-      oldPackageName: javax.persistence
-      newPackageName: jakarta.persistence
-      recursive: true
-  - com.huawei.clouds.openrewrite.hibernate.MigrateLegacyPersistenceStringLiterals
-  - org.openrewrite.java.ChangeType:
-      oldFullyQualifiedTypeName: org.hibernate.type.descriptor.java.JavaTypeDescriptor
-      newFullyQualifiedTypeName: org.hibernate.type.descriptor.java.JavaType
-  - org.openrewrite.java.ChangeType:
-      oldFullyQualifiedTypeName: org.hibernate.type.descriptor.sql.SqlTypeDescriptor
-      newFullyQualifiedTypeName: org.hibernate.type.descriptor.jdbc.JdbcType
-  - org.openrewrite.java.ChangeMethodName:
-      methodPattern: org.hibernate.Session load(java.lang.Class, java.io.Serializable)
-      newMethodName: getReference
-  - org.openrewrite.java.ChangeMethodName:
-      methodPattern: org.hibernate.Session load(java.lang.String, java.io.Serializable)
-      newMethodName: getReference
-  - org.openrewrite.java.ReplaceConstantWithAnotherConstant:
-      existingFullyQualifiedConstantName: org.hibernate.annotations.CascadeType.DELETE
-      fullyQualifiedConstantName: org.hibernate.annotations.CascadeType.REMOVE
+  - com.huawei.clouds.openrewrite.hibernate.MigrateDeterministicHibernateJava
 ---
 type: specs.openrewrite.org/v1beta/recipe
 name: com.huawei.clouds.openrewrite.hibernate.FindManualHibernate7JavaMigrationRisks
-displayName: Find Hibernate 7 Java migrations requiring manual review
-description: Mark removed persistence operations, Criteria and transformer APIs, annotations, dialects, custom types, and API or SPI implementations whose replacement depends on application semantics.
-tags:
-  - hibernate
-  - java
-  - search
-  - manual-review
-preconditions:
-  - org.openrewrite.text.Find:
-      find: 'org\.hibernate|\b(?:Session|Criteria|UserType|Dialect|EmptyInterceptor)\b'
-      regex: true
-      caseSensitive: true
-      filePattern: "**/*.java;**/*.groovy"
-      contextSize: 0
+displayName: Find exact Hibernate 7 Java/Groovy migration risks
+description: Mark attributed Java and exact Hibernate-aware Groovy nodes whose removed persistence, Criteria, transformer, query, annotation, dialect, custom-type, or SPI replacement requires application intent.
+tags: [hibernate, java, groovy, search, manual-review]
 recipeList:
-  - org.openrewrite.text.Find:
-      find: '\.(?:save|update|saveOrUpdate|delete)[ \t]*\('
-      regex: true
-      caseSensitive: true
-      filePattern: "**/*.java;**/*.groovy"
-      contextSize: 0
-  - org.openrewrite.text.Find:
-      find: '\.load[ \t]*\([^,]+,[^,]+,[^)]*\)|\.load[ \t]*\([ \t]*[^,()]+[ \t]*,[ \t]*[^,()]+[ \t]*\)[ \t]*;?'
-      regex: true
-      caseSensitive: true
-      filePattern: "**/*.java;**/*.groovy"
-      contextSize: 0
-  - org.openrewrite.text.Find:
-      find: '\b(?:org\.hibernate\.)?(?:Criteria|criterion\.(?:Restrictions|Projections|Order)|DetachedCriteria)\b|\.createCriteria[ \t]*\('
-      regex: true
-      caseSensitive: true
-      filePattern: "**/*.java;**/*.groovy"
-      contextSize: 0
-  - org.openrewrite.text.Find:
-      find: '\b(?:setResultTransformer|setResultSetMapping|createSQLQuery)[ \t]*\(|\b(?:ResultTransformer|AliasToBeanResultTransformer|AliasToEntityMapResultTransformer)\b'
-      regex: true
-      caseSensitive: true
-      filePattern: "**/*.java;**/*.groovy"
-      contextSize: 0
-  - org.openrewrite.text.Find:
-      find: '\b(?:EmptyInterceptor|Interceptor|Integrator|MetadataContributor|AdditionalJaxbMappingProducer|UserType|CompositeUserType|BasicType|JavaType|JdbcType|TypeContributor|FunctionContributor)\b'
-      regex: true
-      caseSensitive: true
-      filePattern: "**/*.java;**/*.groovy"
-      contextSize: 0
-  - org.openrewrite.text.Find:
-      find: '@(?:Proxy|Loader|Persister|SelectBeforeUpdate|DynamicInsert|DynamicUpdate)\b|CascadeType\.(?:SAVE_UPDATE|REPLICATE|LOCK)\b'
-      regex: true
-      caseSensitive: true
-      filePattern: "**/*.java;**/*.groovy"
-      contextSize: 0
-  - org.openrewrite.text.Find:
-      find: '\b(?:MySQL5Dialect|MySQL57Dialect|MySQL8Dialect|PostgreSQL9Dialect|PostgreSQL10Dialect|Oracle12cDialect|SQLServer2012Dialect|MariaDB10[123]Dialect|H2LegacyDialect)\b'
-      regex: true
-      caseSensitive: true
-      filePattern: "**/*.java;**/*.groovy"
-      contextSize: 0
-  - org.openrewrite.text.Find:
-      find: '@(?:NamedQuery|NamedNativeQuery)\b|\.(?:createQuery|createNativeQuery)[ \t]*\('
-      regex: true
-      caseSensitive: true
-      filePattern: "**/*.java;**/*.groovy"
-      contextSize: 0
+  - com.huawei.clouds.openrewrite.hibernate.FindHibernate7JavaMigrationRisks
+  - com.huawei.clouds.openrewrite.hibernate.FindHibernate7TextMigrationRisks
 ---
 type: specs.openrewrite.org/v1beta/recipe
 name: com.huawei.clouds.openrewrite.hibernate.FindManualHibernate7MappingAndConfigurationRisks
-displayName: Find Hibernate 7 mapping and configuration risks requiring manual review
-description: Mark legacy hbm mappings, versioned or custom dialects, removed settings, native query mappings, caches, generators, enhancement, and schema-generation configuration.
-tags:
-  - hibernate
-  - configuration
-  - xml
-  - search
+displayName: Find exact Hibernate 7 mapping and configuration risks
+description: Mark exact hbm.xml and parsed properties/YAML snippets for legacy mappings, dialects, removed settings, schema, cache, enhancement, generator, batching, and timezone decisions.
+tags: [hibernate, configuration, xml, search, manual-review]
 recipeList:
-  - org.openrewrite.text.Find:
-      find: '<hibernate-mapping\b'
-      regex: true
-      caseSensitive: true
-      filePattern: "**/*.hbm.xml"
-      contextSize: 0
-  - org.openrewrite.text.Find:
-      find: 'hibernate\.dialect[ \t]*[=:][ \t]*(?:org\.hibernate\.dialect\.)?(?:MySQL5Dialect|MySQL57Dialect|MySQL8Dialect|PostgreSQL9Dialect|PostgreSQL10Dialect|Oracle12cDialect|SQLServer2012Dialect|MariaDB10[123]Dialect|H2LegacyDialect)'
-      regex: true
-      caseSensitive: true
-      filePattern: "**/*.properties;**/*.yml;**/*.yaml;**/*.xml"
-      contextSize: 0
-  - org.openrewrite.text.Find:
-      find: 'hibernate\.(?:allow_refresh_detached_entity|temp\.use_jdbc_metadata_defaults|query\.plan_cache_parameter_metadata_max_size|query\.immutable_entity_update_query_handling_mode|session_factory_name|session_factory_name_is_jndi)'
-      regex: true
-      caseSensitive: true
-      filePattern: "**/*.properties;**/*.yml;**/*.yaml;**/*.xml"
-      contextSize: 0
-  - org.openrewrite.text.Find:
-      find: 'hibernate\.(?:hbm2ddl|cache|enhancer|bytecode|id|jdbc\.batch_size|timezone\.default_storage)|jakarta\.persistence\.schema-generation|<(?:sql-query|return-join|loader|generator|composite-id)\b'
-      regex: true
-      caseSensitive: true
-      filePattern: "**/*.properties;**/*.yml;**/*.yaml;**/*.xml;**/*.gradle;**/*.gradle.kts;**/pom.xml"
-      contextSize: 0
+  - com.huawei.clouds.openrewrite.hibernate.FindHibernate7TextMigrationRisks
 ---
 type: specs.openrewrite.org/v1beta/recipe
 name: com.huawei.clouds.openrewrite.hibernate.FindManualHibernate7BuildBaselineRisks
-displayName: Find Hibernate 7 build baseline and companion risks
-description: Mark Java levels below 17, old persistence APIs, Hibernate companions, frameworks, processors, and enhancement plugins that must be aligned with Hibernate ORM 7.2.
-tags:
-  - hibernate
-  - build
-  - search
-  - manual-review
+displayName: Find exact Hibernate 7 build baseline and companion risks
+description: Mark exact Maven/Gradle Java levels below 17, unselected/managed Hibernate Core, Javax Persistence, Hibernate companions/plugins, and framework integration declarations.
+tags: [hibernate, build, search, manual-review]
 recipeList:
-  - org.openrewrite.text.Find:
-      find: '<(?:maven\.compiler\.(?:source|target|release)|source|target|release)>[ \t]*(?:1\.[0-8]|[0-9]|1[0-6])[ \t]*</|<(?:groupId)>javax\.persistence</groupId>|<artifactId>hibernate-(?:envers|spatial|jcache|jpamodelgen|testing|community-dialects|enhance-maven-plugin)</artifactId>|<artifactId>(?:spring-orm|quarkus-hibernate-orm|hypersistence-utils[^<]*)</artifactId>'
-      regex: true
-      caseSensitive: true
-      filePattern: "**/pom.xml"
-      contextSize: 0
-  - org.openrewrite.text.Find:
-      find: '(?:sourceCompatibility|targetCompatibility|languageVersion)[ \t]*(?:=|\.set\(|\.of\()[ \t]*["'']?(?:1\.[0-8]|[0-9]|1[0-6])\b|["''](?:javax\.persistence:|org\.hibernate(?:\.orm)?:hibernate-(?:envers|spatial|jcache|jpamodelgen|testing|community-dialects)|org\.springframework:spring-orm|io\.quarkus:quarkus-hibernate-orm|io\.hypersistence:)'
-      regex: true
-      caseSensitive: true
-      filePattern: "**/*.gradle;**/*.gradle.kts"
-      contextSize: 0
+  - com.huawei.clouds.openrewrite.hibernate.FindHibernate7BuildRisks
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.hibernate.AuditHibernate7Compatibility
+displayName: Audit Hibernate ORM 7.2 compatibility
+description: Run only exact Java, Groovy, mapping, configuration, and build compatibility markers without changing dependencies or source.
+tags: [hibernate, audit, search]
+recipeList:
+  - com.huawei.clouds.openrewrite.hibernate.FindHibernate7JavaMigrationRisks
+  - com.huawei.clouds.openrewrite.hibernate.FindHibernate7TextMigrationRisks
+  - com.huawei.clouds.openrewrite.hibernate.FindHibernate7BuildRisks
 ---
 type: specs.openrewrite.org/v1beta/recipe
 name: com.huawei.clouds.openrewrite.hibernate.MigrateHibernateCoreTo7_2_12
 displayName: Migrate selected Hibernate Core applications to 7.2.12.Final
-description: Strictly upgrade spreadsheet-selected Hibernate Core declarations, migrate deterministic Jakarta and Hibernate constructs, and mark source, mapping, configuration, build, and behavior risks for manual review.
-tags:
-  - hibernate
-  - hibernate-orm
-  - jakarta-persistence
-  - java
-  - source-migration
+description: Strictly upgrade workbook-selected Hibernate Core, migrate only deterministic Jakarta/Hibernate constructs, and mark exact source, mapping, configuration, build, and behavior decisions.
+tags: [hibernate, hibernate-orm, jakarta-persistence, java, source-migration]
 recipeList:
-  - com.huawei.clouds.openrewrite.hibernate.UpgradeHibernateCoreDependencyTo7_2_12
-  - org.openrewrite.java.dependencies.ChangeDependency:
-      oldGroupId: javax.persistence
-      oldArtifactId: javax.persistence-api
-      newGroupId: jakarta.persistence
-      newArtifactId: jakarta.persistence-api
-      newVersion: 3.2.0
-      overrideManagedVersion: true
-      changeManagedDependency: true
-  - com.huawei.clouds.openrewrite.hibernate.MigrateJakartaPersistenceConfigurationTo3_2
+  - com.huawei.clouds.openrewrite.hibernate.UpgradeSelectedHibernateCoreDependency
+  - com.huawei.clouds.openrewrite.hibernate.MigrateExplicitPersistenceApiDependency
+  - com.huawei.clouds.openrewrite.hibernate.MigrateLegacyPersistenceConfiguration
+  - com.huawei.clouds.openrewrite.hibernate.MigratePersistenceProviderServiceFile
   - com.huawei.clouds.openrewrite.hibernate.MigrateDeterministicHibernateSourceTo7
-  - com.huawei.clouds.openrewrite.hibernate.FindManualHibernate7JavaMigrationRisks
-  - com.huawei.clouds.openrewrite.hibernate.FindManualHibernate7MappingAndConfigurationRisks
-  - com.huawei.clouds.openrewrite.hibernate.FindManualHibernate7BuildBaselineRisks
+  - com.huawei.clouds.openrewrite.hibernate.FindHibernate7JavaMigrationRisks
+  - com.huawei.clouds.openrewrite.hibernate.FindHibernate7TextMigrationRisks
+  - com.huawei.clouds.openrewrite.hibernate.FindHibernate7BuildRisks

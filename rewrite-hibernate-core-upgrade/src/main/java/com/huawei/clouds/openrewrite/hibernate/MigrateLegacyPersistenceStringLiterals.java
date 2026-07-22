@@ -25,6 +25,12 @@ public final class MigrateLegacyPersistenceStringLiterals extends Recipe {
     public TreeVisitor<?, ExecutionContext> getVisitor() {
         return new JavaIsoVisitor<ExecutionContext>() {
             @Override
+            public J.CompilationUnit visitCompilationUnit(J.CompilationUnit compilationUnit, ExecutionContext ctx) {
+                return UpgradeSelectedHibernateCoreDependency.generated(compilationUnit.getSourcePath())
+                        ? compilationUnit : super.visitCompilationUnit(compilationUnit, ctx);
+            }
+
+            @Override
             public J.Literal visitLiteral(J.Literal literal, ExecutionContext ctx) {
                 J.Literal l = super.visitLiteral(literal, ctx);
                 if (!(l.getValue() instanceof String value) || !value.contains(OLD_PREFIX)) {

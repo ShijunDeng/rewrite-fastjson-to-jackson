@@ -8,6 +8,14 @@
 com.huawei.clouds.openrewrite.hibernate.MigrateHibernateCoreTo7_2_12
 ```
 
+只需要盘点、不希望产生自动修改时使用：
+
+```text
+com.huawei.clouds.openrewrite.hibernate.AuditHibernate7Compatibility
+```
+
+所有人工项均以带原因的 `SearchResult` 标记（形如 `~~(Hibernate 7: ...)~~>`），重复运行不会叠加标记。
+
 ## 表格版本边界
 
 工作簿分别为 `org.hibernate:hibernate-core` 和 `org.hibernate.orm:hibernate-core` 列出了相同的可见源值：
@@ -37,10 +45,13 @@ com.huawei.clouds.openrewrite.hibernate.UpgradeHibernateCoreDependencyTo7_2_12
 
 | 声明 | 结果 |
 | --- | --- |
-| Maven 直接依赖或 `dependencyManagement`，版本是上述字面值 | groupId 统一为 `org.hibernate.orm`，版本改为 `7.2.12.Final` |
-| Maven `${property}`，属性值是上述版本，且该属性的所有引用都只服务于匹配的 `hibernate-core` 声明 | 同时安全更新坐标和属性值 |
-| Gradle Groovy/Kotlin 标准依赖 configuration 中的完整字符串字面量 | 更新旧/新 groupId 坐标和版本 |
-| BOM 管理且无 `<version>`、共享属性、未解析属性、版本范围、Gradle 插值/目录别名 | 保持原样，不注入 override |
+| Maven 直接依赖、`dependencyManagement` 或 profile 中的标准声明，版本是上述字面值 | groupId 统一为 `org.hibernate.orm`，版本改为 `7.2.12.Final` |
+| Maven root/profile `${property}`，属性只定义一次、值是上述版本，且该属性的所有引用都只服务于匹配的 `hibernate-core` 声明 | 同时安全更新坐标和属性值 |
+| Gradle Groovy/Kotlin 真实 `dependencies {}` 内标准 dependency configuration 的完整字符串，或无 variant 的 Groovy `group/name/version` map 字面量 | 只更新匹配声明中的旧/新 groupId 和可见源版本 |
+| 同一文件混有工作簿内外版本 | 只更新命中的声明，不以文件级匹配扩大范围 |
+| BOM 管理且无 `<version>`、共享/未解析属性、版本范围、Gradle 插值/版本目录 | 保持原样，不注入 override |
+| 重复属性、伪装在配置 XML 中的 `<dependency>`、Gradle `dependencies {}` 外同名调用、map classifier/ext/type、非 `jar` type、Maven plugin dependency | 保持原样，避免改变不明确的所有权、变体或插件类路径 |
+| `target/build/out/dist/generated/.gradle/.mvn/.idea/node_modules` 中的源码、资源或构建声明 | AUTO 与 MARK 都保持原样，不修改生成物或工具缓存 |
 | 未列出的 5.x/6.x、目标版、7.2.12 之后版本、相似 artifact | 保持原样，不扩大升级、不降级 |
 
 ## 配方组成与自动修改
@@ -48,13 +59,22 @@ com.huawei.clouds.openrewrite.hibernate.UpgradeHibernateCoreDependencyTo7_2_12
 | 配方 | 自动处理 |
 | --- | --- |
 | `UpgradeHibernateCoreDependencyTo7_2_12` | 上述严格依赖选择与旧 groupId 迁移 |
-| `MigrateJakartaPersistenceConfigurationTo3_2` | `javax.persistence.*` 设置名；`persistence.xml`/`orm.xml` 的 Jakarta namespace、3.2 XSD 和 version；`PersistenceProvider` service-loader 文件名 |
+| `MigrateJakartaPersistenceConfigurationTo3_2` | 解析后的 `.properties`/YAML `javax.persistence.*` 设置名；`persistence.xml`/`orm.xml` 的 Jakarta namespace、3.2 XSD 和 version；`PersistenceProvider` service-loader 文件名；不改注释文本 |
 | `MigrateDeterministicHibernateSourceTo7` | `javax.persistence`→`jakarta.persistence`；Java 字符串中的同名前缀；两个官方明确的 descriptor contract 重命名；两参数 `Session.load`→同语义 `getReference`；`CascadeType.DELETE`→`REMOVE` |
-| `FindManualHibernate7JavaMigrationRisks` | 标记 removed Session 操作、legacy Criteria、query transformer、查询、旧 annotation、方言、自定义类型和 API/SPI 扩展 |
-| `FindManualHibernate7MappingAndConfigurationRisks` | 标记 hbm.xml、版本化方言、移除设置、DDL/缓存/增强/生成器/native mapping |
-| `FindManualHibernate7BuildBaselineRisks` | 标记 Java <17、Envers/Spatial/JCache/processor/testing/community dialect、Spring/Quarkus/Hypersistence 等需对齐项 |
+| `FindManualHibernate7JavaMigrationRisks` | 通过类型归属精确标记 removed Session 操作、legacy Criteria、query transformer、查询、旧 annotation、方言、自定义类型和 API/SPI 扩展；同名业务方法不误报 |
+| `FindManualHibernate7MappingAndConfigurationRisks` | 标记 hbm.xml、版本化方言、移除设置、DDL/缓存/增强/生成器/native mapping 的具体片段并给出原因 |
+| `FindManualHibernate7BuildBaselineRisks` | 标记具体的 Java <17、未选择/平台管理 core、旧 JPA、Envers/Spatial/JCache/processor/testing/community dialect、Spring/Quarkus/Hypersistence 等需对齐声明 |
+| `AuditHibernate7Compatibility` | 只组合 Java、Groovy、mapping/configuration 与 build 精确标记，不修改依赖、配置或源码 |
 
-推荐配方还把显式 `javax.persistence:javax.persistence-api` 改为 `jakarta.persistence:jakarta.persistence-api:3.2.0`。这一步只处理显式依赖；使用平台/BOM 的工程应在 dry-run 后由平台统一管理 Jakarta 和 Hibernate companion 版本。
+推荐配方还把 Maven project/profile 直接或本地 `dependencyManagement`、Gradle `dependencies {}` 字符串及无 variant Groovy map 中，显式且字面量版本恰为 `javax.persistence:javax.persistence-api:2.2` 的标准依赖改为 `jakarta.persistence:jakarta.persistence-api:3.2.0`。无版本、属性版本、其他版本、classifier/ext/type、plugin dependency、伪 XML dependency 和 Gradle DSL 外同名调用均不自动修改；使用平台/BOM 的工程应由平台统一管理 Jakarta 和 Hibernate companion 版本。
+
+## AUTO、MARK 与 NOOP 边界
+
+| 类别 | 本模块的约束 |
+| --- | --- |
+| AUTO | 只处理工作簿十个可见 Hibernate 版本、显式 JPA 2.2、解析后的 Jakarta 配置值，以及官方可证明等价的 package/type/method/constant 变更 |
+| MARK | 精确定位仍需业务或平台决策的 Java 调用/类型、Groovy 片段、hbm.xml/config 片段和 build 声明；每个标记都携带具体迁移原因 |
+| NOOP | 未列版本、BOM/共享或重复属性/插值、伪 dependency、Gradle DSL 外调用、变体与 plugin dependency、生成源码/资源/构建副本、注释、同名非 Hibernate API、已是目标或更高版本均保持不变 |
 
 自动改写的依据来自固定官方源码：
 
@@ -100,7 +120,7 @@ com.huawei.clouds.openrewrite.hibernate.UpgradeHibernateCoreDependencyTo7_2_12
 - [Dropwizard AbstractDAO `ee35db5b`](https://github.com/dropwizard/dropwizard/blob/ee35db5b4aeb07acf59f7aea53616222444d8372/dropwizard-hibernate/src/main/java/io/dropwizard/hibernate/AbstractDAO.java)：`saveOrUpdate` 只标记，不做不安全替换。
 - [OneDev HibernateInterceptor `1d3f0ae6`](https://github.com/theonedev/onedev/blob/1d3f0ae62b73233970390fd4af5f836cdc4cdc82/server-core/src/main/java/io/onedev/server/persistence/HibernateInterceptor.java)：`EmptyInterceptor` 和旧 interceptor SPI 被标记。
 
-测试结构参考 OpenRewrite 官方固定提交中的 [ChangeDependencyTest](https://github.com/openrewrite/rewrite-java-dependencies/blob/decb8dbb2b5b726f8815efc51c85c34a60268bb0/src/test/java/org/openrewrite/java/dependencies/ChangeDependencyTest.java)、[UpgradeDependencyVersionTest](https://github.com/openrewrite/rewrite-java-dependencies/blob/decb8dbb2b5b726f8815efc51c85c34a60268bb0/src/test/java/org/openrewrite/java/dependencies/UpgradeDependencyVersionTest.java) 与 [rewrite-hibernate Hibernate 7 tests](https://github.com/openrewrite/rewrite-hibernate/tree/48c9947a1790dbdcedeecb4d907d76bed837be95/src/test/java/org/openrewrite/hibernate)。当前模块有 18 个测试方法，覆盖两组坐标的 10 个可见版本、Maven 属性隔离、dependencyManagement、BOM/range/unresolved/shared-property 安全、Groovy/Kotlin literal、插值/catalog no-op、目标/后续版本、幂等、Java/XML/properties/YAML/service 路径、三个以上真实仓库 marker、build baseline 和全部配方发现/校验。
+测试结构参考 OpenRewrite 官方固定提交中的 [ChangeDependencyTest](https://github.com/openrewrite/rewrite-java-dependencies/blob/decb8dbb2b5b726f8815efc51c85c34a60268bb0/src/test/java/org/openrewrite/java/dependencies/ChangeDependencyTest.java)、[UpgradeDependencyVersionTest](https://github.com/openrewrite/rewrite-java-dependencies/blob/decb8dbb2b5b726f8815efc51c85c34a60268bb0/src/test/java/org/openrewrite/java/dependencies/UpgradeDependencyVersionTest.java) 与 [rewrite-hibernate Hibernate 7 tests](https://github.com/openrewrite/rewrite-hibernate/tree/48c9947a1790dbdcedeecb4d907d76bed837be95/src/test/java/org/openrewrite/hibernate)。当前模块有 37 个测试方法，并在单个版本矩阵测试中覆盖两组坐标的全部 10 个可见版本。其余测试覆盖白名单等值、root/profile 属性隔离与重复定义、真实 Maven/Gradle AST 所有权、dependencyManagement、混合版本、BOM/range/unresolved/shared-property、classifier/type/plugin/生成目录安全、Groovy/Kotlin 字符串和 map、插值/catalog no-op、目标/后续版本、AUTO/MARK 两周期幂等、Java/XML/properties/YAML/service 路径、精确 marker、同名 Java/Groovy API 误报防护、Java baseline、复合配方与全部配方发现/校验。
 
 ## 使用与验收
 

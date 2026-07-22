@@ -11,7 +11,7 @@
   </parent>
   <artifactId>rewrite-hibernate-core-upgrade</artifactId>
   <name>OpenRewrite Hibernate Core Upgrade</name>
-  <description>Configuration-based OpenRewrite recipes for migrating Hibernate Core 5.x to 7.2.12.Final.</description>
+  <description>OpenRewrite recipes for migrating Hibernate Core 5.x to 7.2.12.Final.</description>
   <url>https://github.com/ShijunDeng/openrewrite-migration-recipes/tree/main/rewrite-hibernate-core-upgrade</url>
   <dependencies>
     <dependency>
@@ -21,6 +21,16 @@
     <dependency>
       <groupId>org.openrewrite</groupId>
       <artifactId>rewrite-xml</artifactId>
+      <version>${rewrite.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.openrewrite</groupId>
+      <artifactId>rewrite-properties</artifactId>
+      <version>${rewrite.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.openrewrite</groupId>
+      <artifactId>rewrite-yaml</artifactId>
       <version>${rewrite.version}</version>
     </dependency>
     <dependency>
