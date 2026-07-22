@@ -1,0 +1,43 @@
+---
+type: specs.openrewrite.org/v1beta/category
+name: com.huawei.clouds.openrewrite.ngxcolorpicker
+packageName: com.huawei.clouds.openrewrite.ngxcolorpicker
+description: Upgrade ngx-color-picker and migrate its removed NgModule API to standalone Angular declarations.
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.ngxcolorpicker.UpgradeNgxColorPickerTo20_1_1
+displayName: Upgrade selected ngx-color-picker declarations to 20.1.1
+description: Update only spreadsheet-selected exact, caret, or tilde direct declarations in package.json.
+tags:
+  - ngx-color-picker
+  - angular
+  - npm
+  - dependency-upgrade
+recipeList:
+  - com.huawei.clouds.openrewrite.ngxcolorpicker.UpgradeSelectedNgxColorPickerDependency
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.ngxcolorpicker.AuditNgxColorPicker20Compatibility
+displayName: Locate ngx-color-picker 20.1.1 compatibility work
+description: Mark exact manifest and TypeScript nodes that need Angular 19+, standalone scope, deep-import, or removed SliderDirective input decisions.
+tags:
+  - ngx-color-picker
+  - angular-19
+  - search
+recipeList:
+  - com.huawei.clouds.openrewrite.ngxcolorpicker.FindNgxColorPickerManifestRisks
+  - com.huawei.clouds.openrewrite.ngxcolorpicker.FindNgxColorPickerSourceRisks
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.ngxcolorpicker.MigrateNgxColorPickerTo20_1_1
+displayName: Migrate ngx-color-picker applications to 20.1.1
+description: Upgrade selected declarations, replace deterministic ColorPickerModule scopes with ColorPickerDirective, and mark unresolved compatibility work.
+tags:
+  - ngx-color-picker
+  - angular-19
+  - dependency-upgrade
+  - source-migration
+recipeList:
+  - com.huawei.clouds.openrewrite.ngxcolorpicker.UpgradeNgxColorPickerTo20_1_1
+  - com.huawei.clouds.openrewrite.ngxcolorpicker.MigrateColorPickerModuleToStandaloneDirective
+  - com.huawei.clouds.openrewrite.ngxcolorpicker.AuditNgxColorPicker20Compatibility

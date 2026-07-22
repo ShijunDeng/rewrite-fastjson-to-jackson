@@ -119,6 +119,7 @@
     <module>rewrite-jaxen-upgrade</module>
     <module>rewrite-ng2-file-upload-upgrade</module>
     <module>rewrite-react-redux-upgrade</module>
+    <module>rewrite-ngx-color-picker-upgrade</module>
   </modules>
 
   <dependencyManagement>
