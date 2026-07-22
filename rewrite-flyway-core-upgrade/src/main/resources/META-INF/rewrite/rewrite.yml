@@ -2,48 +2,36 @@
 type: specs.openrewrite.org/v1beta/category
 name: com.huawei.clouds.openrewrite.flyway
 packageName: com.huawei.clouds.openrewrite.flyway
-description: Upgrade Flyway Core and its build plugins with explicit safeguards for managed dependencies and database modules.
+description: Strictly upgrade spreadsheet-selected Flyway Core/build declarations, apply deterministic 11.14.1 migrations, and mark behavior-sensitive database work.
 ---
 type: specs.openrewrite.org/v1beta/recipe
 name: com.huawei.clouds.openrewrite.flyway.UpgradeFlywayCoreDependencyTo11_14_1
 displayName: Upgrade Flyway Core dependency to 11.14.1
-description: Upgrade explicit org.flywaydb:flyway-core versions in Maven and Gradle without overriding a platform-managed version or changing source and database modules.
+description: Upgrade only the nine exact spreadsheet source versions of explicit org.flywaydb:flyway-core Maven and Gradle declarations; preserve ranges, dynamic versions, external management, shared properties, and companion artifacts.
 tags:
   - flyway
   - database-migration
   - java
   - dependency-upgrade
 recipeList:
-  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
-      groupId: org.flywaydb
-      artifactId: flyway-core
-      newVersion: 11.14.1
-      overrideManagedVersion: false
+  - com.huawei.clouds.openrewrite.flyway.UpgradeSelectedFlywayCoreDependency
 ---
 type: specs.openrewrite.org/v1beta/recipe
 name: com.huawei.clouds.openrewrite.flyway.UpgradeFlywayBuildPluginsTo11_14_1
 displayName: Upgrade Flyway Maven and Gradle plugins to 11.14.1
-description: Upgrade explicitly versioned open-source Flyway Maven and Gradle plugins without adding missing versions or changing Redgate edition coordinates.
+description: Upgrade explicitly versioned open-source Flyway Maven and Gradle plugins only from the exact spreadsheet versions without adding missing versions or changing Redgate edition coordinates.
 tags:
   - flyway
   - maven
   - gradle
   - plugin-upgrade
 recipeList:
-  - org.openrewrite.maven.UpgradePluginVersion:
-      groupId: org.flywaydb
-      artifactId: flyway-maven-plugin
-      newVersion: 11.14.1
-      trustParent: false
-      addVersionIfMissing: false
-  - org.openrewrite.gradle.plugins.UpgradePluginVersion:
-      pluginIdPattern: org.flywaydb.flyway
-      newVersion: 11.14.1
+  - com.huawei.clouds.openrewrite.flyway.UpgradeSelectedFlywayBuildPlugins
 ---
 type: specs.openrewrite.org/v1beta/recipe
 name: com.huawei.clouds.openrewrite.flyway.MigrateFlywayTo11_14_1
 displayName: Migrate Flyway builds to 11.14.1
-description: Upgrade explicit Flyway Core and build plugin versions and rename the removed report filename property while leaving database module selection and behavioral changes for review.
+description: Strictly upgrade Flyway Core/build plugins, migrate deterministic Java/build/property/callback changes, add unambiguous Maven database companions, and mark all remaining semantic risks.
 tags:
   - flyway
   - database-migration
@@ -52,8 +40,24 @@ tags:
 recipeList:
   - com.huawei.clouds.openrewrite.flyway.UpgradeFlywayCoreDependencyTo11_14_1
   - com.huawei.clouds.openrewrite.flyway.UpgradeFlywayBuildPluginsTo11_14_1
-  - org.openrewrite.properties.ChangePropertyKey:
-      oldPropertyKey: flyway.check.reportFilename
-      newPropertyKey: flyway.reportFilename
-      relaxedBinding: false
-      regex: false
+  - com.huawei.clouds.openrewrite.flyway.AddFlywayDatabaseModules
+  - com.huawei.clouds.openrewrite.flyway.MigrateFlywayProperties
+  - com.huawei.clouds.openrewrite.flyway.MigrateFlywayBuildConfiguration
+  - org.openrewrite.java.ChangeMethodName:
+      methodPattern: org.flywaydb.core.api.configuration.Configuration getFailOnMissingTarget()
+      newMethodName: isFailOnMissingTarget
+  - org.openrewrite.java.ChangeMethodName:
+      methodPattern: org.flywaydb.core.api.configuration.Configuration getDetectEncoding()
+      newMethodName: isDetectEncoding
+  - org.openrewrite.java.ChangeMethodName:
+      methodPattern: org.flywaydb.core.api.configuration.Configuration getCreateSchemas()
+      newMethodName: isCreateSchemas
+  - org.openrewrite.java.ChangeMethodName:
+      methodPattern: org.flywaydb.core.api.configuration.Configuration getFailOnMissingLocations()
+      newMethodName: isFailOnMissingLocations
+  - com.huawei.clouds.openrewrite.flyway.MigrateFlywayJavaApi
+  - com.huawei.clouds.openrewrite.flyway.MigrateFlywayCallbackFilenames
+  - com.huawei.clouds.openrewrite.flyway.FindFlywayJavaMigrationRisks
+  - com.huawei.clouds.openrewrite.flyway.FindFlywayPropertiesRisks
+  - com.huawei.clouds.openrewrite.flyway.FindFlywayDatabaseModuleRisks
+  - com.huawei.clouds.openrewrite.flyway.FindFlywayMigrationFileRisks

@@ -1,116 +1,164 @@
-# Flyway Core 升级到 11.14.1
+# Flyway Core 迁移到 11.14.1
 
-本模块对应表格中的 `org.flywaydb:flyway-core`，覆盖 `5.2.1`、`7.1.1`、`7.11.1`、`7.15.0`、`7.8.2`、`8.5.13`、`9.16.3`、`9.19.4`、`9.20.0` 到 `11.14.1` 的升级。
+本模块是 `org.flywaydb:flyway-core` 的可审计 OpenRewrite 迁移规范。它只接受表格列出的九个源版本：
 
-默认使用仅迁依赖的窄配方：
+`5.2.1`、`7.1.1`、`7.8.2`、`7.11.1`、`7.15.0`、`8.5.13`、`9.16.3`、`9.19.4`、`9.20.0`
 
-```text
-com.huawei.clouds.openrewrite.flyway.UpgradeFlywayCoreDependencyTo11_14_1
-```
+目标版本固定为 `11.14.1`。不在该集合中的版本，即使比目标版本低，也不会被依赖或插件升级配方修改。
 
-如项目直接声明了 Flyway Maven/Gradle 插件，可单独启用：
+## 配方
 
-```text
-com.huawei.clouds.openrewrite.flyway.UpgradeFlywayBuildPluginsTo11_14_1
-```
-
-组合配方会升级上述显式版本，并将官方在 10.0 删除的 properties/conf 键 `flyway.check.reportFilename` 改为 `flyway.reportFilename`：
+推荐迁移配方：
 
 ```text
 com.huawei.clouds.openrewrite.flyway.MigrateFlywayTo11_14_1
 ```
 
-## 自动处理边界
+只升级 Core 依赖：
 
-- 升级 Maven 直接依赖、dependencyManagement、版本属性，以及有 Gradle 语义模型的直接依赖到 `11.14.1`。
-- 不覆盖 Spring Boot/BOM 管理的无版本依赖；应先选择与 Spring Boot 版本匹配的 Flyway，再决定是否显式覆盖 `flyway.version`。
-- 不把 `11.14.1` 或更高版本降级。
-- 插件配方只升级显式版本的开源坐标 `org.flywaydb:flyway-maven-plugin` 与插件 ID `org.flywaydb.flyway`；不会添加缺失版本，也不会改变 Redgate edition 坐标或许可层级。
-- Kotlin Gradle DSL 没有 `GradleProject` 语义模型时安全保持不变；实际执行建议通过 Gradle Tooling API 提供模型。
-- 不根据 JDBC driver、URL 文本或 Spring 配置猜测并自动添加数据库模块。一个工程可能连接多个数据库，URL 也可能来自运行时 secret；错误推断会造成构建成功但运行期加载错误。
-- 不自动修改 `cleanOnValidationError`、`cleanDisabled`、`baselineOnMigrate`、`repair`、schema history 或已执行 SQL。它们涉及数据与审计状态，必须人工决策。
-
-## 10+ 数据库模块拆分
-
-Flyway 10 将多种数据库支持从 `flyway-core` 拆出；只升级 core 对这些数据库不够，运行时常见错误是 `No Flyway database plugin found to handle jdbc:...`。以下名称来自官方 `flyway-11.14.1` tag 的实际模块和数据库文档，而非名称猜测：
-
-| 数据库 | 11.14.1 开源模块 | 处理建议 |
-| --- | --- | --- |
-| PostgreSQL/CockroachDB | `org.flywaydb:flyway-database-postgresql:11.14.1` | API/Spring 项目加入运行 classpath；Gradle Flyway task 还要核对 build classpath |
-| MySQL/MariaDB | `org.flywaydb:flyway-mysql:11.14.1` | 仍需对应 JDBC driver；MariaDB driver 3.x 与 MySQL URL 要核对 `permitMysqlScheme` |
-| SQL Server | `org.flywaydb:flyway-sqlserver:11.14.1` | 同时核对 Microsoft JDBC driver、加密与 Entra/Kerberos 配置 |
-| Oracle | `org.flywaydb:flyway-database-oracle:11.14.1` | 同时核对 `ojdbc11`、Wallet、SQL*Plus 与 edition 功能 |
-| DB2、Derby、HSQLDB、Informix | `flyway-database-db2`、`flyway-database-derby`、`flyway-database-hsqldb`、`flyway-database-informix` | 每项都以对应官方 database support 页的 driver/版本为准 |
-| Redshift、SAP HANA、Snowflake、Sybase ASE | `flyway-database-redshift`、`flyway-database-saphana`、`flyway-database-snowflake`、`flyway-database-sybasease` | 云 driver、认证、parser 与支持层级需分别验证 |
-| Firebird、BigQuery、Spanner、SingleStore | `flyway-firebird`、`flyway-gcp-bigquery`、`flyway-gcp-spanner`、`flyway-singlestore` | 部分还需要额外 SDK/JDBC driver |
-| H2、SQLite | 仍在 `flyway-core` | 不要虚构数据库模块；JDBC driver 仍由应用提供 |
-
-官方 [PostgreSQL](https://documentation.red-gate.com/flyway/reference/database-driver-reference/postgresql-database)、[MySQL](https://documentation.red-gate.com/flyway/reference/database-driver-reference/mysql)、[SQL Server](https://documentation.red-gate.com/flyway/reference/database-driver-reference/sql-server-database) 和 [Oracle](https://documentation.red-gate.com/flyway/reference/database-driver-reference/oracle-database) 页面都明确说明 Java 用法中的独立模块。目标版本源码的完整模块目录见 [flyway-11.14.1 tag](https://github.com/flyway/flyway/tree/flyway-11.14.1/flyway-database)。
-
-Spring Boot 项目还应遵循其 [Flyway 初始化说明](https://docs.spring.io/spring-boot/how-to/data-initialization.html)：让 Boot BOM 管理一组经过验证的版本，并为非内嵌数据库显式加入数据库模块。本模块因此不会给无版本的 Boot-managed `flyway-core` 强塞 `11.14.1`。
-
-## 主要不兼容修改点
-
-| 版本跨度内的变化 | 影响与迁移建议 |
-| --- | --- |
-| Java/构建工具基线提高 | `flyway-core:11.14.1` JAR manifest 的 `Build-Jdk-Spec` 为 17；构建、运行、容器和 CI 统一 JDK 17+。Flyway 10 起 Gradle 插件最低为 7.6；Maven/Gradle 插件也运行在 Java 17 上 |
-| 7.x CLI/配置变化 | `-json` 改为 `-outputType=json`，`-logFile` 已删除并以 `-outputFile` 代替；无效 target、缺失 location 会更严格报错，placeholder 名变为大小写不敏感 |
-| 7.x 移除旧 migration type | `SPRING_JDBC`/`UNDO_SPRING_JDBC` 改为 `JDBC`/`UNDO_JDBC`；自定义 resolver、历史表中旧类型和消费 JSON 输出的脚本都要验证 |
-| 8.x 删除 7.x deprecated API | Android 支持删除；旧 JSON 字段/flag 删除；多个 `Configuration` boolean getter 改为 JavaBean 风格，extension API 由 `ApiExtension` 演进为 `ConfigurationExtension` |
-| 9.x 安全默认值变化 | `cleanDisabled` 默认改为 `true`；不要为了让旧流水线通过而全局设成 `false`。旧 `ignore*Migration` 参数改为 `ignoreMigrationPatterns` |
-| 9.x 执行与 SPI 变化 | Java/script migrations 不再在 dry run 中执行；`MigrationType`、resolver/context、baseline API 和 PostgreSQL locking 行为发生变化，自定义 resolver/plugin/callback 必须重新编译测试 |
-| 10.x 数据库实现模块化 | PostgreSQL、DB2、Derby、HSQLDB、Informix、Redshift、SAP HANA、Snowflake、Sybase ASE 等从 core 拆出，后来还包括 MySQL/SQL Server/Oracle 等独立模块；API、Maven plugin 与 Gradle plugin 的 classpath 放置方式不同 |
-| 10.0 配置/目录变化 | `flyway.check.reportFilename` 删除，改用 `flyway.reportFilename`；CLI/Docker 不再自带默认 `sql` 目录，必须显式检查 `locations`；`cherryPick` 和 license key 转为 extension 配置 |
-| 10.x Java SPI 继续演进 | `ErrorCode` 从 enum 变成接口、基础 enum 为 `CoreErrorCode`；`FlywayMigrateException` 被拆到独立类；parser/createStatement、report/S3 helpers 等扩展点有移动 |
-| 10.18/11.0 删除自动 clean | `cleanOnValidationError` 在 10.18 废弃、11.0 删除，配置存在会报错。正确做法是失败后人工检查并选择 migrate/repair/回滚，不是自动 clean |
-| 10.20+ callback/check 变化 | `createSchema` callback 改为 `beforeCreateSchema`；旧 `check.url/password/username` 删除，应改为 environment 或标准连接参数 |
-| 11.0 凭据输入变化 | CLI 不再交互式询问用户名/密码，改用环境变量或 secrets manager；不要把凭据写入仓库或命令历史 |
-| Redgate artifact group 变化 | 商业版 11+ 不再发布 `org.flywaydb.enterprise`，改用 `com.redgate.flyway`；本配方只处理 OSS `org.flywaydb`，不会跨 edition 改坐标 |
-| 11.x 插件/扩展变化 | `flyway.plugins.*` namespace 开始告警；`CommandExtension` 在 11.11 移除 telemetry 参数；`Location` 构造器在 11.13.2 废弃；11.14.0 将 `S3ClientFactory` 移至 `flyway-locations-s3` |
-| 11.14.1 本身 | 该版本修复 JDBC URL 密码脱敏和根目录 JAR install-dir 崩溃，并更新 Snowflake driver；仍需逐数据库做 parser、driver 与迁移回归 |
-| 版本/重复 migration 语义 | 9.x 以后 migration pattern 的版本按数字解释；repeatable、baseline、out-of-order、target 与 checksum 状态可能和旧流水线不同，必须在生产副本执行 `info`/`validate` |
-| 日志/JSON 输出变化 | 多个大版本调整命令 JSON 字段、错误对象、输出文件和日志；所有解析 Flyway 输出的 CI 脚本都要使用录制样本回归 |
-
-权威依据为 Redgate 官方 [5.x 至 11.14.1 release notes](https://documentation.red-gate.com/flyway/release-notes-and-older-versions/release-notes-for-flyway-engine)、[Flyway 9→10 指南](https://documentation.red-gate.com/fd/flyway-v10-upgrading-from-flyway-v9-224920031.html)、[Flyway 10→11 指南](https://documentation.red-gate.com/flyway/flyway-blog/flyway-v11-updating-from-v10)，以及目标 [Maven Central manifest/POM](https://central.sonatype.com/artifact/org.flywaydb/flyway-core/11.14.1)。
-
-## Schema history、repair 与 clean 风险
-
-- `flyway_schema_history` 是迁移审计记录，包含版本、状态和 checksum。升级前备份数据库与该表，记录旧版 `info -outputType=json` 和 `validate` 结果；升级后先对生产快照验证。
-- 已在永久环境执行的 versioned migration 不应原地修改。官方建议新增 roll-forward migration；否则 checksum 不一致会破坏可重建性。
-- `repair` 会删除失败记录、对齐 checksum/description/type，并把缺失 migration 标记为 deleted；它不会清理由失败 SQL 留下的用户对象，而且必须使用与 `migrate` 相同的 `locations`。必须经 DBA 审核并保存前后 diff。
-- `clean` 会删除配置 schema 中的对象。9.x 起默认禁用是安全边界，生产环境不要为兼容旧脚本改成 `cleanDisabled=false`；测试库也要验证账号、schema 与 URL 后再启用。
-- 不要在首次升级时同时执行依赖升级、`repair`、baseline、out-of-order 或 migration 文件重写。先 dry-run 构建变更，再独立演练数据库状态变化，方便定位 checksum/parser/driver 差异。
-
-详见官方 [schema history](https://documentation.red-gate.com/flyway/flyway-concepts/migrations/flyway-schema-history-table)、[versioned migrations](https://documentation.red-gate.com/flyway/flyway-concepts/migrations/versioned-migrations)、[repair](https://documentation.red-gate.com/flyway/reference/commands/repair) 与 [cleanDisabled](https://documentation.red-gate.com/fd/flyway-clean-disabled-setting-277578981.html) 文档。
-
-## Community、Teams 与 Enterprise
-
-升级 OSS `org.flywaydb:flyway-core` 不会自动获得 Teams/Enterprise 功能。Undo、部分 secrets/auth、Oracle SQL*Plus、advanced check/compare、dry-run 等能力随版本和 edition 变化；升级前盘点实际命令、license 获取方式、离线 permit、私有 Redgate repository 与 EULA。不要把商业版依赖机械改为 OSS，也不要假设旧 license key 配置在 11.x 仍有效。
-
-## 测试样本与覆盖
-
-测试从真实项目结构缩减而来，并保留固定 commit 链接：
-
-- [ninjaframework/ninja Maven dependencyManagement](https://github.com/ninjaframework/ninja/blob/f7b39ce103e547595585276857c3fc77d1e6f4f0/pom.xml#L713-L718)
-- [Testcontainers Spring Boot quickstart Gradle managed dependency](https://github.com/testcontainers/testcontainers-java-spring-boot-quickstart/blob/c2fa0b2287a97026e153c9d9ee3aab5b7e96ba02/build.gradle)
-- [Apache Gobblin Flyway fluent Java API](https://github.com/apache/gobblin/blob/fcfb06b41d041cb797622264cf5322296753fdea/gobblin-metastore/src/main/java/org/apache/gobblin/metastore/DatabaseJobHistoryStore.java#L89-L96)
-- [stitchfix/flotilla-os flyway.conf 安全配置](https://github.com/stitchfix/flotilla-os/blob/11568a7acfb10880744dccd48fba5e99db995b55/.migrations/dev.conf)
-- Flyway 官方 [11.14.1 core source](https://github.com/flyway/flyway/tree/flyway-11.14.1/flyway-core) 与数据库模块
-
-用例组织参考 OpenRewrite 官方 [UpgradeDependencyVersionTest](https://github.com/openrewrite/rewrite-java-dependencies/blob/main/src/test/java/org/openrewrite/java/dependencies/UpgradeDependencyVersionTest.java)、[Maven UpgradePluginVersionTest](https://github.com/openrewrite/rewrite/blob/main/rewrite-maven/src/test/java/org/openrewrite/maven/UpgradePluginVersionTest.java) 和 [Gradle UpgradePluginVersionTest](https://github.com/openrewrite/rewrite/blob/main/rewrite-gradle/src/test/java/org/openrewrite/gradle/plugins/UpgradePluginVersionTest.java)。
-
-当前测试覆盖表格全部 9 个起始版本、Maven 直接/属性/dependencyManagement、Groovy Gradle 字符串与 map notation、Kotlin DSL 无模型安全回退、Spring Boot/BOM 无版本 no-op、目标及更高版本防降级、数据库 companion 防误伤、Maven/Gradle plugin、配置键迁移、clean 安全配置保留、11.14.1 Java API 类型归因和 recipe discovery/validation。
-
-## 使用与验证
-
-先在本仓库安装模块，再在目标项目 dry-run：
-
-```bash
-mvn -f rewrite-flyway-core-upgrade/pom.xml clean verify
-
-mvn -U org.openrewrite.maven:rewrite-maven-plugin:6.44.0:dryRun \
-  -Drewrite.recipeArtifactCoordinates=com.huawei.clouds.openrewrite:rewrite-flyway-core-upgrade:1.0.0-SNAPSHOT \
-  -Drewrite.activeRecipes=com.huawei.clouds.openrewrite.flyway.UpgradeFlywayCoreDependencyTo11_14_1
+```text
+com.huawei.clouds.openrewrite.flyway.UpgradeFlywayCoreDependencyTo11_14_1
 ```
 
-审核 patch 并补齐明确的数据库模块后，在隔离的生产数据副本依次执行：JDK/构建验证、`info`、`validate`、空库全量 migrate、旧库增量 migrate、repeatable/out-of-order/baseline/callback/Java migration、并发锁、失败恢复、Spring Boot 启动和所有数据库方言集成测试。未经审核不要运行 `repair` 或 `clean`。
+只升级 Maven/Gradle 构建插件：
+
+```text
+com.huawei.clouds.openrewrite.flyway.UpgradeFlywayBuildPluginsTo11_14_1
+```
+
+## 处理契约
+
+### AUTO：确定性修改
+
+| 范围 | 自动处理 |
+| --- | --- |
+| Maven Core | 升级直接依赖和 `dependencyManagement` 中显式的九个版本；支持独占 Maven 属性 |
+| 共享 Maven 属性 | 属性还被其他声明引用时，不修改属性，而把 Flyway Core/插件自己的版本内联为 `11.14.1` |
+| Gradle Core | 升级 Groovy 字符串、Groovy map notation、Kotlin 字符串中的显式版本 |
+| Gradle 版本变量 | 只在 `flywayVersion` 是该文件中 Core 坐标的独占变量时升级；共享变量保持不变 |
+| Maven/Gradle 插件 | 升级 `org.flywaydb:flyway-maven-plugin` 与插件 ID `org.flywaydb.flyway` 的九个显式版本；不跨到 `com.redgate.flyway` |
+| 数据库 companion | Maven 项目已经迁到目标 Core 且存在直接 JDBC driver 时，加入确定的 PostgreSQL、MySQL/MariaDB、SQL Server、Oracle 或 DB2 模块；继承 Core 的版本表达式与 scope |
+| properties/conf | 精确迁移 `reportFilename`、Kerberos、SQL Server clean 及 Vault/Dapr/GCSM namespace；相似键不改 |
+| locations | `flyway.locations` 和 Flyway 插件配置中的无前缀位置显式改为 `classpath:`；已带前缀或环境变量的位置不改 |
+| Java API | 四个 `Configuration#get...` boolean getter 改为 `is...`；旧 `int Flyway.migrate()` 的值用法改为 `migrate().migrationsExecuted`，语句用法不改 |
+| callback | `Event.CREATE_SCHEMA` 改为 `BEFORE_CREATE_SCHEMA`；`createSchema.sql`/`createSchema__*.sql` 文件改为 `beforeCreateSchema...` |
+
+确定的配置键映射如下：
+
+| 旧键 | 新键 |
+| --- | --- |
+| `flyway.check.reportFilename` | `flyway.reportFilename` |
+| `flyway.oracleKerberosConfigFile` | `flyway.kerberosConfigFile` |
+| `spring.flyway.oracle-kerberos-config-file` | `spring.flyway.kerberos-config-file` |
+| `flyway.plugins.clean` | `flyway.sqlserver.clean.mode` |
+| `flyway.plugins.clean.schemas.exclude` | `flyway.sqlserver.clean.schemas.exclude` |
+| `flyway.plugins.vault.*` | `flyway.vault.*` |
+| `flyway.plugins.dapr.*` | `flyway.dapr.*` |
+| `flyway.plugins.gcsm.*` | `flyway.gcsm.*` |
+
+### MARK：精确标记，保留人工决策
+
+推荐配方使用 `SearchResult` 标记以下位置：
+
+- JDBC driver 或 `flyway.url` 已表明数据库，但源码集中缺少 Flyway 11 companion 模块；
+- `ignoreMissingMigrations`、`ignorePendingMigrations` 等旧布尔配置。它们必须合并为 `ignoreMigrationPatterns`，且要主动决定是否保留默认 `*:future`；
+- `cleanOnValidationError`。该 API 在目标源码中仍存在但已废弃，不能误报为已删除，也不能自动删掉；
+- `cleanDisabled=false`、`baselineOnMigrate=true`、`outOfOrder=true`、`clean()` 与 `repair()`；
+- 旧的 `new Flyway()`/setter 配置、旧 Jdbc/SpringJdbc Java migration、直接实现 `JavaMigration`、旧 extension/error SPI；
+- 使用通配符的 `new Location(...)`。目标版本需要 `fromWildcardPath` 的 parser 语义，不能机械改成 `fromPath`；
+- 只有 `filesystem:` location 的配置。filesystem 只发现 SQL migration，Java migration 需要 classpath；
+- 默认命名规则下可疑的 `V`、`U`、`R` SQL 文件名，例如 `V1_create.sql`。
+
+标记不会执行数据库操作，也不会改 schema history、checksum 或 migration SQL 内容。
+
+### NO-OP：严格不处理
+
+- `8.2.2`、`9.20.1`、其他未列版本、版本区间、动态版本、版本目录变量；
+- Spring Boot/BOM/父 POM 管理的无版本 Core 或插件；
+- 已经是 `11.14.1` 或更高的版本；
+- Redgate 商业版坐标、其他 `org.flywaydb` artifact 和相似名称；
+- 共享 Gradle 变量、无法静态确定的数据库、runtime secret 中的 URL；
+- 已带 `classpath:`、`filesystem:`、`s3:` 等前缀的位置。
+
+### MANUAL：运行前后必须人工验证
+
+- JDK 17、Maven/Gradle 插件运行时与应用运行时是否一致；
+- 每种数据库的 JDBC driver、companion 模块和插件 task classpath；
+- 自定义 `MigrationResolver`、callback、parser、plugin、`ErrorCode`/`ApiExtension` SPI；
+- Java migration 的 `Connection`/`JdbcTemplate` 适配与事务行为；
+- repeatable、undo、baseline、target、out-of-order、placeholder、locking 和并发启动；
+- 所有读取 Flyway JSON、日志、report 文件的流水线；
+- `info`、`validate`、空库全量 migrate、旧库增量 migrate 以及失败恢复。
+
+## 数据库模块
+
+配方只在 Maven 中、选择完全确定时自动加入以下模块；Gradle 与配置 URL 会得到精确标记：
+
+| JDBC driver/URL | Flyway 11.14.1 companion |
+| --- | --- |
+| PostgreSQL | `org.flywaydb:flyway-database-postgresql` |
+| MySQL/MariaDB | `org.flywaydb:flyway-mysql` |
+| Microsoft SQL Server | `org.flywaydb:flyway-sqlserver` |
+| Oracle | `org.flywaydb:flyway-database-oracle` |
+| IBM DB2 | `org.flywaydb:flyway-database-db2` |
+
+已有 companion 不重复添加；无版本 managed Core 不触发添加。H2 等仍由 Core 处理的数据库不会被虚构出 companion。
+
+## 关键不兼容点
+
+| 变化 | 本模块策略 |
+| --- | --- |
+| Java/构建基线提高 | 不改 toolchain；README 与迁移验收要求 JDK 17 |
+| `Flyway.migrate()` 从 `int` 变为 `MigrateResult` | 对旧类型归因下的值用法追加 `.migrationsExecuted` |
+| Configuration boolean getter 改名 | 四个可确定 getter 自动改名 |
+| 数据库实现模块化 | Maven 确定场景自动补模块，其余标记 |
+| `ignore*Migrations` 合并 | 语义依赖默认值，标记而不猜测 |
+| `ErrorCode` enum 演进为接口，内置常量迁到 `CoreErrorCode` | 标记 SPI 使用点 |
+| `ApiExtension` 演进为 `ConfigurationExtension`/`PluginRegister` | 标记访问路径，不只改类型名 |
+| 旧 Jdbc/SpringJdbc migration API | 标记类声明，要求迁到 `BaseJavaMigration#migrate(Context)` |
+| `Location(String)` 废弃 | 通配符构造标记；非通配符也建议人工核对资源语义 |
+| create-schema callback 名称变化 | Java enum 与 SQL callback 文件名自动迁移 |
+| clean/repair/baseline 安全边界 | 只标记，不执行、不启用 |
+| SQL migration 默认命名 | 只标记可疑文件，尊重自定义 prefix/separator/suffix |
+
+## 固定上游依据
+
+目标事实以 Flyway 官方 `flyway-11.14.1` tag 解引用后的固定 commit
+[`aa1eda9d1cdd4eae6235d8599babba5481d682a9`](https://github.com/flyway/flyway/tree/aa1eda9d1cdd4eae6235d8599babba5481d682a9) 为准，而不是浮动分支：
+
+- [Flyway.java](https://github.com/flyway/flyway/blob/aa1eda9d1cdd4eae6235d8599babba5481d682a9/flyway-core/src/main/java/org/flywaydb/core/Flyway.java)
+- [Configuration.java](https://github.com/flyway/flyway/blob/aa1eda9d1cdd4eae6235d8599babba5481d682a9/flyway-core/src/main/java/org/flywaydb/core/api/configuration/Configuration.java)
+- [FluentConfiguration.java](https://github.com/flyway/flyway/blob/aa1eda9d1cdd4eae6235d8599babba5481d682a9/flyway-core/src/main/java/org/flywaydb/core/api/configuration/FluentConfiguration.java)
+- [Location.java](https://github.com/flyway/flyway/blob/aa1eda9d1cdd4eae6235d8599babba5481d682a9/flyway-core/src/main/java/org/flywaydb/core/api/Location.java)
+- [Event.java](https://github.com/flyway/flyway/blob/aa1eda9d1cdd4eae6235d8599babba5481d682a9/flyway-core/src/main/java/org/flywaydb/core/api/callback/Event.java)
+- [数据库模块目录](https://github.com/flyway/flyway/tree/aa1eda9d1cdd4eae6235d8599babba5481d682a9/flyway-database)
+
+跨版本说明参考 Redgate 官方 [Flyway Engine release notes](https://documentation.red-gate.com/flyway/release-notes-and-older-versions/release-notes-for-flyway-engine)、[9→10 指南](https://documentation.red-gate.com/fd/flyway-v10-upgrading-from-flyway-v9-224920031.html) 与 [10→11 指南](https://documentation.red-gate.com/flyway/flyway-blog/flyway-v11-updating-from-v10)。若博客的计划与目标源码不一致，以固定目标源码为准。
+
+## 真实公共仓测试样本
+
+测试使用固定 commit 的最小化 fixture，不依赖仓库默认分支漂移：
+
+| 仓库与固定 commit | 提取内容 | 预期 |
+| --- | --- | --- |
+| [halo-dev/halo@6533089](https://github.com/halo-dev/halo/blob/6533089555d7915b2af38802f9797cd68ece4586/build.gradle#L100-L154) | 独占 `flywayVersion = "7.15.0"` 与插值 Core 坐标 | 变量自动升级到 `11.14.1` |
+| [testcontainers-java-spring-boot-quickstart@c2fa0b2](https://github.com/testcontainers/testcontainers-java-spring-boot-quickstart/blob/c2fa0b2287a97026e153c9d9ee3aab5b7e96ba02/build.gradle) | Boot-managed versionless Core 与 PostgreSQL driver | Core 不强制版本；缺 companion 时标记 driver |
+| [stitchfix/flotilla-os@11568a7](https://github.com/stitchfix/flotilla-os/blob/11568a7acfb10880744dccd48fba5e99db995b55/.migrations/dev.conf) | PostgreSQL URL 与 filesystem-only locations | 分别标记 companion 和 Java migration 发现风险 |
+| [ninjaframework/ninja@f7b39ce](https://github.com/ninjaframework/ninja/blob/f7b39ce103e547595585276857c3fc77d1e6f4f0/pom.xml#L713-L718) | `dependencyManagement` 中未列出的 `8.2.2` | 严格 no-op |
+| [apache/gobblin@fcfb06b](https://github.com/apache/gobblin/blob/fcfb06b41d041cb797622264cf5322296753fdea/gobblin-metastore/src/main/java/org/apache/gobblin/metastore/DatabaseJobHistoryStore.java#L89-L96) | 当前 `Flyway.configure().dataSource().load()` API | 不误报静态 `configure()`，保持幂等 |
+
+用例写法参考 OpenRewrite 官方固定提交中的 [`UpgradeDependencyVersionTest`](https://github.com/openrewrite/rewrite-java-dependencies/blob/decb8dbb2b5b726f8815efc51c85c34a60268bb0/src/test/java/org/openrewrite/java/dependencies/UpgradeDependencyVersionTest.java)、Maven [`UpgradePluginVersionTest`](https://github.com/openrewrite/rewrite/blob/1b1804a5af7692612398fcce034a846b48b5b8cf/rewrite-maven/src/test/java/org/openrewrite/maven/UpgradePluginVersionTest.java) 与 Gradle [`UpgradePluginVersionTest`](https://github.com/openrewrite/rewrite/blob/1b1804a5af7692612398fcce034a846b48b5b8cf/rewrite-gradle/src/test/java/org/openrewrite/gradle/plugins/UpgradePluginVersionTest.java)。
+
+当前 46 个测试覆盖九个表格源版本、Maven/Gradle/Groovy/Kotlin、属性隔离、managed/BOM、插件、五种数据库 companion、配置映射、Java API、回调文件、SQL 命名、正负例、SearchResult 和双 cycle 幂等。
+
+## 使用与验收
+
+```bash
+mvn -pl rewrite-flyway-core-upgrade -am clean verify
+
+mvn -U org.openrewrite.maven:rewrite-maven-plugin:run \
+  -Drewrite.recipeArtifactCoordinates=com.huawei.clouds.openrewrite:rewrite-flyway-core-upgrade:1.0.0-SNAPSHOT \
+  -Drewrite.activeRecipes=com.huawei.clouds.openrewrite.flyway.MigrateFlywayTo11_14_1
+```
+
+建议先运行 `dryRun` 并审核 patch。随后在隔离的生产数据副本执行 `info`、`validate`、空库和旧库 migrate 回归。不要把首次版本升级与 `repair`、`clean`、baseline 或已执行 migration 修改合并在一次变更中。

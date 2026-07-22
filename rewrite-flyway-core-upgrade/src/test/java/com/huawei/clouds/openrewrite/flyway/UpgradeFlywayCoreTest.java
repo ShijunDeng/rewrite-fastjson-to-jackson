@@ -71,7 +71,7 @@ class UpgradeFlywayCoreTest implements RewriteTest {
     }
 
     @Test
-    void upgradesNinjaStyleManagedDependency() {
+    void rejectsNinjaStyleUnlistedManagedDependency() {
         // Reduced from ninjaframework/ninja at f7b39ce:
         // https://github.com/ninjaframework/ninja/blob/f7b39ce103e547595585276857c3fc77d1e6f4f0/pom.xml#L713-L718
         rewriteRun(pomXml(
@@ -87,23 +87,6 @@ class UpgradeFlywayCoreTest implements RewriteTest {
                         <groupId>org.flywaydb</groupId>
                         <artifactId>flyway-core</artifactId>
                         <version>8.2.2</version>
-                      </dependency>
-                    </dependencies>
-                  </dependencyManagement>
-                </project>
-                """,
-                """
-                <project>
-                  <modelVersion>4.0.0</modelVersion>
-                  <groupId>org.ninjaframework</groupId>
-                  <artifactId>ninja</artifactId>
-                  <version>1</version>
-                  <dependencyManagement>
-                    <dependencies>
-                      <dependency>
-                        <groupId>org.flywaydb</groupId>
-                        <artifactId>flyway-core</artifactId>
-                        <version>11.14.1</version>
                       </dependency>
                     </dependencies>
                   </dependencyManagement>
@@ -183,15 +166,20 @@ class UpgradeFlywayCoreTest implements RewriteTest {
     }
 
     @Test
-    void leavesKotlinGradleDependencyWithoutSemanticModelUntouched() {
-        // UpgradeDependencyVersion relies on the Gradle dependency model for Kotlin DSL.
-        // A parser-only run has no GradleProject marker and must fail safe instead of editing text.
+    void upgradesKotlinGradleLiteralWithoutSemanticModel() {
         rewriteRun(buildGradleKts(
                 """
                 plugins { java }
                 repositories { mavenCentral() }
                 dependencies {
                     implementation("org.flywaydb:flyway-core:9.20.0")
+                }
+                """,
+                """
+                plugins { java }
+                repositories { mavenCentral() }
+                dependencies {
+                    implementation("org.flywaydb:flyway-core:11.14.1")
                 }
                 """
         ));
@@ -418,6 +406,13 @@ class UpgradeFlywayCoreTest implements RewriteTest {
                         flyway.cleanDisabled=true
                         flyway.group=true
                         flyway.locations=filesystem:.migrations
+                        """,
+                        """
+                        ~~(Flyway 11 requires org.flywaydb:flyway-database-postgresql on the relevant application/plugin runtime classpath)~~>flyway.url=jdbc:postgresql://127.0.0.1:5432/flotilla
+                        flyway.user=flotilla
+                        flyway.cleanDisabled=true
+                        flyway.group=true
+                        ~~(filesystem locations discover SQL migrations only; add an explicit classpath location if Java migrations must still be discovered)~~>flyway.locations=filesystem:.migrations
                         """,
                         spec -> spec.path("dev.conf")
                 )
