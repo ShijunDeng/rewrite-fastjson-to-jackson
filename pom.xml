@@ -60,6 +60,7 @@
     <module>rewrite-d3-upgrade</module>
     <module>rewrite-vue-i18n-upgrade</module>
     <module>rewrite-kafka-clients-upgrade</module>
+    <module>rewrite-jakarta-servlet-api-upgrade</module>
   </modules>
 
   <dependencyManagement>

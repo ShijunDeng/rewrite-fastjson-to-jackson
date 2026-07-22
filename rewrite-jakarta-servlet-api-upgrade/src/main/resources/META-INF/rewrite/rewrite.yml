@@ -1,0 +1,97 @@
+---
+type: specs.openrewrite.org/v1beta/category
+name: com.huawei.clouds.openrewrite.jakartaservlet
+packageName: com.huawei.clouds.openrewrite.jakartaservlet
+description: Upgrade Jakarta Servlet API dependencies and migrate the type-safe portion of the Servlet 4.x-6.1 source transition.
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.jakartaservlet.UpgradeJakartaServletApiTo6_1_0
+displayName: Upgrade jakarta.servlet-api to 6.1.0
+description: Upgrade the jakarta.servlet:jakarta.servlet-api Maven or Gradle dependency to 6.1.0 without changing application source.
+tags:
+  - jakarta-servlet
+  - jakarta-ee
+  - java
+  - dependency-upgrade
+recipeList:
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: jakarta.servlet
+      artifactId: jakarta.servlet-api
+      newVersion: 6.1.0
+      overrideManagedVersion: true
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.jakartaservlet.MigrateJakartaServletApiTo6_1_0
+displayName: Migrate Jakarta Servlet applications to Servlet 6.1
+description: Upgrade the dependency, replace removed Servlet method calls that have exact successors, and migrate the Servlet 4.x javax namespace to jakarta.
+tags:
+  - jakarta-servlet
+  - jakarta-ee-11
+  - java
+  - source-migration
+recipeList:
+  - com.huawei.clouds.openrewrite.jakartaservlet.UpgradeJakartaServletApiTo6_1_0
+  - org.openrewrite.java.ChangeMethodName:
+      methodPattern: javax.servlet.http.HttpServletRequest isRequestedSessionIdFromUrl()
+      newMethodName: isRequestedSessionIdFromURL
+  - org.openrewrite.java.ChangeMethodName:
+      methodPattern: javax.servlet.http.HttpServletRequestWrapper isRequestedSessionIdFromUrl()
+      newMethodName: isRequestedSessionIdFromURL
+  - org.openrewrite.java.ChangeMethodName:
+      methodPattern: javax.servlet.http.HttpServletResponse encodeUrl(java.lang.String)
+      newMethodName: encodeURL
+  - org.openrewrite.java.ChangeMethodName:
+      methodPattern: javax.servlet.http.HttpServletResponseWrapper encodeUrl(java.lang.String)
+      newMethodName: encodeURL
+  - org.openrewrite.java.ChangeMethodName:
+      methodPattern: javax.servlet.http.HttpServletResponse encodeRedirectUrl(java.lang.String)
+      newMethodName: encodeRedirectURL
+  - org.openrewrite.java.ChangeMethodName:
+      methodPattern: javax.servlet.http.HttpServletResponseWrapper encodeRedirectUrl(java.lang.String)
+      newMethodName: encodeRedirectURL
+  - org.openrewrite.java.ChangeMethodName:
+      methodPattern: javax.servlet.http.HttpSession getValue(java.lang.String)
+      newMethodName: getAttribute
+  - org.openrewrite.java.ChangeMethodName:
+      methodPattern: javax.servlet.http.HttpSession getValueNames()
+      newMethodName: getAttributeNames
+  - org.openrewrite.java.ChangeMethodName:
+      methodPattern: javax.servlet.http.HttpSession putValue(java.lang.String, java.lang.Object)
+      newMethodName: setAttribute
+  - org.openrewrite.java.ChangeMethodName:
+      methodPattern: javax.servlet.http.HttpSession removeValue(java.lang.String)
+      newMethodName: removeAttribute
+  - org.openrewrite.java.ChangeMethodName:
+      methodPattern: jakarta.servlet.http.HttpServletRequest isRequestedSessionIdFromUrl()
+      newMethodName: isRequestedSessionIdFromURL
+  - org.openrewrite.java.ChangeMethodName:
+      methodPattern: jakarta.servlet.http.HttpServletRequestWrapper isRequestedSessionIdFromUrl()
+      newMethodName: isRequestedSessionIdFromURL
+  - org.openrewrite.java.ChangeMethodName:
+      methodPattern: jakarta.servlet.http.HttpServletResponse encodeUrl(java.lang.String)
+      newMethodName: encodeURL
+  - org.openrewrite.java.ChangeMethodName:
+      methodPattern: jakarta.servlet.http.HttpServletResponseWrapper encodeUrl(java.lang.String)
+      newMethodName: encodeURL
+  - org.openrewrite.java.ChangeMethodName:
+      methodPattern: jakarta.servlet.http.HttpServletResponse encodeRedirectUrl(java.lang.String)
+      newMethodName: encodeRedirectURL
+  - org.openrewrite.java.ChangeMethodName:
+      methodPattern: jakarta.servlet.http.HttpServletResponseWrapper encodeRedirectUrl(java.lang.String)
+      newMethodName: encodeRedirectURL
+  - org.openrewrite.java.ChangeMethodName:
+      methodPattern: jakarta.servlet.http.HttpSession getValue(java.lang.String)
+      newMethodName: getAttribute
+  - org.openrewrite.java.ChangeMethodName:
+      methodPattern: jakarta.servlet.http.HttpSession getValueNames()
+      newMethodName: getAttributeNames
+  - org.openrewrite.java.ChangeMethodName:
+      methodPattern: jakarta.servlet.http.HttpSession putValue(java.lang.String, java.lang.Object)
+      newMethodName: setAttribute
+  - org.openrewrite.java.ChangeMethodName:
+      methodPattern: jakarta.servlet.http.HttpSession removeValue(java.lang.String)
+      newMethodName: removeAttribute
+  - org.openrewrite.java.ChangePackage:
+      oldPackageName: javax.servlet
+      newPackageName: jakarta.servlet
+      recursive: true
