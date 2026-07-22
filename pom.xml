@@ -81,6 +81,7 @@
     <module>rewrite-diagram-js-minimap-upgrade</module>
     <module>rewrite-jetbrains-annotations-upgrade</module>
     <module>rewrite-gridstack-upgrade</module>
+    <module>rewrite-react-dom-upgrade</module>
   </modules>
 
   <dependencyManagement>

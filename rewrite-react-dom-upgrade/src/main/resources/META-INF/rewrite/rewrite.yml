@@ -1,0 +1,36 @@
+---
+type: specs.openrewrite.org/v1beta/category
+name: com.huawei.clouds.openrewrite.reactdom
+packageName: com.huawei.clouds.openrewrite.reactdom
+description: Upgrade selected react-dom declarations with explicit client root, hydration, test, server rendering, and TypeScript migration guidance.
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.reactdom.UpgradeReactDomTo19_0_0
+displayName: Upgrade React DOM to 19.0.0
+description: Update selected direct react-dom 16.x, 17.x, and 18.x declarations in package.json to 19.0.0 without changing React, aliases, protocols, overrides, lockfiles, source code, or unlisted versions.
+tags:
+  - react-dom
+  - react
+  - javascript
+  - typescript
+  - dependency-upgrade
+preconditions:
+  - org.openrewrite.FindSourceFiles:
+      filePattern: package.json;**/package.json
+recipeList:
+  - org.openrewrite.json.ChangeValue:
+      oldKeyPath: >-
+        $.dependencies['react-dom'][?(@ == '16.6.1' || @ == '^16.6.1' || @ == '~16.6.1' || @ == '=16.6.1' || @ == 'v16.6.1' || @ == '^v16.6.1' || @ == '16.14.0' || @ == '^16.14.0' || @ == '~16.14.0' || @ == '=16.14.0' || @ == 'v16.14.0' || @ == '^v16.14.0' || @ == '17.0.2' || @ == '^17.0.2' || @ == '~17.0.2' || @ == '=17.0.2' || @ == 'v17.0.2' || @ == '^v17.0.2' || @ == '18.2.0' || @ == '^18.2.0' || @ == '~18.2.0' || @ == '=18.2.0' || @ == 'v18.2.0' || @ == '^v18.2.0')]
+      value: '"19.0.0"'
+  - org.openrewrite.json.ChangeValue:
+      oldKeyPath: >-
+        $.devDependencies['react-dom'][?(@ == '16.6.1' || @ == '^16.6.1' || @ == '~16.6.1' || @ == '=16.6.1' || @ == 'v16.6.1' || @ == '^v16.6.1' || @ == '16.14.0' || @ == '^16.14.0' || @ == '~16.14.0' || @ == '=16.14.0' || @ == 'v16.14.0' || @ == '^v16.14.0' || @ == '17.0.2' || @ == '^17.0.2' || @ == '~17.0.2' || @ == '=17.0.2' || @ == 'v17.0.2' || @ == '^v17.0.2' || @ == '18.2.0' || @ == '^18.2.0' || @ == '~18.2.0' || @ == '=18.2.0' || @ == 'v18.2.0' || @ == '^v18.2.0')]
+      value: '"19.0.0"'
+  - org.openrewrite.json.ChangeValue:
+      oldKeyPath: >-
+        $.peerDependencies['react-dom'][?(@ == '16.6.1' || @ == '^16.6.1' || @ == '~16.6.1' || @ == '=16.6.1' || @ == 'v16.6.1' || @ == '^v16.6.1' || @ == '16.14.0' || @ == '^16.14.0' || @ == '~16.14.0' || @ == '=16.14.0' || @ == 'v16.14.0' || @ == '^v16.14.0' || @ == '17.0.2' || @ == '^17.0.2' || @ == '~17.0.2' || @ == '=17.0.2' || @ == 'v17.0.2' || @ == '^v17.0.2' || @ == '18.2.0' || @ == '^18.2.0' || @ == '~18.2.0' || @ == '=18.2.0' || @ == 'v18.2.0' || @ == '^v18.2.0')]
+      value: '"19.0.0"'
+  - org.openrewrite.json.ChangeValue:
+      oldKeyPath: >-
+        $.optionalDependencies['react-dom'][?(@ == '16.6.1' || @ == '^16.6.1' || @ == '~16.6.1' || @ == '=16.6.1' || @ == 'v16.6.1' || @ == '^v16.6.1' || @ == '16.14.0' || @ == '^16.14.0' || @ == '~16.14.0' || @ == '=16.14.0' || @ == 'v16.14.0' || @ == '^v16.14.0' || @ == '17.0.2' || @ == '^17.0.2' || @ == '~17.0.2' || @ == '=17.0.2' || @ == 'v17.0.2' || @ == '^v17.0.2' || @ == '18.2.0' || @ == '^18.2.0' || @ == '~18.2.0' || @ == '=18.2.0' || @ == 'v18.2.0' || @ == '^v18.2.0')]
+      value: '"19.0.0"'
