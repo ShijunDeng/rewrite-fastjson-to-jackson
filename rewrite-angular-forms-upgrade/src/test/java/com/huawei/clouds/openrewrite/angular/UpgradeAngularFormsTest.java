@@ -33,8 +33,8 @@ class UpgradeAngularFormsTest implements RewriteTest {
                 {
                   "dependencies": {"@angular/forms": "20.3.26"},
                   "devDependencies": {"@angular/forms": "20.3.26"},
-                  "peerDependencies": {"@angular/forms": "20.3.26"},
-                  "optionalDependencies": {"@angular/forms": "20.3.26"}
+                  "peerDependencies": {"@angular/forms": ">=13 <20"},
+                  "optionalDependencies": {"@angular/forms": "19.2.0"}
                 }
                 """,
                 spec -> spec.path("package.json")

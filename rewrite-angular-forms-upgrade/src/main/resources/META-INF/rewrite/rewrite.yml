@@ -2,30 +2,31 @@
 type: specs.openrewrite.org/v1beta/category
 name: com.huawei.clouds.openrewrite.angular
 packageName: com.huawei.clouds.openrewrite.angular
-description: Upgrade Angular packages with explicit lockstep and CLI migration guidance.
+description: Upgrade Angular Forms with strict dependency boundaries, deterministic migrations, and precise risk markers.
 ---
 type: specs.openrewrite.org/v1beta/recipe
 name: com.huawei.clouds.openrewrite.angular.UpgradeAngularFormsTo20_3_26
-displayName: Upgrade @angular/forms to 20.3.26
-description: Update direct @angular/forms declarations in package.json to 20.3.26. Other Angular packages and CLI migrations must be handled in lockstep.
+displayName: Upgrade selected @angular/forms declarations to 20.3.26
+description: Strict low-level dependency recipe. It changes only spreadsheet-listed exact, caret, or tilde declarations in direct package.json dependency sections.
 tags:
   - angular
   - angular-forms
-  - nodejs
   - dependency-upgrade
-preconditions:
-  - org.openrewrite.FindSourceFiles:
-      filePattern: package.json;**/package.json
 recipeList:
-  - org.openrewrite.json.ChangeValue:
-      oldKeyPath: $.dependencies['@angular/forms']
-      value: '"20.3.26"'
-  - org.openrewrite.json.ChangeValue:
-      oldKeyPath: $.devDependencies['@angular/forms']
-      value: '"20.3.26"'
-  - org.openrewrite.json.ChangeValue:
-      oldKeyPath: $.peerDependencies['@angular/forms']
-      value: '"20.3.26"'
-  - org.openrewrite.json.ChangeValue:
-      oldKeyPath: $.optionalDependencies['@angular/forms']
-      value: '"20.3.26"'
+  - com.huawei.clouds.openrewrite.angular.UpgradeSelectedAngularFormsDependency
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.angular.MigrateAngularFormsTo20_3_26
+displayName: Migrate Angular Forms applications to 20.3.26
+description: Recommended recipe combining the strict dependency change, deterministic source/template changes, and exact review markers.
+tags:
+  - angular
+  - angular-forms
+  - migration
+recipeList:
+  - com.huawei.clouds.openrewrite.angular.UpgradeSelectedAngularFormsDependency
+  - com.huawei.clouds.openrewrite.angular.MigrateDeterministicAngularFormsSource
+  - com.huawei.clouds.openrewrite.angular.MigrateDeterministicAngularFormsTemplate
+  - com.huawei.clouds.openrewrite.angular.FindAngularFormsJsonRisks
+  - com.huawei.clouds.openrewrite.angular.FindAngularFormsTypeScriptRisks
+  - com.huawei.clouds.openrewrite.angular.FindAngularFormsTemplateRisks

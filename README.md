@@ -27,7 +27,7 @@
 | [`rewrite-angular-animations-upgrade`](rewrite-angular-animations-upgrade) | `com.huawei.clouds.openrewrite.angular.UpgradeAngularAnimationsTo20_3_26` | 将 `@angular/animations` 升级到 20.3.26，并指导迁离 legacy animations API |
 | [`rewrite-angular-router-upgrade`](rewrite-angular-router-upgrade) | `com.huawei.clouds.openrewrite.angular.MigrateAngularRouterTo20_3_26` | 严格升级 Angular Router 20.3.26，自动迁移 current navigation、legacy router options 与 RouterLink，并标记 guard、redirect、lazy、provider、SSR 和模板风险 |
 | [`rewrite-angular-core-upgrade`](rewrite-angular-core-upgrade) | `com.huawei.clouds.openrewrite.angular.MigrateAngularCoreTo20_3_26` | 严格升级 Angular Core 20.3.26，自动迁移 `TestBed.get`/`DOCUMENT`，并标记 package group、工具链、SSR、DI 与渲染风险 |
-| [`rewrite-angular-forms-upgrade`](rewrite-angular-forms-upgrade) | `com.huawei.clouds.openrewrite.angular.UpgradeAngularFormsTo20_3_26` | 将 `@angular/forms` 升级到 20.3.26 |
+| [`rewrite-angular-forms-upgrade`](rewrite-angular-forms-upgrade) | `com.huawei.clouds.openrewrite.angular.MigrateAngularFormsTo20_3_26` | 严格升级 `@angular/forms`，自动迁移可证明安全的 typed-forms/CVA/template 变化并精确标记业务语义风险 |
 | [`rewrite-angular-compiler-upgrade`](rewrite-angular-compiler-upgrade) | `com.huawei.clouds.openrewrite.angular.UpgradeAngularCompilerTo20_3_26` | 将 `@angular/compiler` 升级到 20.3.26 |
 | [`rewrite-jasypt-spring-boot-starter-upgrade`](rewrite-jasypt-spring-boot-starter-upgrade) | `com.huawei.clouds.openrewrite.jasypt.MigrateJasyptSpringBootStarterTo4_0_3` | 严格升级到 4.0.3，自动迁移配置键和自动配置包，并定位 Java/Boot 基线、历史密文、密钥及扩展点风险 |
 | [`rewrite-angular-cdk-upgrade`](rewrite-angular-cdk-upgrade) | `com.huawei.clouds.openrewrite.angular.UpgradeAngularCdkTo20_2_14` | 将 `@angular/cdk` 升级到 20.2.14，且不降级后续版本 |
