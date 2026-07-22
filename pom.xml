@@ -67,6 +67,7 @@
     <module>rewrite-flyway-core-upgrade</module>
     <module>rewrite-date-fns-upgrade</module>
     <module>rewrite-uuid-upgrade</module>
+    <module>rewrite-shedlock-spring-upgrade</module>
   </modules>
 
   <dependencyManagement>
