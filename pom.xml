@@ -38,6 +38,7 @@
     <module>rewrite-guava-upgrade</module>
     <module>rewrite-ngx-translate-core-upgrade</module>
     <module>rewrite-hibernate-validator-upgrade</module>
+    <module>rewrite-echarts-upgrade</module>
   </modules>
 
   <dependencyManagement>

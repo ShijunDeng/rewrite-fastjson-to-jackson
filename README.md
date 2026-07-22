@@ -15,6 +15,7 @@
 | [`rewrite-guava-upgrade`](rewrite-guava-upgrade) | `com.huawei.clouds.openrewrite.guava.UpgradeGuavaTo33_5_0Jre` | 将 Maven/Gradle Guava 依赖升级到 33.5.0-jre |
 | [`rewrite-ngx-translate-core-upgrade`](rewrite-ngx-translate-core-upgrade) | `com.huawei.clouds.openrewrite.ngxtranslate.UpgradeNgxTranslateCoreTo17` | 将 `@ngx-translate/core` 升级到 17.0.0 |
 | [`rewrite-hibernate-validator-upgrade`](rewrite-hibernate-validator-upgrade) | `com.huawei.clouds.openrewrite.hibernatevalidator.UpgradeHibernateValidatorTo8` | 将 Hibernate Validator 升级到 8.0.3.Final 并迁移 Jakarta Validation API |
+| [`rewrite-echarts-upgrade`](rewrite-echarts-upgrade) | `com.huawei.clouds.openrewrite.echarts.UpgradeEChartsTo6_1_0` | 将 ECharts 4.x/5.x 的 `package.json` 声明升级到 6.1.0 |
 
 后续迁移应新增独立模块，例如：
 

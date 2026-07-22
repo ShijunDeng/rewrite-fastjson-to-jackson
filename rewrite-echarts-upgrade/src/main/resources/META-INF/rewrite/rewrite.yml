@@ -1,0 +1,30 @@
+---
+type: specs.openrewrite.org/v1beta/category
+name: com.huawei.clouds.openrewrite.echarts
+packageName: com.huawei.clouds.openrewrite.echarts
+description: Upgrade Apache ECharts applications with explicit compatibility guidance.
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.echarts.UpgradeEChartsTo6_1_0
+displayName: Upgrade Apache ECharts 4.x or 5.x to 6.1.0
+description: Update direct ECharts declarations in package.json to 6.1.0. Lock files must be regenerated with the project's package manager.
+tags:
+  - echarts
+  - nodejs
+  - dependency-upgrade
+preconditions:
+  - org.openrewrite.FindSourceFiles:
+      filePattern: package.json;**/package.json
+recipeList:
+  - org.openrewrite.json.ChangeValue:
+      oldKeyPath: $.dependencies.echarts
+      value: '"6.1.0"'
+  - org.openrewrite.json.ChangeValue:
+      oldKeyPath: $.devDependencies.echarts
+      value: '"6.1.0"'
+  - org.openrewrite.json.ChangeValue:
+      oldKeyPath: $.peerDependencies.echarts
+      value: '"6.1.0"'
+  - org.openrewrite.json.ChangeValue:
+      oldKeyPath: $.optionalDependencies.echarts
+      value: '"6.1.0"'
