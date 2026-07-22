@@ -49,6 +49,7 @@
 | [`rewrite-tweenjs-upgrade`](rewrite-tweenjs-upgrade) | `com.huawei.clouds.openrewrite.tweenjs.UpgradeTweenJsTo23_1_1` | 将表格指定的 @tweenjs/tween.js 19/20 声明升级到 23.1.1，并说明模块与时间轴行为变化 |
 | [`rewrite-mssql-jdbc-upgrade`](rewrite-mssql-jdbc-upgrade) | `com.huawei.clouds.openrewrite.mssqljdbc.UpgradeMssqlJdbcTo13_2_1Jre11` | 将表格指定的 Microsoft SQL Server JDBC 7.x–11.x 依赖升级到 13.2.1.jre11，并说明 Java、TLS、认证和 vector 行为变化 |
 | [`rewrite-react-router-dom-upgrade`](rewrite-react-router-dom-upgrade) | `com.huawei.clouds.openrewrite.reactrouterdom.UpgradeReactRouterDomTo6_30_4` | 将表格指定的 react-router-dom 4.3.1 声明升级到 6.30.4，并说明路由、导航、SSR 与 data router 迁移边界 |
+| [`rewrite-lossless-json-upgrade`](rewrite-lossless-json-upgrade) | `com.huawei.clouds.openrewrite.losslessjson.UpgradeLosslessJsonTo4_0_1` | 将表格指定的 lossless-json 2.0.8/2.0.11 声明升级到 4.0.1，并说明 Node、模块入口、TypeScript 与无损数字语义变化 |
 
 后续迁移应新增独立模块，例如：
 

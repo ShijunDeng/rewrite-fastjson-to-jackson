@@ -1,0 +1,38 @@
+---
+type: specs.openrewrite.org/v1beta/category
+name: com.huawei.clouds.openrewrite.losslessjson
+packageName: com.huawei.clouds.openrewrite.losslessjson
+description: Upgrade lossless-json with explicit module-system, TypeScript, parser, and numeric-semantics migration guidance.
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.losslessjson.UpgradeLosslessJsonTo4_0_1
+displayName: Upgrade lossless-json to 4.0.1
+description: Update the spreadsheet-selected direct lossless-json 2.0.8 and 2.0.11 declarations in package.json to 4.0.1 without changing source code, lockfiles, overrides, non-registry references, or newer versions.
+tags:
+  - lossless-json
+  - json
+  - bigint
+  - javascript
+  - typescript
+  - nodejs
+  - dependency-upgrade
+preconditions:
+  - org.openrewrite.FindSourceFiles:
+      filePattern: package.json;**/package.json
+recipeList:
+  - org.openrewrite.json.ChangeValue:
+      oldKeyPath: >-
+        $.dependencies[?(@['lossless-json'] =~ '^[<>=~^ ]*v?2\.0\.(?:8|11)(?:[-+ <>=~^|].*)?$')]['lossless-json']
+      value: '"4.0.1"'
+  - org.openrewrite.json.ChangeValue:
+      oldKeyPath: >-
+        $.devDependencies[?(@['lossless-json'] =~ '^[<>=~^ ]*v?2\.0\.(?:8|11)(?:[-+ <>=~^|].*)?$')]['lossless-json']
+      value: '"4.0.1"'
+  - org.openrewrite.json.ChangeValue:
+      oldKeyPath: >-
+        $.peerDependencies[?(@['lossless-json'] =~ '^[<>=~^ ]*v?2\.0\.(?:8|11)(?:[-+ <>=~^|].*)?$')]['lossless-json']
+      value: '"4.0.1"'
+  - org.openrewrite.json.ChangeValue:
+      oldKeyPath: >-
+        $.optionalDependencies[?(@['lossless-json'] =~ '^[<>=~^ ]*v?2\.0\.(?:8|11)(?:[-+ <>=~^|].*)?$')]['lossless-json']
+      value: '"4.0.1"'

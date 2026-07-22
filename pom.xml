@@ -72,6 +72,7 @@
     <module>rewrite-tweenjs-upgrade</module>
     <module>rewrite-mssql-jdbc-upgrade</module>
     <module>rewrite-react-router-dom-upgrade</module>
+    <module>rewrite-lossless-json-upgrade</module>
   </modules>
 
   <dependencyManagement>
