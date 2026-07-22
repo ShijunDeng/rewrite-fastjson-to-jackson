@@ -58,6 +58,7 @@
     <module>rewrite-vue-router-upgrade</module>
     <module>rewrite-okhttp-upgrade</module>
     <module>rewrite-d3-upgrade</module>
+    <module>rewrite-vue-i18n-upgrade</module>
   </modules>
 
   <dependencyManagement>

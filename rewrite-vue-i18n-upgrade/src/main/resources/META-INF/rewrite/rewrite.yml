@@ -1,0 +1,35 @@
+---
+type: specs.openrewrite.org/v1beta/category
+name: com.huawei.clouds.openrewrite.vuei18n
+packageName: com.huawei.clouds.openrewrite.vuei18n
+description: Upgrade Vue I18n while preserving unsupported dependency protocols for manual review.
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.vuei18n.UpgradeVueI18nTo11_3_0
+displayName: Upgrade vue-i18n to 11.3.0
+description: Update older direct vue-i18n declarations in package.json to 11.3.0 without downgrading newer versions or replacing workspace, alias, Git, URL, or file references.
+tags:
+  - vue
+  - vue-i18n
+  - nodejs
+  - dependency-upgrade
+preconditions:
+  - org.openrewrite.FindSourceFiles:
+      filePattern: package.json;**/package.json
+recipeList:
+  - org.openrewrite.json.ChangeValue:
+      oldKeyPath: >-
+        $.dependencies[?(@['vue-i18n'] =~ '^[<>=~^ ]*v?(?:[7-9](?:\.|$)|10(?:\.|$)|11\.[0-2](?:\.|$)|11\.3\.0-).*')]['vue-i18n']
+      value: '"11.3.0"'
+  - org.openrewrite.json.ChangeValue:
+      oldKeyPath: >-
+        $.devDependencies[?(@['vue-i18n'] =~ '^[<>=~^ ]*v?(?:[7-9](?:\.|$)|10(?:\.|$)|11\.[0-2](?:\.|$)|11\.3\.0-).*')]['vue-i18n']
+      value: '"11.3.0"'
+  - org.openrewrite.json.ChangeValue:
+      oldKeyPath: >-
+        $.peerDependencies[?(@['vue-i18n'] =~ '^[<>=~^ ]*v?(?:[7-9](?:\.|$)|10(?:\.|$)|11\.[0-2](?:\.|$)|11\.3\.0-).*')]['vue-i18n']
+      value: '"11.3.0"'
+  - org.openrewrite.json.ChangeValue:
+      oldKeyPath: >-
+        $.optionalDependencies[?(@['vue-i18n'] =~ '^[<>=~^ ]*v?(?:[7-9](?:\.|$)|10(?:\.|$)|11\.[0-2](?:\.|$)|11\.3\.0-).*')]['vue-i18n']
+      value: '"11.3.0"'
