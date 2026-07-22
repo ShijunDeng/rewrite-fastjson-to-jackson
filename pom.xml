@@ -109,6 +109,7 @@
     <module>rewrite-prometheus-upgrade</module>
     <module>rewrite-angular-architects-module-federation-upgrade</module>
     <module>rewrite-springfox-swagger2-upgrade</module>
+    <module>rewrite-grafana-upgrade</module>
   </modules>
 
   <dependencyManagement>

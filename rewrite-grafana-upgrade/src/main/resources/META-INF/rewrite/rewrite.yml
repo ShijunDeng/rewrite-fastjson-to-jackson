@@ -1,0 +1,35 @@
+---
+type: specs.openrewrite.org/v1beta/category
+name: com.huawei.clouds.openrewrite.grafana
+packageName: com.huawei.clouds.openrewrite.grafana
+description: Upgrade Grafana deployment images and migrate configuration with alerting, plugin, authentication, data source, dashboard, encryption, and rollback guidance.
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.grafana.UpgradeGrafanaImageTo12_1_1
+displayName: Upgrade Grafana image to 12.1.1
+description: Upgrade only XLSX-listed Grafana image tags 7.4.5, 7.5.16, 8.5.14, and 9.1.7 in YAML deployment owners, Helm repository/tag mappings, and Dockerfile FROM instructions.
+tags:
+  - grafana
+  - observability
+  - docker
+  - kubernetes
+  - strict
+recipeList:
+  - com.huawei.clouds.openrewrite.grafana.UpgradeSelectedGrafanaImage
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.grafana.MigrateGrafanaTo12_1_1
+displayName: Migrate Grafana to 12.1.1
+description: Upgrade selected images, apply deterministic configuration migrations, and mark alerting, Angular plugin, identity, encryption, data source, dashboard, plugin, database, and ownership risks.
+tags:
+  - grafana
+  - observability
+  - alerting
+  - provisioning
+  - migration
+recipeList:
+  - com.huawei.clouds.openrewrite.grafana.UpgradeSelectedGrafanaImage
+  - com.huawei.clouds.openrewrite.grafana.MigrateGrafana12DeterministicConfiguration
+  - com.huawei.clouds.openrewrite.grafana.FindGrafana12YamlRisks
+  - com.huawei.clouds.openrewrite.grafana.FindGrafana12JsonRisks
+  - com.huawei.clouds.openrewrite.grafana.FindGrafana12TextRisks
