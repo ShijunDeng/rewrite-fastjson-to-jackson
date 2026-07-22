@@ -1,0 +1,108 @@
+---
+type: specs.openrewrite.org/v1beta/category
+name: com.huawei.clouds.openrewrite.hibernate
+packageName: com.huawei.clouds.openrewrite.hibernate
+description: Migrate Hibernate ORM dependencies and common source APIs with explicit compatibility guidance.
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.hibernate.UpgradeHibernateCoreDependencyTo7_2_12
+displayName: Upgrade the Hibernate Core dependency to 7.2.12.Final
+description: Move the legacy org.hibernate coordinate to org.hibernate.orm and upgrade hibernate-core declarations without modifying application source.
+tags:
+  - hibernate
+  - hibernate-orm
+  - java
+  - dependency-upgrade
+recipeList:
+  - org.openrewrite.java.dependencies.ChangeDependency:
+      oldGroupId: org.hibernate
+      oldArtifactId: hibernate-core
+      newGroupId: org.hibernate.orm
+      newArtifactId: hibernate-core
+      newVersion: 7.2.12.Final
+      overrideManagedVersion: true
+      changeManagedDependency: true
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: org.hibernate.orm
+      artifactId: hibernate-core
+      newVersion: 7.2.12.Final
+      overrideManagedVersion: true
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.hibernate.MigrateHibernateCoreTo7_2_12
+displayName: Migrate Hibernate Core 5.x applications to 7.2.12.Final
+description: Upgrade Hibernate Core and Jakarta Persistence dependencies, migrate javax.persistence source references, and update common removed Hibernate APIs.
+tags:
+  - hibernate
+  - hibernate-orm
+  - jakarta-persistence
+  - java
+  - source-migration
+recipeList:
+  - com.huawei.clouds.openrewrite.hibernate.UpgradeHibernateCoreDependencyTo7_2_12
+  - org.openrewrite.java.dependencies.ChangeDependency:
+      oldGroupId: javax.persistence
+      oldArtifactId: javax.persistence-api
+      newGroupId: jakarta.persistence
+      newArtifactId: jakarta.persistence-api
+      newVersion: 3.2.0
+      overrideManagedVersion: true
+      changeManagedDependency: true
+  - org.openrewrite.java.ChangePackage:
+      oldPackageName: javax.persistence
+      newPackageName: jakarta.persistence
+      recursive: true
+  - org.openrewrite.java.ChangeType:
+      oldFullyQualifiedTypeName: org.hibernate.type.descriptor.java.JavaTypeDescriptor
+      newFullyQualifiedTypeName: org.hibernate.type.descriptor.java.JavaType
+  - org.openrewrite.java.ChangeType:
+      oldFullyQualifiedTypeName: org.hibernate.type.descriptor.sql.SqlTypeDescriptor
+      newFullyQualifiedTypeName: org.hibernate.type.descriptor.jdbc.JdbcType
+  - org.openrewrite.java.ChangeType:
+      oldFullyQualifiedTypeName: org.hibernate.dialect.MySQL5Dialect
+      newFullyQualifiedTypeName: org.hibernate.dialect.MySQLDialect
+  - org.openrewrite.java.ChangeType:
+      oldFullyQualifiedTypeName: org.hibernate.dialect.MySQL57Dialect
+      newFullyQualifiedTypeName: org.hibernate.dialect.MySQLDialect
+  - org.openrewrite.java.ChangeType:
+      oldFullyQualifiedTypeName: org.hibernate.dialect.MySQL8Dialect
+      newFullyQualifiedTypeName: org.hibernate.dialect.MySQLDialect
+  - org.openrewrite.java.ChangeType:
+      oldFullyQualifiedTypeName: org.hibernate.dialect.PostgreSQL9Dialect
+      newFullyQualifiedTypeName: org.hibernate.dialect.PostgreSQLDialect
+  - org.openrewrite.java.ChangeType:
+      oldFullyQualifiedTypeName: org.hibernate.dialect.PostgreSQL10Dialect
+      newFullyQualifiedTypeName: org.hibernate.dialect.PostgreSQLDialect
+  - org.openrewrite.java.ChangeType:
+      oldFullyQualifiedTypeName: org.hibernate.dialect.Oracle12cDialect
+      newFullyQualifiedTypeName: org.hibernate.dialect.OracleDialect
+  - org.openrewrite.java.ChangeType:
+      oldFullyQualifiedTypeName: org.hibernate.dialect.SQLServer2012Dialect
+      newFullyQualifiedTypeName: org.hibernate.dialect.SQLServerDialect
+  - org.openrewrite.java.ChangeMethodName:
+      methodPattern: org.hibernate.Session save(java.lang.Object)
+      newMethodName: persist
+  - org.openrewrite.java.ChangeMethodName:
+      methodPattern: org.hibernate.Session save(java.lang.String, java.lang.Object)
+      newMethodName: persist
+  - org.openrewrite.java.ChangeMethodName:
+      methodPattern: org.hibernate.Session delete(java.lang.Object)
+      newMethodName: remove
+  - org.openrewrite.java.ChangeMethodName:
+      methodPattern: org.hibernate.Session delete(java.lang.String, java.lang.Object)
+      newMethodName: remove
+  - org.openrewrite.java.ChangeMethodName:
+      methodPattern: org.hibernate.Session get(java.lang.Class, java.io.Serializable)
+      newMethodName: find
+  - org.openrewrite.java.ChangeMethodName:
+      methodPattern: org.hibernate.Session get(java.lang.String, java.io.Serializable)
+      newMethodName: find
+  - org.openrewrite.java.ChangeMethodName:
+      methodPattern: org.hibernate.Session load(java.lang.Class, java.io.Serializable)
+      newMethodName: getReference
+  - org.openrewrite.java.ChangeMethodName:
+      methodPattern: org.hibernate.Session load(java.lang.String, java.io.Serializable)
+      newMethodName: getReference
+  - org.openrewrite.java.ReplaceConstantWithAnotherConstant:
+      existingFullyQualifiedConstantName: org.hibernate.annotations.CascadeType.DELETE
+      fullyQualifiedConstantName: org.hibernate.annotations.CascadeType.REMOVE

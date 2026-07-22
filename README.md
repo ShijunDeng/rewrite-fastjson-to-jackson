@@ -31,6 +31,7 @@
 | [`rewrite-angular-compiler-upgrade`](rewrite-angular-compiler-upgrade) | `com.huawei.clouds.openrewrite.angular.UpgradeAngularCompilerTo20_3_26` | 将 `@angular/compiler` 升级到 20.3.26 |
 | [`rewrite-jasypt-spring-boot-starter-upgrade`](rewrite-jasypt-spring-boot-starter-upgrade) | `com.huawei.clouds.openrewrite.jasypt.UpgradeJasyptSpringBootStarterTo4_0_3` | 将 Jasypt Spring Boot Starter 升级到 4.0.3 |
 | [`rewrite-angular-cdk-upgrade`](rewrite-angular-cdk-upgrade) | `com.huawei.clouds.openrewrite.angular.UpgradeAngularCdkTo20_2_14` | 将 `@angular/cdk` 升级到 20.2.14，且不降级后续版本 |
+| [`rewrite-hibernate-core-upgrade`](rewrite-hibernate-core-upgrade) | `com.huawei.clouds.openrewrite.hibernate.MigrateHibernateCoreTo7_2_12` | 将 Hibernate Core 5.x 依赖和常见源码 API 迁到 7.2.12.Final |
 
 后续迁移应新增独立模块，例如：
 

@@ -54,6 +54,7 @@
     <module>rewrite-angular-compiler-upgrade</module>
     <module>rewrite-jasypt-spring-boot-starter-upgrade</module>
     <module>rewrite-angular-cdk-upgrade</module>
+    <module>rewrite-hibernate-core-upgrade</module>
   </modules>
 
   <dependencyManagement>
