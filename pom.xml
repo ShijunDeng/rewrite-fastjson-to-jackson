@@ -75,6 +75,7 @@
     <module>rewrite-lossless-json-upgrade</module>
     <module>rewrite-shedlock-jdbc-template-upgrade</module>
     <module>rewrite-jakarta-annotation-api-upgrade</module>
+    <module>rewrite-kubernetes-client-java-upgrade</module>
   </modules>
 
   <dependencyManagement>

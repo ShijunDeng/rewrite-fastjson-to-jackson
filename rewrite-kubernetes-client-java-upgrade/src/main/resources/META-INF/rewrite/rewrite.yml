@@ -1,0 +1,198 @@
+---
+type: specs.openrewrite.org/v1beta/category
+name: com.huawei.clouds.openrewrite.kubernetesclientjava
+packageName: com.huawei.clouds.openrewrite.kubernetesclientjava
+description: Upgrade the official Kubernetes Java client while retaining the pre-20 generated SDK interface.
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.kubernetesclientjava.UpgradeKubernetesClientJavaDependencyTo25_0_0_Legacy
+displayName: Upgrade Kubernetes Java client dependency to 25.0.0-legacy
+description: Upgrade explicit io.kubernetes:client-java versions in Maven and Gradle builds to 25.0.0-legacy without overriding an externally managed version or changing companion artifacts and source.
+tags:
+  - kubernetes
+  - kubernetes-client
+  - java
+  - dependency-upgrade
+recipeList:
+  - com.huawei.clouds.openrewrite.kubernetesclientjava.UpgradeKubernetesClientJava11_0_2To25_0_0_Legacy
+  - com.huawei.clouds.openrewrite.kubernetesclientjava.UpgradeKubernetesClientJava16_0_2To25_0_0_Legacy
+  - com.huawei.clouds.openrewrite.kubernetesclientjava.UpgradeKubernetesClientJava16_0_3To25_0_0_Legacy
+  - com.huawei.clouds.openrewrite.kubernetesclientjava.UpgradeKubernetesClientJava17_0_2To25_0_0_Legacy
+  - com.huawei.clouds.openrewrite.kubernetesclientjava.UpgradeKubernetesClientJava18_0_1To25_0_0_Legacy
+  - com.huawei.clouds.openrewrite.kubernetesclientjava.UpgradeManagedKubernetesClientJava11_0_2To25_0_0_Legacy
+  - com.huawei.clouds.openrewrite.kubernetesclientjava.UpgradeManagedKubernetesClientJava16_0_2To25_0_0_Legacy
+  - com.huawei.clouds.openrewrite.kubernetesclientjava.UpgradeManagedKubernetesClientJava16_0_3To25_0_0_Legacy
+  - com.huawei.clouds.openrewrite.kubernetesclientjava.UpgradeManagedKubernetesClientJava17_0_2To25_0_0_Legacy
+  - com.huawei.clouds.openrewrite.kubernetesclientjava.UpgradeManagedKubernetesClientJava18_0_1To25_0_0_Legacy
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.kubernetesclientjava.MigrateKubernetesClientJavaTo25_0_0_Legacy
+displayName: Migrate Kubernetes Java client applications to 25.0.0-legacy
+description: Apply the conservative dependency upgrade; generated Kubernetes models, API calls, watches, authentication, patches, and serialization require application-specific review and are intentionally not rewritten without type and cluster context.
+tags:
+  - kubernetes
+  - kubernetes-client
+  - java
+  - migration
+recipeList:
+  - com.huawei.clouds.openrewrite.kubernetesclientjava.UpgradeKubernetesClientJavaDependencyTo25_0_0_Legacy
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.kubernetesclientjava.UpgradeKubernetesClientJava11_0_2To25_0_0_Legacy
+displayName: Upgrade Kubernetes Java client 11.0.2 to 25.0.0-legacy
+description: Upgrade only io.kubernetes:client-java 11.0.2 declarations to 25.0.0-legacy.
+preconditions:
+  - org.openrewrite.java.dependencies.FindDependency:
+      groupId: io.kubernetes
+      artifactId: client-java
+      version: 11.0.2
+recipeList:
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: io.kubernetes
+      artifactId: client-java
+      newVersion: 25.0.0-legacy
+      overrideManagedVersion: false
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.kubernetesclientjava.UpgradeKubernetesClientJava16_0_2To25_0_0_Legacy
+displayName: Upgrade Kubernetes Java client 16.0.2 to 25.0.0-legacy
+description: Upgrade only io.kubernetes:client-java 16.0.2 declarations to 25.0.0-legacy.
+preconditions:
+  - org.openrewrite.java.dependencies.FindDependency:
+      groupId: io.kubernetes
+      artifactId: client-java
+      version: 16.0.2
+recipeList:
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: io.kubernetes
+      artifactId: client-java
+      newVersion: 25.0.0-legacy
+      overrideManagedVersion: false
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.kubernetesclientjava.UpgradeKubernetesClientJava16_0_3To25_0_0_Legacy
+displayName: Upgrade Kubernetes Java client 16.0.3 to 25.0.0-legacy
+description: Upgrade only io.kubernetes:client-java 16.0.3 declarations to 25.0.0-legacy.
+preconditions:
+  - org.openrewrite.java.dependencies.FindDependency:
+      groupId: io.kubernetes
+      artifactId: client-java
+      version: 16.0.3
+recipeList:
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: io.kubernetes
+      artifactId: client-java
+      newVersion: 25.0.0-legacy
+      overrideManagedVersion: false
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.kubernetesclientjava.UpgradeKubernetesClientJava17_0_2To25_0_0_Legacy
+displayName: Upgrade Kubernetes Java client 17.0.2 to 25.0.0-legacy
+description: Upgrade only io.kubernetes:client-java 17.0.2 declarations to 25.0.0-legacy.
+preconditions:
+  - org.openrewrite.java.dependencies.FindDependency:
+      groupId: io.kubernetes
+      artifactId: client-java
+      version: 17.0.2
+recipeList:
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: io.kubernetes
+      artifactId: client-java
+      newVersion: 25.0.0-legacy
+      overrideManagedVersion: false
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.kubernetesclientjava.UpgradeKubernetesClientJava18_0_1To25_0_0_Legacy
+displayName: Upgrade Kubernetes Java client 18.0.1 to 25.0.0-legacy
+description: Upgrade only io.kubernetes:client-java 18.0.1 declarations to 25.0.0-legacy.
+preconditions:
+  - org.openrewrite.java.dependencies.FindDependency:
+      groupId: io.kubernetes
+      artifactId: client-java
+      version: 18.0.1
+recipeList:
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: io.kubernetes
+      artifactId: client-java
+      newVersion: 25.0.0-legacy
+      overrideManagedVersion: false
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.kubernetesclientjava.UpgradeManagedKubernetesClientJava11_0_2To25_0_0_Legacy
+displayName: Upgrade managed Kubernetes Java client 11.0.2 to 25.0.0-legacy
+description: Upgrade Maven dependencyManagement entries for io.kubernetes:client-java 11.0.2 to 25.0.0-legacy.
+preconditions:
+  - org.openrewrite.maven.search.FindManagedDependency:
+      groupId: io.kubernetes
+      artifactId: client-java
+      version: 11.0.2
+recipeList:
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: io.kubernetes
+      artifactId: client-java
+      newVersion: 25.0.0-legacy
+      overrideManagedVersion: false
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.kubernetesclientjava.UpgradeManagedKubernetesClientJava16_0_2To25_0_0_Legacy
+displayName: Upgrade managed Kubernetes Java client 16.0.2 to 25.0.0-legacy
+description: Upgrade Maven dependencyManagement entries for io.kubernetes:client-java 16.0.2 to 25.0.0-legacy.
+preconditions:
+  - org.openrewrite.maven.search.FindManagedDependency:
+      groupId: io.kubernetes
+      artifactId: client-java
+      version: 16.0.2
+recipeList:
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: io.kubernetes
+      artifactId: client-java
+      newVersion: 25.0.0-legacy
+      overrideManagedVersion: false
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.kubernetesclientjava.UpgradeManagedKubernetesClientJava16_0_3To25_0_0_Legacy
+displayName: Upgrade managed Kubernetes Java client 16.0.3 to 25.0.0-legacy
+description: Upgrade Maven dependencyManagement entries for io.kubernetes:client-java 16.0.3 to 25.0.0-legacy.
+preconditions:
+  - org.openrewrite.maven.search.FindManagedDependency:
+      groupId: io.kubernetes
+      artifactId: client-java
+      version: 16.0.3
+recipeList:
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: io.kubernetes
+      artifactId: client-java
+      newVersion: 25.0.0-legacy
+      overrideManagedVersion: false
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.kubernetesclientjava.UpgradeManagedKubernetesClientJava17_0_2To25_0_0_Legacy
+displayName: Upgrade managed Kubernetes Java client 17.0.2 to 25.0.0-legacy
+description: Upgrade Maven dependencyManagement entries for io.kubernetes:client-java 17.0.2 to 25.0.0-legacy.
+preconditions:
+  - org.openrewrite.maven.search.FindManagedDependency:
+      groupId: io.kubernetes
+      artifactId: client-java
+      version: 17.0.2
+recipeList:
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: io.kubernetes
+      artifactId: client-java
+      newVersion: 25.0.0-legacy
+      overrideManagedVersion: false
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.kubernetesclientjava.UpgradeManagedKubernetesClientJava18_0_1To25_0_0_Legacy
+displayName: Upgrade managed Kubernetes Java client 18.0.1 to 25.0.0-legacy
+description: Upgrade Maven dependencyManagement entries for io.kubernetes:client-java 18.0.1 to 25.0.0-legacy.
+preconditions:
+  - org.openrewrite.maven.search.FindManagedDependency:
+      groupId: io.kubernetes
+      artifactId: client-java
+      version: 18.0.1
+recipeList:
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: io.kubernetes
+      artifactId: client-java
+      newVersion: 25.0.0-legacy
+      overrideManagedVersion: false
