@@ -51,6 +51,7 @@
     <module>rewrite-angular-router-upgrade</module>
     <module>rewrite-angular-core-upgrade</module>
     <module>rewrite-angular-forms-upgrade</module>
+    <module>rewrite-angular-compiler-upgrade</module>
   </modules>
 
   <dependencyManagement>

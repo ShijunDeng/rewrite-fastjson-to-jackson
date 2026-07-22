@@ -28,6 +28,7 @@
 | [`rewrite-angular-router-upgrade`](rewrite-angular-router-upgrade) | `com.huawei.clouds.openrewrite.angular.UpgradeAngularRouterTo20_3_26` | 将 `@angular/router` 升级到 20.3.26 |
 | [`rewrite-angular-core-upgrade`](rewrite-angular-core-upgrade) | `com.huawei.clouds.openrewrite.angular.UpgradeAngularCoreTo20_3_26` | 将 `@angular/core` 升级到 20.3.26 |
 | [`rewrite-angular-forms-upgrade`](rewrite-angular-forms-upgrade) | `com.huawei.clouds.openrewrite.angular.UpgradeAngularFormsTo20_3_26` | 将 `@angular/forms` 升级到 20.3.26 |
+| [`rewrite-angular-compiler-upgrade`](rewrite-angular-compiler-upgrade) | `com.huawei.clouds.openrewrite.angular.UpgradeAngularCompilerTo20_3_26` | 将 `@angular/compiler` 升级到 20.3.26 |
 
 后续迁移应新增独立模块，例如：
 
