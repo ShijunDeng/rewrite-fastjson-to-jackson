@@ -1,69 +1,106 @@
-# ShedLock Spring 升级到 7.2.1
+# ShedLock Spring 7.2.1 migration
 
-本模块对应 `开源软件升级.xlsx` 中的 `net.javacrumbs.shedlock:shedlock-spring`，覆盖 `2.2.0`、`4.29.0`、`4.33.0`、`4.41.0`、`4.44.0` 到 `7.2.1` 的升级。
-
-仅升级构建声明的窄配方：
-
-```text
-com.huawei.clouds.openrewrite.shedlockspring.UpgradeShedLockSpringDependencyTo7_2_1
-```
-
-同时处理 ShedLock 2.x 注解包名和字符串 duration 属性的组合配方：
+本模块迁移 `net.javacrumbs.shedlock:shedlock-spring`。推荐配方同时执行严格依赖升级、能够证明语义等价的注解迁移，以及构建、Spring AOP、provider 和运行时风险扫描：
 
 ```text
 com.huawei.clouds.openrewrite.shedlockspring.MigrateShedLockSpringTo7_2_1
 ```
 
-## 自动处理范围
+只修改依赖、不扫描兼容性时使用：
 
-- 将 Maven/Gradle 中显式的 `net.javacrumbs.shedlock:shedlock-spring` 版本升级到 `7.2.1`，包括 Maven 属性与 dependencyManagement；不会降级高于目标的版本。
-- 将 2.x 的 `net.javacrumbs.shedlock.core.SchedulerLock` 改为 `net.javacrumbs.shedlock.spring.annotation.SchedulerLock`。
-- 将迁移后注解中的 `lockAtMostForString`、`lockAtLeastForString` 分别改为 `lockAtMostFor`、`lockAtLeastFor`。
-- 不升级 `shedlock-core` 或任何 provider。表格为这些 artifact 分别安排了模块；同一应用必须最终把 Spring、core、provider、BOM 对齐到同一 ShedLock 版本。
-- 不给 Spring Boot/BOM 管理的无版本依赖添加版本，不重写 lock table，不调整定时表达式、锁名或 duration 值。
-- Gradle Kotlin DSL 在没有 Gradle Tooling Model 的单文件扫描中会安全保持不变；应在真实 Gradle 工程中执行 recipe。
+```text
+com.huawei.clouds.openrewrite.shedlockspring.UpgradeShedLockSpringDependencyTo7_2_1
+```
 
-## 不兼容修改点
+只迁移旧注解契约时使用：
 
-| 版本跨度内的变化 | 影响与迁移建议 |
-| --- | --- |
-| Java/Spring 基线跨越三代 | 官方 POM 显示 4.44.0 为 JDK 8 + Spring 5.3，5.0.0 起为 JDK 17 + Spring 6，7.2.1 为 JDK 17 + Spring 7.0.1。目标通常意味着 Spring Framework 7 / Spring Boot 4；先统一 JDK、Spring、Jakarta、测试框架和容器基线 |
-| `SchedulerLock` 从 core 移到 Spring annotation 包 | 组合配方会迁移 import；反射字符串、XML、文档片段和自建 annotation wrapper 仍需人工搜索 |
-| 2.x 数字毫秒属性被字符串 duration 取代 | `lockAtMostForString`/`lockAtLeastForString` 可安全改名；但旧 `lockAtMostFor = 120000` 这类数值必须人工改为 `"120000"`、`"2m"` 或 `"PT2M"`。配方不会猜测单位或改写表达式 |
-| `@EnableSchedulerLock.mode` 在 3.0 改义 | 2.x 的 `mode` 是 ShedLock `InterceptMode`，新版 `mode` 是 Spring `AdviceMode`，ShedLock 选择项改名为 `interceptMode`。检查旧 `PROXY_SCHEDULER` 配置，优先使用默认 `PROXY_METHOD` |
-| `PROXY_SCHEDULER` 在目标版本标记 for-removal | 该模式依赖包装 TaskScheduler，并在 Spring 6.2+ 需要反射兼容；改为 method proxy 后，直接方法调用也会尝试加锁，AOP self-invocation/final/private 方法与 advisor 顺序要回归 |
-| 6.0 支持多个 `LockProvider` | 有多个 provider bean 时，应在方法、类或 package 上用 `@LockProviderToUse("beanName")` 消歧；未选择时可能在任务执行时失败，而不是仅靠启动检查发现 |
-| 锁不会等待 | 另一个节点持锁时，任务会被跳过而非排队。升级不能改变业务对此语义的依赖；为跳过、异常、长任务和重试补充指标与告警 |
-| `lockAtMostFor` 是故障上限，不是任务超时 | 若任务超过该值，其他节点可能再次执行同一任务。按最坏运行时长设置，并验证节点时钟同步；不要用较小值代替超时/取消机制 |
-| `lockAtLeastFor` 依赖时钟 | 它适合短任务限频，但节点时钟偏差可能造成重复。JDBC provider 优先评估 `usingDbTime()`，其他 provider 按官方能力验证 |
-| `LockConfiguration` 构造器变化 | 2.x 使用 name + absolute `Instant`，目标使用 `createdAt, name, Duration, Duration`；手写 `LockProvider`、`LockingTaskExecutor` 与动态任务必须重新编译并明确创建时间 |
-| `SimpleLock` 增加 extend 生命周期 | `extend` 返回新的 `Optional<SimpleLock>`，调用后旧 lock 不能再 unlock/extend；自定义 provider 和 wrapper 要实现或明确不支持 extension，并验证异常路径只释放一次 |
-| `KeepAliveLockProvider` 有额外线程与下限 | 它在 `lockAtMostFor` 中点续租，最小支持 30 秒；调度器关闭、续租失败、网络分区和应用停机必须专项测试，不能把它当作无限租约 |
-| duration 支持多种格式 | 注解可接受 `10m`、毫秒字符串和 ISO-8601，也可能包含 Spring placeholder/SpEL。统一格式并验证解析失败、负值、atLeast > atMost 与缺省值 |
-| Spring AOP 边界仍然存在 | final/private 方法、同类自调用、非 Spring 实例、异常传播和 advisor 顺序都会影响加锁；在方法内使用 `LockAssert.assertLocked()` 可帮助测试代理确实生效 |
-| JPMS/反射边界 | 7.x JAR 提供 module descriptor；module-path、native image、AOT 与强封装环境应检查 Spring AOP 反射和包开放配置 |
+```text
+com.huawei.clouds.openrewrite.shedlockspring.MigrateLegacySchedulerLockAnnotations
+```
 
-目标版本源码/POM依据：ShedLock 官方 [`shedlock-parent-7.2.1`](https://github.com/lukas-krecan/ShedLock/tree/shedlock-parent-7.2.1)、[7.2.1 parent POM](https://github.com/lukas-krecan/ShedLock/blob/shedlock-parent-7.2.1/pom.xml)、[Spring module POM](https://github.com/lukas-krecan/ShedLock/blob/shedlock-parent-7.2.1/spring/shedlock-spring/pom.xml)、[官方 README](https://github.com/lukas-krecan/ShedLock/blob/shedlock-parent-7.2.1/README.md) 和 [RELEASES](https://github.com/lukas-krecan/ShedLock/blob/shedlock-parent-7.2.1/RELEASES.md)。
+## 精确版本边界
 
-## Provider 与存储验证
+目标版本为 `7.2.1`。`开源软件升级.xlsx` 对该 artifact 实际给出且仅给出以下五个源版本：
 
-`shedlock-spring` 只提供 Spring 集成，锁的原子性由 provider 和存储决定。升级前盘点实际 provider，保持所有 ShedLock artifact 版本一致，并分别验证：
+```text
+2.2.0, 4.29.0, 4.33.0, 4.41.0, 4.44.0
+```
 
-- JDBC 的 schema/table/column 大小写、时区、事务隔离、`usingDbTime()`、主键和数据库故障切换；不要手工删除已缓存的锁记录；
-- Redis/Mongo/Elasticsearch 等 provider 的驱动大版本、序列化、TTL、主从切换和网络分区语义；
-- 锁表数据从旧版本升级前后的可读性，任务运行中滚动发布时的新旧节点互操作；
-- 应用 shutdown、任务异常、进程被杀、租约到期、延长失败和重复执行的幂等性。
+配方不使用 `2.x`、`4.x` 或 `latest.release` 之类范围，也不会猜测任何未列出的版本。因此 `4.5.0`、`4.42.0`、`6.3.1`、动态 Gradle 表达式、外部 BOM 管理以及已经为 `7.2.1`/更高版本的声明都不会被依赖配方改写。
 
-配方不会修改数据库或锁记录，也不会自动添加 provider，这是为了避免把依赖升级变成不可逆的运行状态变更。
+## 不兼容处理规范
 
-## 真实仓库测试来源
+`AUTO` 表示有官方源码或旧实现证明语义等价，配方自动修改；`MARK` 表示保留业务意图并在准确 AST/配置位置生成 `SearchResult`；`NO-OP` 表示刻意保持不变。
 
-- [eugenp/tutorials](https://github.com/eugenp/tutorials/blob/245cf4c3d0f1b20b5e5748f6bbfe4d03c688f481/spring-boot-modules/spring-boot-libraries/pom.xml) 的 Maven `shedlock.version` 属性，同时被 spring 与 JDBC provider 使用；测试确认共享属性升级的实际影响。
-- [wells2333/sg-exam](https://github.com/wells2333/sg-exam/blob/4a7215ace7f56555bc683e4a4c0188f86986fd9f/sg-job/build.gradle) 的 Groovy Gradle 字符串声明和 core/spring/provider 三件套。
-- [spinnaker/spinnaker](https://github.com/spinnaker/spinnaker/blob/ab45221c7fea10e567d009a63980f18a154118e5/orca/orca-sql/orca-sql.gradle) 的 parenthesized Gradle 声明及 4.44.0 spring/provider 组合。
-- [epam/cloud-pipeline](https://github.com/epam/cloud-pipeline/blob/17daf5f68ba893b067c6846a5dfaba93f8f964bc/api/src/main/java/com/epam/pipeline/manager/access/AccessCodeCleaner.java) 的旧 core 注解 import 与 `lockAtMostForString`，用于验证源码迁移。
+| 迁移点 | 状态 | 行为 | 主要测试 |
+| --- | --- | --- | --- |
+| Maven direct、`dependencyManagement`、profile 中的五个精确版本 | AUTO | 只把 `shedlock-spring` 改为 `7.2.1` | 五版本参数化、managed/profile |
+| 只供 Spring artifact 使用的本地 Maven property | AUTO | 将属性值改为 `7.2.1` | exclusive property |
+| property 同时管理 Spring、core 或 provider | AUTO | 只把 Spring dependency 隔离为字面量 `7.2.1`，共享属性和其他 artifact 不动 | shared property |
+| Maven 无版本、外部 BOM 管理 | NO-OP/MARK | 严格配方不局部覆盖；推荐配方提示核对实际解析版本 | ShedLock BOM fixture |
+| Gradle Groovy/Kotlin 的直接安全字面量或 Groovy map | AUTO | 只改 dependency DSL 的精确坐标；注释、说明字符串和变量插值不动 | Spinnaker、map、Kotlin tooling |
+| 未列出、目标或更高版本；相似 group/artifact | NO-OP | 不扩大表格范围、不降级、不误改 | Baeldung、sg-exam、strict no-op |
+| `net.javacrumbs.shedlock.core.SchedulerLock` | AUTO | 改为 `net.javacrumbs.shedlock.spring.annotation.SchedulerLock` | EPAM、Toxiproxy |
+| `lockAtMostForString`/`lockAtLeastForString` | AUTO | 改名为 7.2.1 的 `lockAtMostFor`/`lockAtLeastFor` | ISO、placeholder fixture |
+| 旧注解的非负数字毫秒 literal | AUTO | 转成无单位字符串，例如 `120000` → `"120000"`；目标 converter 对无单位数字仍按毫秒处理 | numeric before→after |
+| 旧注解同时设置数字和 String duration | AUTO | 按旧 extractor 的优先级保留数字；负数表示 fallback，改用对应 String 值 | precedence/fallback |
+| 旧注解的数字常量或表达式 | MARK | 不猜常量值/单位，保留表达式并提示人工转成 duration String | non-literal marker |
+| ShedLock 2.x `@EnableSchedulerLock(mode = InterceptMode.PROXY_*)` | AUTO | 属性名改为 `interceptMode`；Spring `AdviceMode mode` 保持不变 | legacy mode、AdviceMode no-op |
+| Java < 17、Spring Framework < 6.2、Spring Boot < 3.4 | MARK | 标在 Maven/Gradle 的具体版本声明上 | Java/Spring/Boot fixtures |
+| ShedLock artifact 与 core/provider/BOM 未对齐 | MARK | 不越权升级其他表格模块，提示统一到兼容的 `7.2.1` line | Maven/Gradle alignment |
+| ShedLock 相关源码/构建仍使用 framework-facing `javax.*` | MARK | 提示按 Spring 6.2/7 平台迁移 Jakarta API | SIGLUS import、Maven/Gradle dependency |
+| 旧 ShedLock Spring XML | MARK | 3.x 起已不支持，不自动生成可能改变 bean 生命周期的 Java config | XML marker |
+| 默认或显式 `PROXY_METHOD` | MARK | 提示直接调用也加锁，并检查 proxyability、self-invocation 与 advisor order | default mode |
+| `PROXY_SCHEDULER` | MARK | 7.2.1 已标记 for-removal，且 Spring 6.2 依赖反射 workaround | SIGLUS marker |
+| `@SchedulerLock` 位于 private/static/final 方法或 final class | MARK | 标在方法边界；不擅自改变可见性、继承或 bean API | proxy boundary |
+| 同类 self-invocation 调用被锁方法 | MARK | 标在调用点；要求通过代理协作者或重划锁边界 | self invocation |
+| 多个 `@Bean LockProvider` 且没有 `@Primary` | MARK | 标记 provider bean；无 `@LockProviderToUse` 的任务也标记 | multiple providers |
+| `@LockProviderToUse` | MARK | 核对 bean name 以及 method/type/package 继承路径；官方实现是在执行时解析 | provider selection |
+| lock name/duration 中的 placeholder 或 SpEL | MARK | 核对参数名、bean access、解析失败、负值和唯一性 | dynamic name/duration |
+| 显式 `lockAtMostFor` | MARK | 强调它是进程故障安全上限而非任务 timeout，必须大于最坏运行时长 | at-most marker |
+| 显式 `lockAtLeastFor` | MARK | 核对 `atLeast <= atMost`、节点时钟和短任务 skip 语义 | at-least/invalid marker |
+| `KeepAliveLockProvider` | MARK | 核对 30 秒下限、provider extension、续租线程、shutdown 和续租失败 | SIGLUS/constructor marker |
+| reactive return 或锁内调用 `subscribe()` | MARK | 同步 proxy 可能只覆盖 publisher 创建/订阅发起，而非异步完成 | PagoPA fixture |
+| `@Async`/`@Transactional`/`@Retryable` 与锁共用 join point | MARK | 核对 advisor 顺序、线程切换与异常传播 | multi-advice marker |
+| virtual-thread executor/config | MARK | 核对实际工作完成边界，以及 `LockAssert`/`LockExtender` 的 ThreadLocal 生命周期 | Java/properties/YAML marker |
+| primitive non-void 的锁方法 | MARK | 7.2.1 method proxy 明确拒绝该返回类型 | primitive return |
+| 直接 `LockProvider.lock`、自定义 provider | MARK | 区分 empty（未取得锁）与 `LockException`（provider 异常），核对 retry/catch | provider/error marker |
+| 手写 `LockConfiguration`、`SimpleLock.extend`、`LockExtender` | MARK | 检查新四参数构造、createdAt/clock、替换后的 lock 生命周期和一次性 unlock | manual API marker |
+| `LockAssert.assertLocked()` | NO-OP | 官方仍推荐用于验证 proxy 确实持锁 | stable API no-op |
 
-测试风格参考 OpenRewrite 官方 `UpgradeDependencyVersionTest`、`ChangeTypeTest` 与 `ChangeAnnotationAttributeNameTest`。17 个测试覆盖表格全部版本、Maven direct/property/dependencyManagement、Groovy Gradle 两种写法、Kotlin DSL 无模型安全边界、旧注解包和两个 string 属性、目标/高版本防降级、相邻 artifact/相似坐标 no-op，以及两个 recipe 的 discovery/validation。
+ShedLock 的任务竞争语义没有变成排队：锁已被其他节点持有时，当前执行会被跳过。配方不会重写调度表达式、锁名、数据库记录、provider 或业务重试，因为这些修改无法从静态源码证明等价。
+
+## 固定官方依据
+
+`shedlock-parent-7.2.1` 是 annotated tag；本模块固定使用其 peeled commit [`f79462aa33d864ca7e877dc9494dbb9b7ab05518`](https://github.com/lukas-krecan/ShedLock/tree/f79462aa33d864ca7e877dc9494dbb9b7ab05518)，避免默认分支漂移。
+
+- [根 POM](https://github.com/lukas-krecan/ShedLock/blob/f79462aa33d864ca7e877dc9494dbb9b7ab05518/pom.xml) 固定 JDK 17、Spring 7.0.1；[README compatibility table](https://github.com/lukas-krecan/ShedLock/blob/f79462aa33d864ca7e877dc9494dbb9b7ab05518/README.md) 说明 7.x 支持 Java 17、Spring 7.0/6.2 和 Boot 4.x/3.5/3.4。
+- [`EnableSchedulerLock`](https://github.com/lukas-krecan/ShedLock/blob/f79462aa33d864ca7e877dc9494dbb9b7ab05518/spring/shedlock-spring/src/main/java/net/javacrumbs/shedlock/spring/annotation/EnableSchedulerLock.java) 给出默认 `PROXY_METHOD`、`PROXY_SCHEDULER` for-removal、Spring `AdviceMode` 和 `order`。
+- [`SchedulerLock`](https://github.com/lukas-krecan/ShedLock/blob/f79462aa33d864ca7e877dc9494dbb9b7ab05518/spring/shedlock-spring/src/main/java/net/javacrumbs/shedlock/spring/annotation/SchedulerLock.java) 的 duration 属性均为 String。
+- [`StringToDurationConverter`](https://github.com/lukas-krecan/ShedLock/blob/f79462aa33d864ca7e877dc9494dbb9b7ab05518/spring/shedlock-spring/src/main/java/net/javacrumbs/shedlock/spring/aop/StringToDurationConverter.java) 证明无单位数字按毫秒处理，并列出简单单位和 ISO-8601 规则。
+- [`MethodProxyScheduledLockAdvisor`](https://github.com/lukas-krecan/ShedLock/blob/f79462aa33d864ca7e877dc9494dbb9b7ab05518/spring/shedlock-spring/src/main/java/net/javacrumbs/shedlock/spring/aop/MethodProxyScheduledLockAdvisor.java) 是同步 method interceptor，并明确拒绝 primitive non-void return。
+- [`BeanNameSelectingLockProviderSupplier`](https://github.com/lukas-krecan/ShedLock/blob/f79462aa33d864ca7e877dc9494dbb9b7ab05518/spring/shedlock-spring/src/main/java/net/javacrumbs/shedlock/spring/aop/BeanNameSelectingLockProviderSupplier.java) 证明多个 provider 的选择和运行时失败路径。
+- [`KeepAliveLockProvider`](https://github.com/lukas-krecan/ShedLock/blob/f79462aa33d864ca7e877dc9494dbb9b7ab05518/shedlock-core/src/main/java/net/javacrumbs/shedlock/support/KeepAliveLockProvider.java)、[`LockConfiguration`](https://github.com/lukas-krecan/ShedLock/blob/f79462aa33d864ca7e877dc9494dbb9b7ab05518/shedlock-core/src/main/java/net/javacrumbs/shedlock/core/LockConfiguration.java) 和 [`RELEASES.md`](https://github.com/lukas-krecan/ShedLock/blob/f79462aa33d864ca7e877dc9494dbb9b7ab05518/RELEASES.md) 支撑续租、时钟、构造器和 `LockException` 检查。
+
+旧语义固定到 `2.2.0` commit [`49796926f3f637d6a0590fd36579a41e9d2e3bcb`](https://github.com/lukas-krecan/ShedLock/tree/49796926f3f637d6a0590fd36579a41e9d2e3bcb)：旧 [`SchedulerLock`](https://github.com/lukas-krecan/ShedLock/blob/49796926f3f637d6a0590fd36579a41e9d2e3bcb/shedlock-core/src/main/java/net/javacrumbs/shedlock/core/SchedulerLock.java) 明确数字单位为毫秒，旧 [`EnableSchedulerLock`](https://github.com/lukas-krecan/ShedLock/blob/49796926f3f637d6a0590fd36579a41e9d2e3bcb/spring/shedlock-spring/src/main/java/net/javacrumbs/shedlock/spring/annotation/EnableSchedulerLock.java) 的 `mode` 类型是 ShedLock `InterceptMode`。这两项是自动转换的证明边界。
+
+reactive/virtual-thread 标记是依据上述同步 interceptor 与 ThreadLocal API 做出的保守推断，必须由应用集成测试确认；README 不把它描述成 ShedLock 官方承诺的异步事务边界。
+
+## 固定真实仓用例
+
+测试夹具只保留与迁移相关的最小形态，但每个来源都固定到不可漂移的 commit：
+
+| 固定仓库 | 真实形态 | 期望 |
+| --- | --- | --- |
+| [spinnaker/spinnaker `ab45221c`](https://github.com/spinnaker/spinnaker/blob/ab45221c7fea10e567d009a63980f18a154118e5/orca/orca-sql/orca-sql.gradle) | Gradle parenthesized `shedlock-spring:4.44.0` | AUTO → `7.2.1` |
+| [epam/cloud-pipeline `17daf5f6`](https://github.com/epam/cloud-pipeline/blob/17daf5f68ba893b067c6846a5dfaba93f8f964bc/api/src/main/java/com/epam/pipeline/manager/access/AccessCodeCleaner.java) | core package annotation、两个 `*ForString` | AUTO package/attribute |
+| [buckle/toxiproxy-frontend `ddddc3a`](https://github.com/buckle/toxiproxy-frontend/blob/ddddc3a1552dba0c75c85c31ed68bb68070d0605/server/src/main/java/toxiproxy/backup/BackupChecker.java) | 旧注解与 placeholder duration | AUTO，值不改写 |
+| [eugenp/tutorials `245cf4c3`](https://github.com/eugenp/tutorials/blob/245cf4c3d0f1b20b5e5748f6bbfe4d03c688f481/spring-boot-modules/spring-boot-libraries/pom.xml) | `6.3.1` shared Maven property | strict NO-OP |
+| [wells2333/sg-exam `4a7215a`](https://github.com/wells2333/sg-exam/blob/4a7215ace7f56555bc683e4a4c0188f86986fd9f/sg-job/build.gradle) | Gradle `4.5.0` core/spring/provider | strict NO-OP |
+| [SIGLUS/siglus-api `79268df`](https://github.com/SIGLUS/siglus-api/blob/79268df6c77c1d2dd9108b0522e14b53e75ac704/src/main/java/org/siglus/siglusapi/Application.java) | `PROXY_SCHEDULER`、`javax`；[configuration](https://github.com/SIGLUS/siglus-api/blob/79268df6c77c1d2dd9108b0522e14b53e75ac704/src/main/java/org/siglus/siglusapi/config/SchedulerConfiguration.java) 使用 KeepAlive | MARK |
+| [pagopa/pn-address-manager `0ddf0d6`](https://github.com/pagopa/pn-address-manager/blob/0ddf0d65d3e831d05793fc9252d9a49b313695f2/src/main/java/it/pagopa/pn/address/manager/service/PendingRequestService.java) | 锁方法内启动 reactive `subscribe()` | MARK |
+
+OpenRewrite 测试写法固定参考 [`UpgradeDependencyVersionTest` at `decb8db`](https://github.com/openrewrite/rewrite-java-dependencies/blob/decb8dbb2b5b726f8815efc51c85c34a60268bb0/src/test/java/org/openrewrite/java/dependencies/UpgradeDependencyVersionTest.java)、[`ChangeTypeTest`](https://github.com/openrewrite/rewrite/blob/1b1804a5af7692612398fcce034a846b48b5b8cf/rewrite-java-test/src/test/java/org/openrewrite/java/ChangeTypeTest.java) 和 [`ChangeAnnotationAttributeNameTest`](https://github.com/openrewrite/rewrite/blob/1b1804a5af7692612398fcce034a846b48b5b8cf/rewrite-java-test/src/test/java/org/openrewrite/java/ChangeAnnotationAttributeNameTest.java)。
 
 ## 使用与验证
 
@@ -73,10 +110,12 @@ mvn -U org.openrewrite.maven:rewrite-maven-plugin:6.44.0:dryRun \
   -Drewrite.activeRecipes=com.huawei.clouds.openrewrite.shedlockspring.MigrateShedLockSpringTo7_2_1
 ```
 
-审核 patch 后，对齐 core/provider/BOM，迁移 Spring 与数值 duration，运行 JDK 17 编译、Spring context、AOP/self-invocation、多 provider、并发、长任务、失败恢复、滚动发布和真实存储集成测试。
+处理全部 `~~>` 标记并确认 patch 后再改为 `run`。至少执行 Java 17 编译、Spring context/AOP、直接调用与 self-invocation、多 provider、SpEL/duration、任务 skip、长任务越过 at-most、异常、时钟偏差、KeepAlive shutdown、reactive/async/virtual thread 以及真实存储并发测试。
 
 模块自身验证：
 
 ```bash
 mvn -f rewrite-shedlock-spring-upgrade/pom.xml clean verify
 ```
+
+当前 50 个测试覆盖五个精确版本、Maven/Gradle/Kotlin、共享属性（含 XML attribute 引用）与外部管理、官方确定性注解变化、7 个固定真实仓、marker/no-op、配方发现及重复 cycle 幂等检查。

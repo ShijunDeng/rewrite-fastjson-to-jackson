@@ -2,43 +2,42 @@
 type: specs.openrewrite.org/v1beta/category
 name: com.huawei.clouds.openrewrite.shedlockspring
 packageName: com.huawei.clouds.openrewrite.shedlockspring
-description: Upgrade ShedLock Spring dependencies and the SchedulerLock annotation package used by 2.x applications.
----
-type: specs.openrewrite.org/v1beta/recipe
-name: com.huawei.clouds.openrewrite.shedlockspring.UpgradeShedLockSpringDependencyTo7_2_1
-displayName: Upgrade ShedLock Spring dependency to 7.2.1
-description: Upgrade net.javacrumbs.shedlock:shedlock-spring declarations in Maven and Gradle builds to 7.2.1.
-tags:
-  - shedlock
-  - spring
-  - java
-  - dependency-upgrade
-recipeList:
-  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
-      groupId: net.javacrumbs.shedlock
-      artifactId: shedlock-spring
-      newVersion: 7.2.1
-      overrideManagedVersion: true
+description: Strictly migrate ShedLock Spring dependencies, annotations, proxy boundaries and runtime decisions to 7.2.1.
 ---
 type: specs.openrewrite.org/v1beta/recipe
 name: com.huawei.clouds.openrewrite.shedlockspring.MigrateShedLockSpringTo7_2_1
 displayName: Migrate ShedLock Spring applications to 7.2.1
-description: Upgrade ShedLock Spring and move the SchedulerLock annotation exported by ShedLock 2.x to its supported Spring package.
+description: Upgrade only spreadsheet-listed dependency versions, apply deterministic annotation migrations, and mark Java, Spring, provider, AOP, duration, clock and concurrency decisions.
 tags:
   - shedlock
   - spring
   - java
-  - source-migration
+  - distributed-lock
+  - migration
 recipeList:
   - com.huawei.clouds.openrewrite.shedlockspring.UpgradeShedLockSpringDependencyTo7_2_1
+  - com.huawei.clouds.openrewrite.shedlockspring.MigrateLegacySchedulerLockAnnotations
+  - com.huawei.clouds.openrewrite.shedlockspring.FindShedLockSpring7BuildRisks
+  - com.huawei.clouds.openrewrite.shedlockspring.FindShedLockSpring7JavaRisks
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.shedlockspring.MigrateLegacySchedulerLockAnnotations
+displayName: Migrate legacy ShedLock Spring annotation contracts
+description: Preserve legacy millisecond literals and InterceptMode semantics, then move SchedulerLock from the core package to the supported Spring annotation package.
+recipeList:
+  - com.huawei.clouds.openrewrite.shedlockspring.MigrateShedLockSpring7Source
   - org.openrewrite.java.ChangeType:
       oldFullyQualifiedTypeName: net.javacrumbs.shedlock.core.SchedulerLock
       newFullyQualifiedTypeName: net.javacrumbs.shedlock.spring.annotation.SchedulerLock
-  - org.openrewrite.java.ChangeAnnotationAttributeName:
-      annotationType: net.javacrumbs.shedlock.spring.annotation.SchedulerLock
-      oldAttributeName: lockAtMostForString
-      newAttributeName: lockAtMostFor
-  - org.openrewrite.java.ChangeAnnotationAttributeName:
-      annotationType: net.javacrumbs.shedlock.spring.annotation.SchedulerLock
-      oldAttributeName: lockAtLeastForString
-      newAttributeName: lockAtLeastFor
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.shedlockspring.UpgradeShedLockSpringDependencyTo7_2_1
+displayName: Strictly upgrade listed ShedLock Spring versions to 7.2.1
+description: Upgrade only the five source versions explicitly visible in the spreadsheet in local Maven declarations and direct Gradle dependency literals; preserve shared Maven properties and external management.
+tags:
+  - shedlock
+  - spring
+  - dependency-upgrade
+  - strict
+recipeList:
+  - com.huawei.clouds.openrewrite.shedlockspring.UpgradeSelectedShedLockSpringDependency

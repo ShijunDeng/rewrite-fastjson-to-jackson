@@ -44,7 +44,7 @@
 | [`rewrite-flyway-core-upgrade`](rewrite-flyway-core-upgrade) | `com.huawei.clouds.openrewrite.flyway.MigrateFlywayTo11_14_1` | 严格升级 Flyway Core/插件到 11.14.1，补齐确定的数据库模块并迁移配置、Java API、callback 文件；高风险数据库操作仅标记 |
 | [`rewrite-date-fns-upgrade`](rewrite-date-fns-upgrade) | `com.huawei.clouds.openrewrite.datefns.UpgradeDateFnsTo4_1_0` | 将表格指定的 date-fns 2.x 声明升级到 4.1.0，保留未列版本和外部引用 |
 | [`rewrite-uuid-upgrade`](rewrite-uuid-upgrade) | `com.huawei.clouds.openrewrite.uuid.UpgradeUuidTo13_0_2` | 将表格指定的 uuid 8.x–11.x 声明升级到 13.0.2，保留协议引用和未列版本 |
-| [`rewrite-shedlock-spring-upgrade`](rewrite-shedlock-spring-upgrade) | `com.huawei.clouds.openrewrite.shedlockspring.MigrateShedLockSpringTo7_2_1` | 将 ShedLock Spring 升级到 7.2.1，并迁移 2.x 的 SchedulerLock 包名与字符串 duration 属性 |
+| [`rewrite-shedlock-spring-upgrade`](rewrite-shedlock-spring-upgrade) | `com.huawei.clouds.openrewrite.shedlockspring.MigrateShedLockSpringTo7_2_1` | 严格升级 ShedLock Spring 7.2.1，自动迁移旧 SchedulerLock 包名、duration 与 interceptMode，并标记 AOP、provider、异步及构建兼容风险 |
 | [`rewrite-ng-dynamic-forms-core-upgrade`](rewrite-ng-dynamic-forms-core-upgrade) | `com.huawei.clouds.openrewrite.ngdynamicforms.UpgradeNgDynamicFormsCoreTo18_0_0` | 将 @ng-dynamic-forms/core 14.x–17.x 升级到 18.0.0，并说明 Angular/standalone/UI 配套迁移 |
 | [`rewrite-tweenjs-upgrade`](rewrite-tweenjs-upgrade) | `com.huawei.clouds.openrewrite.tweenjs.UpgradeTweenJsTo23_1_1` | 将表格指定的 @tweenjs/tween.js 19/20 声明升级到 23.1.1，并说明模块与时间轴行为变化 |
 | [`rewrite-mssql-jdbc-upgrade`](rewrite-mssql-jdbc-upgrade) | `com.huawei.clouds.openrewrite.mssqljdbc.MigrateMssqlJdbcTo13_2_1Jre11` | 严格升级 SQL Server JDBC 到 13.2.1.jre11，迁移确定性 Entra 认证值，并标记 Java、TLS、超时、加密、vector、原生库和会话风险 |
