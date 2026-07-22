@@ -1,0 +1,36 @@
+---
+type: specs.openrewrite.org/v1beta/category
+name: com.huawei.clouds.openrewrite.reactrouterdom
+packageName: com.huawei.clouds.openrewrite.reactrouterdom
+description: Upgrade React Router DOM dependencies with explicit source-migration guidance.
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.reactrouterdom.UpgradeReactRouterDomTo6_30_4
+displayName: Upgrade React Router DOM to 6.30.4
+description: Update direct react-router-dom 4.3.1 declarations in package.json to 6.30.4 without changing source code, lockfiles, other versions, or non-registry references.
+tags:
+  - react
+  - react-router
+  - react-router-dom
+  - nodejs
+  - dependency-upgrade
+preconditions:
+  - org.openrewrite.FindSourceFiles:
+      filePattern: package.json;**/package.json
+recipeList:
+  - org.openrewrite.json.ChangeValue:
+      oldKeyPath: >-
+        $.dependencies[?(@['react-router-dom'] =~ '^[<>=~^ ]*v?4\.3\.1(?:[-+ <>=~^|].*)?$')]['react-router-dom']
+      value: '"6.30.4"'
+  - org.openrewrite.json.ChangeValue:
+      oldKeyPath: >-
+        $.devDependencies[?(@['react-router-dom'] =~ '^[<>=~^ ]*v?4\.3\.1(?:[-+ <>=~^|].*)?$')]['react-router-dom']
+      value: '"6.30.4"'
+  - org.openrewrite.json.ChangeValue:
+      oldKeyPath: >-
+        $.peerDependencies[?(@['react-router-dom'] =~ '^[<>=~^ ]*v?4\.3\.1(?:[-+ <>=~^|].*)?$')]['react-router-dom']
+      value: '"6.30.4"'
+  - org.openrewrite.json.ChangeValue:
+      oldKeyPath: >-
+        $.optionalDependencies[?(@['react-router-dom'] =~ '^[<>=~^ ]*v?4\.3\.1(?:[-+ <>=~^|].*)?$')]['react-router-dom']
+      value: '"6.30.4"'

@@ -71,6 +71,7 @@
     <module>rewrite-ng-dynamic-forms-core-upgrade</module>
     <module>rewrite-tweenjs-upgrade</module>
     <module>rewrite-mssql-jdbc-upgrade</module>
+    <module>rewrite-react-router-dom-upgrade</module>
   </modules>
 
   <dependencyManagement>
