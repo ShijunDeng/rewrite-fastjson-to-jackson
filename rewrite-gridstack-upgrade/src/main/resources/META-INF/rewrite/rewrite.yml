@@ -2,35 +2,32 @@
 type: specs.openrewrite.org/v1beta/category
 name: com.huawei.clouds.openrewrite.gridstack
 packageName: com.huawei.clouds.openrewrite.gridstack
-description: Upgrade GridStack with explicit API, event, type, drag-and-drop, nested-grid, responsive, CSS, and framework migration guidance.
+description: Upgrade GridStack dependencies and surface source, configuration, template, style, runtime, framework, and serialization decisions.
 ---
 type: specs.openrewrite.org/v1beta/recipe
 name: com.huawei.clouds.openrewrite.gridstack.UpgradeGridStackTo12_3_3
-displayName: Upgrade GridStack to 12.3.3
-description: Update only spreadsheet-selected direct gridstack declarations in package.json to 12.3.3 without changing other versions, ranges, aliases, protocols, overrides, lockfiles, or source code.
+displayName: Upgrade selected GridStack dependencies to 12.3.3
+description: Update only XLSX-visible exact, caret, or tilde single direct gridstack declarations in package.json to 12.3.3.
 tags:
   - gridstack
-  - dashboard
+  - javascript
+  - dependency-upgrade
+recipeList:
+  - com.huawei.clouds.openrewrite.gridstack.UpgradeSelectedGridStackDependency
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.gridstack.MigrateGridStackTo12_3_3
+displayName: Migrate GridStack applications to 12.3.3
+description: Apply the strict dependency upgrade, deterministic import/API/config/template migrations, and precise manifest/source/template/style risk markers.
+tags:
+  - gridstack
   - javascript
   - typescript
-  - dependency-upgrade
-preconditions:
-  - org.openrewrite.FindSourceFiles:
-      filePattern: package.json;**/package.json
+  - migration
 recipeList:
-  - org.openrewrite.json.ChangeValue:
-      oldKeyPath: >-
-        $.dependencies['gridstack'][?(@ == '4.2.6' || @ == '^4.2.6' || @ == '~4.2.6' || @ == '=4.2.6' || @ == '5.1.1' || @ == '^5.1.1' || @ == '~5.1.1' || @ == '=5.1.1' || @ == '6.0.0' || @ == '^6.0.0' || @ == '~6.0.0' || @ == '=6.0.0' || @ == '6.0.3' || @ == '^6.0.3' || @ == '~6.0.3' || @ == '=6.0.3' || @ == '7.1.1' || @ == '^7.1.1' || @ == '~7.1.1' || @ == '=7.1.1')]
-      value: '"12.3.3"'
-  - org.openrewrite.json.ChangeValue:
-      oldKeyPath: >-
-        $.devDependencies['gridstack'][?(@ == '4.2.6' || @ == '^4.2.6' || @ == '~4.2.6' || @ == '=4.2.6' || @ == '5.1.1' || @ == '^5.1.1' || @ == '~5.1.1' || @ == '=5.1.1' || @ == '6.0.0' || @ == '^6.0.0' || @ == '~6.0.0' || @ == '=6.0.0' || @ == '6.0.3' || @ == '^6.0.3' || @ == '~6.0.3' || @ == '=6.0.3' || @ == '7.1.1' || @ == '^7.1.1' || @ == '~7.1.1' || @ == '=7.1.1')]
-      value: '"12.3.3"'
-  - org.openrewrite.json.ChangeValue:
-      oldKeyPath: >-
-        $.peerDependencies['gridstack'][?(@ == '4.2.6' || @ == '^4.2.6' || @ == '~4.2.6' || @ == '=4.2.6' || @ == '5.1.1' || @ == '^5.1.1' || @ == '~5.1.1' || @ == '=5.1.1' || @ == '6.0.0' || @ == '^6.0.0' || @ == '~6.0.0' || @ == '=6.0.0' || @ == '6.0.3' || @ == '^6.0.3' || @ == '~6.0.3' || @ == '=6.0.3' || @ == '7.1.1' || @ == '^7.1.1' || @ == '~7.1.1' || @ == '=7.1.1')]
-      value: '"12.3.3"'
-  - org.openrewrite.json.ChangeValue:
-      oldKeyPath: >-
-        $.optionalDependencies['gridstack'][?(@ == '4.2.6' || @ == '^4.2.6' || @ == '~4.2.6' || @ == '=4.2.6' || @ == '5.1.1' || @ == '^5.1.1' || @ == '~5.1.1' || @ == '=5.1.1' || @ == '6.0.0' || @ == '^6.0.0' || @ == '~6.0.0' || @ == '=6.0.0' || @ == '6.0.3' || @ == '^6.0.3' || @ == '~6.0.3' || @ == '=6.0.3' || @ == '7.1.1' || @ == '^7.1.1' || @ == '~7.1.1' || @ == '=7.1.1')]
-      value: '"12.3.3"'
+  - com.huawei.clouds.openrewrite.gridstack.UpgradeGridStackTo12_3_3
+  - com.huawei.clouds.openrewrite.gridstack.MigrateDeterministicGridStackSource
+  - com.huawei.clouds.openrewrite.gridstack.MigrateDeterministicGridStackTemplates
+  - com.huawei.clouds.openrewrite.gridstack.FindGridStackManifestRisks
+  - com.huawei.clouds.openrewrite.gridstack.FindGridStackJavaScriptRisks
+  - com.huawei.clouds.openrewrite.gridstack.FindGridStackTemplateStyleRisks
