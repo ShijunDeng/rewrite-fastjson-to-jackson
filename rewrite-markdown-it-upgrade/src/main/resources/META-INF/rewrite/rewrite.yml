@@ -1,0 +1,35 @@
+---
+type: specs.openrewrite.org/v1beta/category
+name: com.huawei.clouds.openrewrite.markdownit
+packageName: com.huawei.clouds.openrewrite.markdownit
+description: Upgrade workbook-selected markdown-it declarations with explicit ESM, internal API, parser rule, renderer, plugin, and output compatibility guidance.
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.markdownit.UpgradeMarkdownItTo14_3_0
+displayName: Upgrade markdown-it to 14.3.0
+description: Update only workbook-selected exact, caret, or tilde single direct markdown-it declarations in package.json to 14.3.0.
+tags:
+  - markdown-it
+  - markdown
+  - javascript
+  - nodejs
+  - dependency-upgrade
+recipeList:
+  - com.huawei.clouds.openrewrite.markdownit.UpgradeSelectedMarkdownItDependency
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.markdownit.MigrateMarkdownItTo14_3_0
+displayName: Migrate markdown-it to 14.3.0
+description: Apply the strict dependency upgrade, deterministic public/deep import and rule-name migrations, and precise manifest and source risk markers.
+tags:
+  - markdown-it
+  - markdown
+  - javascript
+  - typescript
+  - nodejs
+  - migration
+recipeList:
+  - com.huawei.clouds.openrewrite.markdownit.UpgradeMarkdownItTo14_3_0
+  - com.huawei.clouds.openrewrite.markdownit.MigrateDeterministicMarkdownItSource
+  - com.huawei.clouds.openrewrite.markdownit.FindMarkdownItManifestRisks
+  - com.huawei.clouds.openrewrite.markdownit.FindMarkdownItSourceRisks

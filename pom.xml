@@ -111,6 +111,7 @@
     <module>rewrite-springfox-swagger2-upgrade</module>
     <module>rewrite-grafana-upgrade</module>
     <module>rewrite-single-spa-angular-upgrade</module>
+    <module>rewrite-markdown-it-upgrade</module>
   </modules>
 
   <dependencyManagement>
