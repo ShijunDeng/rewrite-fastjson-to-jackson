@@ -2,30 +2,32 @@
 type: specs.openrewrite.org/v1beta/category
 name: com.huawei.clouds.openrewrite.angular
 packageName: com.huawei.clouds.openrewrite.angular
-description: Upgrade Angular packages with explicit lockstep and CLI migration guidance.
+description: Upgrade Angular Compiler with strict dependency boundaries, deterministic migrations, and precise risk markers.
 ---
 type: specs.openrewrite.org/v1beta/recipe
 name: com.huawei.clouds.openrewrite.angular.UpgradeAngularCompilerTo20_3_26
-displayName: Upgrade @angular/compiler to 20.3.26
-description: Update direct @angular/compiler declarations in package.json to 20.3.26. Other Angular packages and CLI migrations must be handled in lockstep.
+displayName: Upgrade selected @angular/compiler declarations to 20.3.26
+description: Strict low-level recipe changing only spreadsheet-listed exact, caret, or tilde declarations in direct package.json dependency sections.
 tags:
   - angular
   - angular-compiler
-  - nodejs
   - dependency-upgrade
-preconditions:
-  - org.openrewrite.FindSourceFiles:
-      filePattern: package.json;**/package.json
 recipeList:
-  - org.openrewrite.json.ChangeValue:
-      oldKeyPath: $.dependencies['@angular/compiler']
-      value: '"20.3.26"'
-  - org.openrewrite.json.ChangeValue:
-      oldKeyPath: $.devDependencies['@angular/compiler']
-      value: '"20.3.26"'
-  - org.openrewrite.json.ChangeValue:
-      oldKeyPath: $.peerDependencies['@angular/compiler']
-      value: '"20.3.26"'
-  - org.openrewrite.json.ChangeValue:
-      oldKeyPath: $.optionalDependencies['@angular/compiler']
-      value: '"20.3.26"'
+  - com.huawei.clouds.openrewrite.angular.UpgradeSelectedAngularCompilerDependency
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.angular.MigrateAngularCompilerTo20_3_26
+displayName: Migrate Angular Compiler applications to 20.3.26
+description: Recommended recipe combining the strict dependency change, deterministic JSON/source/template changes, and exact review markers.
+tags:
+  - angular
+  - angular-compiler
+  - migration
+recipeList:
+  - com.huawei.clouds.openrewrite.angular.UpgradeSelectedAngularCompilerDependency
+  - com.huawei.clouds.openrewrite.angular.MigrateDeterministicAngularCompilerJson
+  - com.huawei.clouds.openrewrite.angular.MigrateDeterministicAngularCompilerSource
+  - com.huawei.clouds.openrewrite.angular.MigrateDeterministicAngularCompilerTemplate
+  - com.huawei.clouds.openrewrite.angular.FindAngularCompilerJsonRisks
+  - com.huawei.clouds.openrewrite.angular.FindAngularCompilerTypeScriptRisks
+  - com.huawei.clouds.openrewrite.angular.FindAngularCompilerTemplateRisks

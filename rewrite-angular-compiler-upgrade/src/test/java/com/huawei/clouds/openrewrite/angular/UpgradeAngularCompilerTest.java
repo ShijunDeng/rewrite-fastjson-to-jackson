@@ -33,8 +33,8 @@ class UpgradeAngularCompilerTest implements RewriteTest {
                 {
                   "dependencies": {"@angular/compiler": "20.3.26"},
                   "devDependencies": {"@angular/compiler": "20.3.26"},
-                  "peerDependencies": {"@angular/compiler": "20.3.26"},
-                  "optionalDependencies": {"@angular/compiler": "20.3.26"}
+                  "peerDependencies": {"@angular/compiler": ">=13 <20"},
+                  "optionalDependencies": {"@angular/compiler": "19.2.0"}
                 }
                 """,
                 spec -> spec.path("package.json")
