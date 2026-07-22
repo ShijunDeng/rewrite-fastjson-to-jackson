@@ -98,6 +98,7 @@
     <module>rewrite-bootstrap-upgrade</module>
     <module>rewrite-jetty-proxy-upgrade</module>
     <module>rewrite-icu4j-upgrade</module>
+    <module>rewrite-fs-extra-upgrade</module>
   </modules>
 
   <dependencyManagement>

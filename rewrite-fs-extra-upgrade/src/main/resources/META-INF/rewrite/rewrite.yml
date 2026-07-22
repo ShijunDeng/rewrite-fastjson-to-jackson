@@ -1,0 +1,37 @@
+---
+type: specs.openrewrite.org/v1beta/category
+name: com.huawei.clouds.openrewrite.fsextra
+packageName: com.huawei.clouds.openrewrite.fsextra
+description: Upgrade fs-extra with explicit Node runtime, public-export, module-system, and filesystem-semantics guidance.
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.fsextra.UpgradeFsExtraTo11_3_4
+displayName: Upgrade fs-extra to 11.3.4
+description: Update only exact, caret, or tilde direct fs-extra declarations anchored to the six XLSX-visible source versions in package.json.
+tags:
+  - fs-extra
+  - filesystem
+  - javascript
+  - typescript
+  - nodejs
+  - dependency-upgrade
+recipeList:
+  - com.huawei.clouds.openrewrite.fsextra.UpgradeSelectedFsExtraDependency
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.fsextra.MigrateFsExtraTo11_3_4
+displayName: Migrate fs-extra to 11.3.4
+description: Apply the strict dependency upgrade, route provably compatible named ESM imports, and mark exact manifest, lockfile, module-boundary, option, and filesystem-semantic risks.
+tags:
+  - fs-extra
+  - filesystem
+  - javascript
+  - typescript
+  - nodejs
+  - migration
+recipeList:
+  - com.huawei.clouds.openrewrite.fsextra.UpgradeFsExtraTo11_3_4
+  - com.huawei.clouds.openrewrite.fsextra.MigrateDeterministicFsExtraImports
+  - com.huawei.clouds.openrewrite.fsextra.FindFsExtraManifestRisks
+  - com.huawei.clouds.openrewrite.fsextra.FindFsExtraTextLockRisks
+  - com.huawei.clouds.openrewrite.fsextra.FindFsExtraJavaScriptRisks
