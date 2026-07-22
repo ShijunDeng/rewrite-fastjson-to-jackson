@@ -90,6 +90,7 @@
     <module>rewrite-curator-framework-upgrade</module>
     <module>rewrite-ngx-infinite-scroll-upgrade</module>
     <module>rewrite-jul-to-slf4j-upgrade</module>
+    <module>rewrite-swiper-upgrade</module>
   </modules>
 
   <dependencyManagement>
