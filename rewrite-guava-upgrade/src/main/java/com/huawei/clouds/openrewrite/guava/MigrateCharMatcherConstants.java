@@ -1,7 +1,13 @@
 package com.huawei.clouds.openrewrite.guava;
 
 import org.openrewrite.Recipe;
+import org.openrewrite.ExecutionContext;
+import org.openrewrite.Preconditions;
+import org.openrewrite.SourceFile;
+import org.openrewrite.Tree;
+import org.openrewrite.TreeVisitor;
 import org.openrewrite.java.ChangeStaticFieldToMethod;
+import org.openrewrite.marker.SearchResult;
 
 import java.util.List;
 
@@ -41,6 +47,32 @@ public final class MigrateCharMatcherConstants extends Recipe {
     }
 
     private static Recipe change(String field, String method) {
-        return new ChangeStaticFieldToMethod(CHAR_MATCHER, field, null, null, method);
+        return projectSourcesOnly(new ChangeStaticFieldToMethod(CHAR_MATCHER, field, null, null, method));
+    }
+
+    private static Recipe projectSourcesOnly(Recipe delegate) {
+        return new Recipe() {
+            @Override
+            public String getDisplayName() {
+                return delegate.getDisplayName();
+            }
+
+            @Override
+            public String getDescription() {
+                return delegate.getDescription();
+            }
+
+            @Override
+            public TreeVisitor<?, ExecutionContext> getVisitor() {
+                return Preconditions.check(new TreeVisitor<Tree, ExecutionContext>() {
+                    @Override
+                    public Tree visit(Tree tree, ExecutionContext ctx) {
+                        return tree instanceof SourceFile source &&
+                               UpgradeSelectedGuavaDependency.isProjectPath(source.getSourcePath())
+                                ? SearchResult.found(tree) : tree;
+                    }
+                }, delegate.getVisitor());
+            }
+        };
     }
 }

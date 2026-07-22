@@ -50,6 +50,12 @@ public final class FindGuavaMigrationRisks extends Recipe {
     public JavaIsoVisitor<ExecutionContext> getVisitor() {
         return new JavaIsoVisitor<ExecutionContext>() {
             @Override
+            public J.CompilationUnit visitCompilationUnit(J.CompilationUnit compilationUnit, ExecutionContext ctx) {
+                return UpgradeSelectedGuavaDependency.isProjectPath(compilationUnit.getSourcePath())
+                        ? super.visitCompilationUnit(compilationUnit, ctx) : compilationUnit;
+            }
+
+            @Override
             public J.MethodInvocation visitMethodInvocation(J.MethodInvocation method, ExecutionContext ctx) {
                 J.MethodInvocation m = super.visitMethodInvocation(method, ctx);
                 JavaType.Method methodType = m.getMethodType();
@@ -61,7 +67,7 @@ public final class FindGuavaMigrationRisks extends Recipe {
                     return m;
                 }
                 String message = METHOD_RISKS.get(key(declaringType.getFullyQualifiedName(), methodType.getName()));
-                return message == null ? m : SearchResult.found(m, message);
+                return message == null ? m : mark(m, message);
             }
 
             @Override
@@ -71,14 +77,14 @@ public final class FindGuavaMigrationRisks extends Recipe {
                 String message = type == null || getCursor().firstEnclosing(J.Import.class) != null ||
                                  !id.getSimpleName().equals(type.getClassName())
                         ? null : TYPE_RISKS.get(type.getFullyQualifiedName());
-                return message == null ? id : SearchResult.found(id, message);
+                return message == null ? id : mark(id, message);
             }
 
             @Override
             public J.Literal visitLiteral(J.Literal literal, ExecutionContext ctx) {
                 J.Literal l = super.visitLiteral(literal, ctx);
                 return GWT_RPC_PROPERTY.equals(l.getValue())
-                        ? SearchResult.found(l, "Guava GWT-RPC support was removed; this emergency property no longer restores it")
+                        ? mark(l, "Guava GWT-RPC support was removed; this emergency property no longer restores it")
                         : l;
             }
         };
@@ -90,5 +96,10 @@ public final class FindGuavaMigrationRisks extends Recipe {
 
     private static String key(String owner, String method) {
         return owner + "#" + method;
+    }
+
+    private static <T extends org.openrewrite.Tree> T mark(T tree, String message) {
+        return tree.getMarkers().findAll(SearchResult.class).stream()
+                .anyMatch(result -> message.equals(result.getDescription())) ? tree : SearchResult.found(tree, message);
     }
 }

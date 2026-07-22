@@ -1,7 +1,6 @@
 package com.huawei.clouds.openrewrite.guava;
 
 import org.junit.jupiter.api.Test;
-import org.openrewrite.java.JavaParser;
 import org.openrewrite.test.RecipeSpec;
 import org.openrewrite.test.RewriteTest;
 
@@ -11,7 +10,7 @@ import static org.openrewrite.maven.Assertions.pomXml;
 class MigrateGuavaJavaTest implements RewriteTest {
     @Override
     public void defaults(RecipeSpec spec) {
-        spec.parser(JavaParser.fromJavaVersion().classpath("guava"));
+        spec.parser(Guava21Parser.parser());
     }
 
     @Test
@@ -335,6 +334,34 @@ class MigrateGuavaJavaTest implements RewriteTest {
                             void addCallback(Object future, Object callback) {}
                         }
                         """
+                )
+        );
+    }
+
+    @Test
+    void recommendedRecipeSkipsGeneratedJavaSources() {
+        rewriteRun(
+                spec -> spec.recipe(UpgradeGuavaTest.environment().activateRecipes(
+                        "com.huawei.clouds.openrewrite.guava.MigrateGuavaTo33_5_0Jre")),
+                java(
+                        """
+                        import com.google.common.base.CharMatcher;
+                        class GeneratedMatcher { Object matcher = CharMatcher.WHITESPACE; }
+                        """,
+                        source -> source.path("target/generated-sources/GeneratedMatcher.java")
+                ),
+                java(
+                        """
+                        import com.google.common.util.concurrent.FutureCallback;
+                        import com.google.common.util.concurrent.Futures;
+                        import com.google.common.util.concurrent.ListenableFuture;
+                        class GeneratedCallback {
+                            void call(ListenableFuture<String> future, FutureCallback<String> callback) {
+                                Futures.addCallback(future, callback);
+                            }
+                        }
+                        """,
+                        source -> source.path("build/generated/GeneratedCallback.java")
                 )
         );
     }

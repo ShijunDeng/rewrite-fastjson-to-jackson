@@ -1,7 +1,6 @@
 package com.huawei.clouds.openrewrite.guava;
 
 import org.junit.jupiter.api.Test;
-import org.openrewrite.java.JavaParser;
 import org.openrewrite.test.RecipeSpec;
 import org.openrewrite.test.RewriteTest;
 
@@ -11,12 +10,13 @@ class FindGuavaMigrationRisksTest implements RewriteTest {
     @Override
     public void defaults(RecipeSpec spec) {
         spec.recipe(new FindGuavaMigrationRisks())
-                .parser(JavaParser.fromJavaVersion().classpath("guava"));
+                .parser(Guava21Parser.parser());
     }
 
     @Test
     void marksRemovedAndBehaviorSensitiveMethodsPrecisely() {
         rewriteRun(
+                spec -> spec.cycles(2).expectedCyclesThatMakeChanges(1),
                 java(
                         """
                         import com.google.common.base.Predicates;
@@ -59,7 +59,20 @@ class FindGuavaMigrationRisksTest implements RewriteTest {
     }
 
     @Test
+    void skipsGeneratedRiskCandidates() {
+        rewriteRun(java(
+                """
+                import com.google.common.io.Files;
+                class GeneratedTempDirectory { Object create() { return Files.createTempDir(); } }
+                """,
+                source -> source.path("target/generated-sources/GeneratedTempDirectory.java")
+        ));
+    }
+
+    @Test
     void marksRemovedCheckedFutureType() {
+        // CheckedFuture usage shape from SDNHub_Opendaylight_Tutorial at 1b2bf534080df9c88925da613c85943c4b8d03c3:
+        // https://github.com/sdnhub/SDNHub_Opendaylight_Tutorial/blob/1b2bf534080df9c88925da613c85943c4b8d03c3/commons/utils/src/main/java/org/sdnhub/odl/tutorial/utils/GenericTransactionUtils.java
         rewriteRun(
                 java(
                         """
@@ -155,5 +168,49 @@ class FindGuavaMigrationRisksTest implements RewriteTest {
                         """
                 )
         );
+    }
+
+    @Test
+    void marksConveyalCreateTempDirCallAtExactInvocation() {
+        // Reduced from conveyal/gtfs-editor at ba136fcb7f41758ba95e8c5d5d8847ff5b8f5f99:
+        // https://github.com/conveyal/gtfs-editor/blob/ba136fcb7f41758ba95e8c5d5d8847ff5b8f5f99/app/jobs/GisExport.java#L49-L52
+        rewriteRun(java(
+                """
+                import com.google.common.io.Files;
+                import java.io.File;
+                class GisExport {
+                    File outputDirectory() {
+                        return Files.createTempDir();
+                    }
+                }
+                """,
+                """
+                import com.google.common.io.Files;
+                import java.io.File;
+                class GisExport {
+                    File outputDirectory() {
+                        return /*~~(Files.createTempDir is deprecated and changed security/error behavior; migrate with explicit IOException and permissions handling)~~>*/Files.createTempDir();
+                    }
+                }
+                """
+        ));
+    }
+
+    @Test
+    void leavesArchUnitSameNamedNestedPredicatesUnmarked() {
+        // Same-name negative shape from TNG/ArchUnit at e5faf1c0f2643be5d47d7d2e62a1b32e3169b14b:
+        // https://github.com/TNG/ArchUnit/blob/e5faf1c0f2643be5d47d7d2e62a1b32e3169b14b/archunit/src/main/java/com/tngtech/archunit/lang/syntax/ClassesThatInternal.java#L243-L273
+        rewriteRun(java("""
+                class JavaClass {
+                    static class Predicates {
+                        static Object assignableFrom(Class<?> type) { return type; }
+                    }
+                }
+                class ClassesThatInternal {
+                    Object areAssignableFrom(Class<?> type) {
+                        return JavaClass.Predicates.assignableFrom(type);
+                    }
+                }
+                """));
     }
 }
