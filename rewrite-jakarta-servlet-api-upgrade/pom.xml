@@ -11,16 +11,41 @@
   </parent>
   <artifactId>rewrite-jakarta-servlet-api-upgrade</artifactId>
   <name>OpenRewrite Jakarta Servlet API Upgrade</name>
-  <description>Configuration-based OpenRewrite recipes for migrating Jakarta Servlet API 4.x-6.0 to 6.1.0.</description>
+  <description>Strict OpenRewrite recipes for migrating selected Jakarta Servlet API versions to Servlet 6.1.</description>
   <url>https://github.com/ShijunDeng/openrewrite-migration-recipes/tree/main/rewrite-jakarta-servlet-api-upgrade</url>
   <dependencies>
     <dependency>
-      <groupId>org.openrewrite.recipe</groupId>
-      <artifactId>rewrite-java-dependencies</artifactId>
+      <groupId>org.openrewrite</groupId>
+      <artifactId>rewrite-java</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.openrewrite</groupId>
+      <artifactId>rewrite-maven</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.openrewrite</groupId>
+      <artifactId>rewrite-xml</artifactId>
+      <version>${rewrite.version}</version>
     </dependency>
     <dependency>
       <groupId>org.openrewrite</groupId>
       <artifactId>rewrite-gradle</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.openrewrite.recipe</groupId>
+      <artifactId>rewrite-java-dependencies</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.openrewrite.gradle.tooling</groupId>
+      <artifactId>model</artifactId>
+      <version>${rewrite.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.gradle</groupId>
+      <artifactId>gradle-tooling-api</artifactId>
+      <version>7.3-20210825160000+0000</version>
       <scope>test</scope>
     </dependency>
     <dependency>
