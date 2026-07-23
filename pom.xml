@@ -158,6 +158,7 @@
     <module>rewrite-netty-codec-http-upgrade</module>
     <module>rewrite-netty-codec-http2-upgrade</module>
     <module>rewrite-spring-webflux-upgrade</module>
+    <module>rewrite-bcpkix-jdk18on-upgrade</module>
   </modules>
 
   <dependencyManagement>

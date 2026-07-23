@@ -1,0 +1,68 @@
+---
+type: specs.openrewrite.org/v1beta/category
+name: com.huawei.clouds.openrewrite.bcpkixjdk18on
+packageName: com.huawei.clouds.openrewrite.bcpkixjdk18on
+description: Strictly upgrade bcpkix-jdk18on to 1.81.1, automate proven PKIX API migrations, and locate compatibility decisions.
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.bcpkixjdk18on.UpgradeBcPkixJdk18onTo1_81_1
+displayName: Upgrade selected bcpkix-jdk18on dependencies to 1.81.1
+description: Upgrade only org.bouncycastle:bcpkix-jdk18on 1.74 and 1.75 in unambiguously owned standard Maven or root Gradle declarations.
+tags:
+  - bouncycastle
+  - bcpkix
+  - java
+  - dependency-upgrade
+recipeList:
+  - com.huawei.clouds.openrewrite.bcpkixjdk18on.UpgradeSelectedBcPkixDependency
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.bcpkixjdk18on.MigrateDeterministicBcPkix1_81_1Java
+displayName: Migrate deterministic Bouncy Castle PKIX 1.81.1 Java API changes
+description: Apply only the official delta-certificate type rename and the byte-for-byte equivalent inline PKMAC wrapper removal with attributed Bouncy Castle types.
+tags:
+  - bouncycastle
+  - bcpkix
+  - source-migration
+recipeList:
+  - com.huawei.clouds.openrewrite.bcpkixjdk18on.MigrateBcPkix1811Java
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.bcpkixjdk18on.FindBcPkix1_81_1BuildRisks
+displayName: Find Bouncy Castle PKIX 1.81.1 build risks
+description: Mark dependency ownership, higher-version no-downgrade conflicts, family skew, lineages, variants, BOM/catalog ownership, and signed-JAR/JPMS/OSGi packaging risks.
+tags:
+  - bouncycastle
+  - bcpkix
+  - build
+  - search
+recipeList:
+  - com.huawei.clouds.openrewrite.bcpkixjdk18on.FindBcPkix1811BuildRisks
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.bcpkixjdk18on.FindBcPkix1_81_1SourceAndConfigurationRisks
+displayName: Find Bouncy Castle PKIX 1.81.1 source and configuration risks
+description: Mark removed PKIX APIs and CMS, PKCS, PEM, OCSP, TSP, ASN.1, operator, provider, LDAP, serialization, packaging, and JPMS behavior boundaries.
+tags:
+  - bouncycastle
+  - bcpkix
+  - cryptography
+  - search
+recipeList:
+  - com.huawei.clouds.openrewrite.bcpkixjdk18on.FindBcPkix1811SourceRisks
+  - com.huawei.clouds.openrewrite.bcpkixjdk18on.FindBcPkix1811ConfigurationRisks
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.bcpkixjdk18on.MigrateBcPkixJdk18onTo1_81_1
+displayName: Migrate Bouncy Castle PKIX applications to 1.81.1
+description: Strictly upgrade selected dependencies, apply proven-equivalent Java changes, and mark every remaining build, PKIX/CMS/PKCS/PEM/OCSP/TSP, encoding, provider, and configuration decision.
+tags:
+  - bouncycastle
+  - bcpkix
+  - cryptography
+  - migration
+recipeList:
+  - com.huawei.clouds.openrewrite.bcpkixjdk18on.UpgradeBcPkixJdk18onTo1_81_1
+  - com.huawei.clouds.openrewrite.bcpkixjdk18on.MigrateDeterministicBcPkix1_81_1Java
+  - com.huawei.clouds.openrewrite.bcpkixjdk18on.FindBcPkix1_81_1BuildRisks
+  - com.huawei.clouds.openrewrite.bcpkixjdk18on.FindBcPkix1_81_1SourceAndConfigurationRisks
