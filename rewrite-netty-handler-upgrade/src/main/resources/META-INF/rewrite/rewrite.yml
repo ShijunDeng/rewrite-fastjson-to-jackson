@@ -1,0 +1,40 @@
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.nettyhandler.UpgradeNettyHandlerTo4_1_136
+displayName: Upgrade selected Netty Handler dependencies to 4.1.136.Final
+description: >-
+  Upgrade only the twenty workbook-listed io.netty:netty-handler 4.1.x versions in locally owned
+  Maven or Gradle declarations, including an unambiguous local netty-bom owner. Any 4.2.x, future
+  branch, or fixed version above 4.1.136.Final remains unchanged.
+recipeList:
+  - com.huawei.clouds.openrewrite.nettyhandler.UpgradeSelectedNettyHandlerDependency
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.nettyhandler.MigrateSslHandlerIsEncrypted
+displayName: Make the Netty SSLv2 detection choice explicit
+description: >-
+  Reuse the official AddLiteralMethodArgument recipe on authored source files to preserve the old
+  SslHandler.isEncrypted(ByteBuf) behavior without rewriting generated output.
+preconditions:
+  - com.huawei.clouds.openrewrite.nettyhandler.FindAuthoredSourceFiles
+recipeList:
+  - org.openrewrite.java.AddLiteralMethodArgument:
+      methodPattern: io.netty.handler.ssl.SslHandler isEncrypted(io.netty.buffer.ByteBuf)
+      argumentIndex: 1
+      literal: false
+      primitiveType: boolean
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.nettyhandler.MigrateNettyHandlerTo4_1_136
+displayName: Migrate Netty Handler to 4.1.136.Final
+description: >-
+  Upgrade approved lower 4.1 versions, report every would-be downgrade as 目标版本冲突（禁止降级）, apply
+  only implementation-proven API defaults, and mark build, TLS configuration and source behavior
+  that requires application evidence.
+recipeList:
+  - com.huawei.clouds.openrewrite.nettyhandler.UpgradeSelectedNettyHandlerDependency
+  - com.huawei.clouds.openrewrite.nettyhandler.FindNettyHandler41136BuildRisks
+  - com.huawei.clouds.openrewrite.nettyhandler.MigrateDeprecatedNettyHandlerApis
+  - com.huawei.clouds.openrewrite.nettyhandler.MigrateSslHandlerIsEncrypted
+  - com.huawei.clouds.openrewrite.nettyhandler.FindNettyHandler41136SourceRisks
+  - com.huawei.clouds.openrewrite.nettyhandler.FindNettyHandlerConfigurationRisks

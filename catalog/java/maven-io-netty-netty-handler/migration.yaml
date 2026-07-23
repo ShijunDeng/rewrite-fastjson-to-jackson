@@ -14,11 +14,17 @@
     ],
     "canonicalIdentity": {
       "value": "io.netty:netty-handler",
-      "status": "unverified",
-      "evidence": []
+      "status": "verified",
+      "evidence": [
+        "https://github.com/netty/netty/tree/fca0764703b3bb59c6e6dc5d29c6d9710d35c0e6",
+        "maven-central:jar-sha256:54bb1a59f46a3aefd117942e6acee09e555b756776bad731fc06159d89c2da28",
+        "maven-central:pom-sha256:584c16cb512756a16101bade5a62ce51dba26b4150b33aa705dd887da5f0e26e"
+      ]
     },
     "targetVersion": "4.1.136.Final",
-    "candidateImplementationModules": []
+    "candidateImplementationModules": [
+      "rewrite-netty-handler-upgrade"
+    ]
   },
   "workbook": {
     "sha256": "17020a54165808d7a90801b56cf6c7dff428f3b6dfa931b089e84f9946104309",
@@ -37,7 +43,7 @@
         "sourceAtomic": true,
         "direction": {
           "relation": "upgrade-candidate",
-          "action": "mark",
+          "action": "auto",
           "comparator": "conservative-numeric-prefix-v1",
           "reason": "表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。"
         }
@@ -56,7 +62,7 @@
         "sourceAtomic": true,
         "direction": {
           "relation": "upgrade-candidate",
-          "action": "mark",
+          "action": "auto",
           "comparator": "conservative-numeric-prefix-v1",
           "reason": "表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。"
         }
@@ -75,7 +81,7 @@
         "sourceAtomic": true,
         "direction": {
           "relation": "upgrade-candidate",
-          "action": "mark",
+          "action": "auto",
           "comparator": "conservative-numeric-prefix-v1",
           "reason": "表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。"
         }
@@ -94,7 +100,7 @@
         "sourceAtomic": true,
         "direction": {
           "relation": "upgrade-candidate",
-          "action": "mark",
+          "action": "auto",
           "comparator": "conservative-numeric-prefix-v1",
           "reason": "表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。"
         }
@@ -113,7 +119,7 @@
         "sourceAtomic": true,
         "direction": {
           "relation": "upgrade-candidate",
-          "action": "mark",
+          "action": "auto",
           "comparator": "conservative-numeric-prefix-v1",
           "reason": "表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。"
         }
@@ -132,7 +138,7 @@
         "sourceAtomic": true,
         "direction": {
           "relation": "upgrade-candidate",
-          "action": "mark",
+          "action": "auto",
           "comparator": "conservative-numeric-prefix-v1",
           "reason": "表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。"
         }
@@ -151,7 +157,7 @@
         "sourceAtomic": true,
         "direction": {
           "relation": "upgrade-candidate",
-          "action": "mark",
+          "action": "auto",
           "comparator": "conservative-numeric-prefix-v1",
           "reason": "表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。"
         }
@@ -170,7 +176,7 @@
         "sourceAtomic": true,
         "direction": {
           "relation": "upgrade-candidate",
-          "action": "mark",
+          "action": "auto",
           "comparator": "conservative-numeric-prefix-v1",
           "reason": "表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。"
         }
@@ -189,7 +195,7 @@
         "sourceAtomic": true,
         "direction": {
           "relation": "upgrade-candidate",
-          "action": "mark",
+          "action": "auto",
           "comparator": "conservative-numeric-prefix-v1",
           "reason": "表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。"
         }
@@ -227,7 +233,7 @@
         "sourceAtomic": true,
         "direction": {
           "relation": "upgrade-candidate",
-          "action": "mark",
+          "action": "auto",
           "comparator": "conservative-numeric-prefix-v1",
           "reason": "表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。"
         }
@@ -246,7 +252,7 @@
         "sourceAtomic": true,
         "direction": {
           "relation": "upgrade-candidate",
-          "action": "mark",
+          "action": "auto",
           "comparator": "conservative-numeric-prefix-v1",
           "reason": "表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。"
         }
@@ -265,7 +271,7 @@
         "sourceAtomic": true,
         "direction": {
           "relation": "upgrade-candidate",
-          "action": "mark",
+          "action": "auto",
           "comparator": "conservative-numeric-prefix-v1",
           "reason": "表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。"
         }
@@ -284,7 +290,7 @@
         "sourceAtomic": true,
         "direction": {
           "relation": "upgrade-candidate",
-          "action": "mark",
+          "action": "auto",
           "comparator": "conservative-numeric-prefix-v1",
           "reason": "表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。"
         }
@@ -303,7 +309,7 @@
         "sourceAtomic": true,
         "direction": {
           "relation": "upgrade-candidate",
-          "action": "mark",
+          "action": "auto",
           "comparator": "conservative-numeric-prefix-v1",
           "reason": "表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。"
         }
@@ -322,7 +328,7 @@
         "sourceAtomic": true,
         "direction": {
           "relation": "upgrade-candidate",
-          "action": "mark",
+          "action": "auto",
           "comparator": "conservative-numeric-prefix-v1",
           "reason": "表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。"
         }
@@ -341,7 +347,7 @@
         "sourceAtomic": true,
         "direction": {
           "relation": "upgrade-candidate",
-          "action": "mark",
+          "action": "auto",
           "comparator": "conservative-numeric-prefix-v1",
           "reason": "表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。"
         }
@@ -360,7 +366,7 @@
         "sourceAtomic": true,
         "direction": {
           "relation": "upgrade-candidate",
-          "action": "mark",
+          "action": "auto",
           "comparator": "conservative-numeric-prefix-v1",
           "reason": "表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。"
         }
@@ -379,19 +385,63 @@
         "sourceAtomic": true,
         "direction": {
           "relation": "upgrade-candidate",
-          "action": "mark",
+          "action": "auto",
           "comparator": "conservative-numeric-prefix-v1",
           "reason": "表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。"
         }
       }
     ]
   },
-  "taskDirectives": [],
+  "taskDirectives": [
+    {
+      "id": "U-001",
+      "status": "verified",
+      "sourceVersions": [
+        "4.1.49.Final",
+        "4.1.63.Final",
+        "4.1.100.Final",
+        "4.1.101.Final",
+        "4.1.107.Final",
+        "4.1.108.Final",
+        "4.1.109.Final",
+        "4.1.115.Final",
+        "4.1.118.Final",
+        "4.1.119.Final",
+        "4.1.121.Final",
+        "4.1.124.Final",
+        "4.1.125.Final",
+        "4.1.126.Final",
+        "4.1.127.Final",
+        "4.1.128.Final",
+        "4.1.129.Final",
+        "4.1.130.Final",
+        "4.1.132.Final",
+        "4.1.133.Final"
+      ],
+      "targetVersion": "4.1.136.Final",
+      "relation": "user-supplied-upgrade",
+      "action": "auto",
+      "statement": "用户补充的原子版本清单解开了 Excel #3775 的截断聚合显示；只有这 20 个低于目标的精确 4.1 版本进入 AUTO，聚合单元格本身仍保持 MARK。"
+    },
+    {
+      "id": "U-002",
+      "status": "verified",
+      "sourceVersions": [
+        "4.2.1.Final",
+        "4.2.10.Final"
+      ],
+      "targetVersion": "4.1.136.Final",
+      "relation": "conflict",
+      "action": "mark",
+      "statement": "用户明确要求整体只升级不回退，因此两个 4.2 版本保持不变并标记目标版本冲突（禁止降级）。"
+    }
+  ],
   "policy": {
     "allowDowngrade": false,
     "conflictMarker": "目标版本冲突（禁止降级）",
-    "autoSourceWhitelist": [],
-    "upgradeCandidatesPendingEvidence": [
+    "autoSourceWhitelist": [
+      "4.1.49.Final",
+      "4.1.63.Final",
       "4.1.100.Final",
       "4.1.101.Final",
       "4.1.107.Final",
@@ -400,10 +450,23 @@
       "4.1.115.Final",
       "4.1.118.Final",
       "4.1.119.Final",
-      "4.1.121.Final"
+      "4.1.121.Final",
+      "4.1.124.Final",
+      "4.1.125.Final",
+      "4.1.126.Final",
+      "4.1.127.Final",
+      "4.1.128.Final",
+      "4.1.129.Final",
+      "4.1.130.Final",
+      "4.1.132.Final",
+      "4.1.133.Final"
     ],
+    "upgradeCandidatesPendingEvidence": [],
     "noopVersions": [],
-    "conflictVersions": [],
+    "conflictVersions": [
+      "4.2.1.Final",
+      "4.2.10.Final"
+    ],
     "unresolvedVersions": [
       "4.1.124.Final ... (共22个版本)"
     ]
@@ -412,22 +475,54 @@
     {
       "id": "E-001",
       "claim": "制品身份、源版本与目标制品身份",
-      "status": "unverified",
-      "officialSources": [],
-      "realFixtures": []
+      "status": "verified",
+      "officialSources": [
+        "https://github.com/netty/netty/tree/fca0764703b3bb59c6e6dc5d29c6d9710d35c0e6",
+        "maven-central:jar-sha256:54bb1a59f46a3aefd117942e6acee09e555b756776bad731fc06159d89c2da28",
+        "maven-central:pom-sha256:584c16cb512756a16101bade5a62ce51dba26b4150b33aa705dd887da5f0e26e"
+      ],
+      "realFixtures": [
+        "netty/netty@fca0764703b3bb59c6e6dc5d29c6d9710d35c0e6"
+      ]
     },
     {
       "id": "E-002",
       "claim": "迁移边的 API、配置与默认行为变化",
-      "status": "unverified",
-      "officialSources": [],
-      "realFixtures": []
+      "status": "verified",
+      "officialSources": [
+        "https://github.com/netty/netty/commit/dc30c3337a",
+        "https://github.com/netty/netty/commit/74b2fcf85724fc955fd4562ff3ef0bb703afa287",
+        "https://github.com/netty/netty/commit/00fd4ea2647ae3551508654ddff7dfb7e2ab0e61",
+        "https://github.com/netty/netty/commit/829c885a45",
+        "https://github.com/netty/netty/commit/d6be98bc7b"
+      ],
+      "realFixtures": [
+        "netty/netty@fca0764703b3bb59c6e6dc5d29c6d9710d35c0e6"
+      ]
     },
     {
       "id": "E-003",
       "claim": "真实工程用法、负例与行为验收",
-      "status": "unverified",
-      "officialSources": [],
+      "status": "verified",
+      "officialSources": [
+        "https://github.com/openrewrite/rewrite/blob/b3008cc4a1f0c43f562da16e5933a2a56d9bc568/rewrite-test/src/main/java/org/openrewrite/test/RewriteTest.java"
+      ],
+      "realFixtures": [
+        "apache/logging-flume-rpc@579b77c28000e19c3ee10aca1677202dfa951f72",
+        "apache/dubbo@eb1d8abaebdc2ce1e15d6236cf9f9179d34e9082",
+        "apache/rocketmq@577b89f2cdddf0d42cfd3c1b6effdac0cd0e467c"
+      ]
+    },
+    {
+      "id": "E-004",
+      "claim": "OpenRewrite 官方能力已检索、复用并通过组合测试",
+      "status": "verified",
+      "officialSources": [
+        "https://github.com/openrewrite/rewrite/tree/b3008cc4a1f0c43f562da16e5933a2a56d9bc568",
+        "https://github.com/openrewrite/rewrite/blob/b3008cc4a1f0c43f562da16e5933a2a56d9bc568/rewrite-java/src/main/java/org/openrewrite/java/AddLiteralMethodArgument.java",
+        "https://github.com/openrewrite/rewrite-netty/tree/9546824604ff662eb73bd4cabdd9a9d54bc0ae63",
+        "https://github.com/openrewrite/rewrite-netty/blob/9546824604ff662eb73bd4cabdd9a9d54bc0ae63/src/main/resources/META-INF/rewrite/netty-4_1_to_4_2.yml"
+      ],
       "realFixtures": []
     }
   ],
@@ -439,11 +534,11 @@
       ],
       "dimension": "补丁行为 / 安全 / 回归",
       "excelNoteStatus": "table_fact",
-      "evidenceStatus": "unverified",
-      "disposition": "mark",
-      "treatment": "固定官方补丁说明和制品身份后才允许版本 AUTO；仍需验证安全修复、默认行为、序列化与协议回归。",
-      "recipe": null,
-      "tests": []
+      "evidenceStatus": "verified",
+      "disposition": "auto+mark",
+      "treatment": "严格白名单升级；复用官方参数配方并迁移有源码证明的 deprecated API；TLS、SNI、ALPN、native、pipeline、timeout 等精确 MARK；更高版本禁止降级。",
+      "recipe": "com.huawei.clouds.openrewrite.nettyhandler.MigrateNettyHandlerTo4_1_136",
+      "tests": ["UpgradeNettyHandlerDependencyTest", "MigrateDeprecatedNettyHandlerApisTest", "FindNettyHandler41136BuildRisksTest", "FindNettyHandler41136SourceRisksTest", "FindNettyHandlerConfigurationRisksTest", "NettyHandlerRecommendedRecipeTest"]
     },
     {
       "id": "C-002",
@@ -452,11 +547,11 @@
       ],
       "dimension": "补丁行为 / 安全 / 回归",
       "excelNoteStatus": "table_fact",
-      "evidenceStatus": "unverified",
-      "disposition": "mark",
-      "treatment": "固定官方补丁说明和制品身份后才允许版本 AUTO；仍需验证安全修复、默认行为、序列化与协议回归。",
-      "recipe": null,
-      "tests": []
+      "evidenceStatus": "verified",
+      "disposition": "auto+mark",
+      "treatment": "严格白名单升级；复用官方参数配方并迁移有源码证明的 deprecated API；TLS、SNI、ALPN、native、pipeline、timeout 等精确 MARK；更高版本禁止降级。",
+      "recipe": "com.huawei.clouds.openrewrite.nettyhandler.MigrateNettyHandlerTo4_1_136",
+      "tests": ["UpgradeNettyHandlerDependencyTest", "MigrateDeprecatedNettyHandlerApisTest", "FindNettyHandler41136BuildRisksTest", "FindNettyHandler41136SourceRisksTest", "FindNettyHandlerConfigurationRisksTest", "NettyHandlerRecommendedRecipeTest"]
     },
     {
       "id": "C-003",
@@ -465,11 +560,11 @@
       ],
       "dimension": "补丁行为 / 安全 / 回归",
       "excelNoteStatus": "table_fact",
-      "evidenceStatus": "unverified",
-      "disposition": "mark",
-      "treatment": "固定官方补丁说明和制品身份后才允许版本 AUTO；仍需验证安全修复、默认行为、序列化与协议回归。",
-      "recipe": null,
-      "tests": []
+      "evidenceStatus": "verified",
+      "disposition": "auto+mark",
+      "treatment": "严格白名单升级；复用官方参数配方并迁移有源码证明的 deprecated API；TLS、SNI、ALPN、native、pipeline、timeout 等精确 MARK；更高版本禁止降级。",
+      "recipe": "com.huawei.clouds.openrewrite.nettyhandler.MigrateNettyHandlerTo4_1_136",
+      "tests": ["UpgradeNettyHandlerDependencyTest", "MigrateDeprecatedNettyHandlerApisTest", "FindNettyHandler41136BuildRisksTest", "FindNettyHandler41136SourceRisksTest", "FindNettyHandlerConfigurationRisksTest", "NettyHandlerRecommendedRecipeTest"]
     },
     {
       "id": "C-004",
@@ -478,11 +573,11 @@
       ],
       "dimension": "补丁行为 / 安全 / 回归",
       "excelNoteStatus": "table_fact",
-      "evidenceStatus": "unverified",
-      "disposition": "mark",
-      "treatment": "固定官方补丁说明和制品身份后才允许版本 AUTO；仍需验证安全修复、默认行为、序列化与协议回归。",
-      "recipe": null,
-      "tests": []
+      "evidenceStatus": "verified",
+      "disposition": "auto+mark",
+      "treatment": "严格白名单升级；复用官方参数配方并迁移有源码证明的 deprecated API；TLS、SNI、ALPN、native、pipeline、timeout 等精确 MARK；更高版本禁止降级。",
+      "recipe": "com.huawei.clouds.openrewrite.nettyhandler.MigrateNettyHandlerTo4_1_136",
+      "tests": ["UpgradeNettyHandlerDependencyTest", "MigrateDeprecatedNettyHandlerApisTest", "FindNettyHandler41136BuildRisksTest", "FindNettyHandler41136SourceRisksTest", "FindNettyHandlerConfigurationRisksTest", "NettyHandlerRecommendedRecipeTest"]
     },
     {
       "id": "C-005",
@@ -491,11 +586,11 @@
       ],
       "dimension": "补丁行为 / 安全 / 回归",
       "excelNoteStatus": "table_fact",
-      "evidenceStatus": "unverified",
-      "disposition": "mark",
-      "treatment": "固定官方补丁说明和制品身份后才允许版本 AUTO；仍需验证安全修复、默认行为、序列化与协议回归。",
-      "recipe": null,
-      "tests": []
+      "evidenceStatus": "verified",
+      "disposition": "auto+mark",
+      "treatment": "严格白名单升级；复用官方参数配方并迁移有源码证明的 deprecated API；TLS、SNI、ALPN、native、pipeline、timeout 等精确 MARK；更高版本禁止降级。",
+      "recipe": "com.huawei.clouds.openrewrite.nettyhandler.MigrateNettyHandlerTo4_1_136",
+      "tests": ["UpgradeNettyHandlerDependencyTest", "MigrateDeprecatedNettyHandlerApisTest", "FindNettyHandler41136BuildRisksTest", "FindNettyHandler41136SourceRisksTest", "FindNettyHandlerConfigurationRisksTest", "NettyHandlerRecommendedRecipeTest"]
     },
     {
       "id": "C-006",
@@ -504,11 +599,11 @@
       ],
       "dimension": "补丁行为 / 安全 / 回归",
       "excelNoteStatus": "table_fact",
-      "evidenceStatus": "unverified",
-      "disposition": "mark",
-      "treatment": "固定官方补丁说明和制品身份后才允许版本 AUTO；仍需验证安全修复、默认行为、序列化与协议回归。",
-      "recipe": null,
-      "tests": []
+      "evidenceStatus": "verified",
+      "disposition": "auto+mark",
+      "treatment": "严格白名单升级；复用官方参数配方并迁移有源码证明的 deprecated API；TLS、SNI、ALPN、native、pipeline、timeout 等精确 MARK；更高版本禁止降级。",
+      "recipe": "com.huawei.clouds.openrewrite.nettyhandler.MigrateNettyHandlerTo4_1_136",
+      "tests": ["UpgradeNettyHandlerDependencyTest", "MigrateDeprecatedNettyHandlerApisTest", "FindNettyHandler41136BuildRisksTest", "FindNettyHandler41136SourceRisksTest", "FindNettyHandlerConfigurationRisksTest", "NettyHandlerRecommendedRecipeTest"]
     },
     {
       "id": "C-007",
@@ -517,11 +612,11 @@
       ],
       "dimension": "补丁行为 / 安全 / 回归",
       "excelNoteStatus": "table_fact",
-      "evidenceStatus": "unverified",
-      "disposition": "mark",
-      "treatment": "固定官方补丁说明和制品身份后才允许版本 AUTO；仍需验证安全修复、默认行为、序列化与协议回归。",
-      "recipe": null,
-      "tests": []
+      "evidenceStatus": "verified",
+      "disposition": "auto+mark",
+      "treatment": "严格白名单升级；复用官方参数配方并迁移有源码证明的 deprecated API；TLS、SNI、ALPN、native、pipeline、timeout 等精确 MARK；更高版本禁止降级。",
+      "recipe": "com.huawei.clouds.openrewrite.nettyhandler.MigrateNettyHandlerTo4_1_136",
+      "tests": ["UpgradeNettyHandlerDependencyTest", "MigrateDeprecatedNettyHandlerApisTest", "FindNettyHandler41136BuildRisksTest", "FindNettyHandler41136SourceRisksTest", "FindNettyHandlerConfigurationRisksTest", "NettyHandlerRecommendedRecipeTest"]
     },
     {
       "id": "C-008",
@@ -530,11 +625,11 @@
       ],
       "dimension": "补丁行为 / 安全 / 回归",
       "excelNoteStatus": "table_fact",
-      "evidenceStatus": "unverified",
-      "disposition": "mark",
-      "treatment": "固定官方补丁说明和制品身份后才允许版本 AUTO；仍需验证安全修复、默认行为、序列化与协议回归。",
-      "recipe": null,
-      "tests": []
+      "evidenceStatus": "verified",
+      "disposition": "auto+mark",
+      "treatment": "严格白名单升级；复用官方参数配方并迁移有源码证明的 deprecated API；TLS、SNI、ALPN、native、pipeline、timeout 等精确 MARK；更高版本禁止降级。",
+      "recipe": "com.huawei.clouds.openrewrite.nettyhandler.MigrateNettyHandlerTo4_1_136",
+      "tests": ["UpgradeNettyHandlerDependencyTest", "MigrateDeprecatedNettyHandlerApisTest", "FindNettyHandler41136BuildRisksTest", "FindNettyHandler41136SourceRisksTest", "FindNettyHandlerConfigurationRisksTest", "NettyHandlerRecommendedRecipeTest"]
     },
     {
       "id": "C-009",
@@ -543,11 +638,11 @@
       ],
       "dimension": "补丁行为 / 安全 / 回归",
       "excelNoteStatus": "table_fact",
-      "evidenceStatus": "unverified",
-      "disposition": "mark",
-      "treatment": "固定官方补丁说明和制品身份后才允许版本 AUTO；仍需验证安全修复、默认行为、序列化与协议回归。",
-      "recipe": null,
-      "tests": []
+      "evidenceStatus": "verified",
+      "disposition": "auto+mark",
+      "treatment": "严格白名单升级；复用官方参数配方并迁移有源码证明的 deprecated API；TLS、SNI、ALPN、native、pipeline、timeout 等精确 MARK；更高版本禁止降级。",
+      "recipe": "com.huawei.clouds.openrewrite.nettyhandler.MigrateNettyHandlerTo4_1_136",
+      "tests": ["UpgradeNettyHandlerDependencyTest", "MigrateDeprecatedNettyHandlerApisTest", "FindNettyHandler41136BuildRisksTest", "FindNettyHandler41136SourceRisksTest", "FindNettyHandlerConfigurationRisksTest", "NettyHandlerRecommendedRecipeTest"]
     },
     {
       "id": "C-010",
@@ -556,11 +651,11 @@
       ],
       "dimension": "补丁行为 / 安全 / 回归",
       "excelNoteStatus": "table_fact",
-      "evidenceStatus": "unverified",
-      "disposition": "mark",
-      "treatment": "固定官方补丁说明和制品身份后才允许版本 AUTO；仍需验证安全修复、默认行为、序列化与协议回归。",
-      "recipe": null,
-      "tests": []
+      "evidenceStatus": "verified",
+      "disposition": "auto+mark",
+      "treatment": "聚合单元格本身保持 MARK；仅用户 U-001 明确的 20 个低版本进入严格白名单 AUTO；4.2 输入保持不变并标记禁止降级；API AUTO 与运行时风险处置同实现 README。",
+      "recipe": "com.huawei.clouds.openrewrite.nettyhandler.MigrateNettyHandlerTo4_1_136",
+      "tests": ["UpgradeNettyHandlerDependencyTest", "MigrateDeprecatedNettyHandlerApisTest", "FindNettyHandler41136BuildRisksTest", "FindNettyHandler41136SourceRisksTest", "FindNettyHandlerConfigurationRisksTest", "NettyHandlerRecommendedRecipeTest"]
     },
     {
       "id": "C-011",
@@ -569,11 +664,11 @@
       ],
       "dimension": "补丁行为 / 安全 / 回归",
       "excelNoteStatus": "table_fact",
-      "evidenceStatus": "unverified",
-      "disposition": "mark",
-      "treatment": "固定官方补丁说明和制品身份后才允许版本 AUTO；仍需验证安全修复、默认行为、序列化与协议回归。",
-      "recipe": null,
-      "tests": []
+      "evidenceStatus": "verified",
+      "disposition": "auto+mark",
+      "treatment": "严格白名单升级；复用官方参数配方并迁移有源码证明的 deprecated API；TLS、SNI、ALPN、native、pipeline、timeout 等精确 MARK；更高版本禁止降级。",
+      "recipe": "com.huawei.clouds.openrewrite.nettyhandler.MigrateNettyHandlerTo4_1_136",
+      "tests": ["UpgradeNettyHandlerDependencyTest", "MigrateDeprecatedNettyHandlerApisTest", "FindNettyHandler41136BuildRisksTest", "FindNettyHandler41136SourceRisksTest", "FindNettyHandlerConfigurationRisksTest", "NettyHandlerRecommendedRecipeTest"]
     },
     {
       "id": "C-012",
@@ -582,11 +677,11 @@
       ],
       "dimension": "补丁行为 / 安全 / 回归",
       "excelNoteStatus": "table_fact",
-      "evidenceStatus": "unverified",
-      "disposition": "mark",
-      "treatment": "固定官方补丁说明和制品身份后才允许版本 AUTO；仍需验证安全修复、默认行为、序列化与协议回归。",
-      "recipe": null,
-      "tests": []
+      "evidenceStatus": "verified",
+      "disposition": "auto+mark",
+      "treatment": "严格白名单升级；复用官方参数配方并迁移有源码证明的 deprecated API；TLS、SNI、ALPN、native、pipeline、timeout 等精确 MARK；更高版本禁止降级。",
+      "recipe": "com.huawei.clouds.openrewrite.nettyhandler.MigrateNettyHandlerTo4_1_136",
+      "tests": ["UpgradeNettyHandlerDependencyTest", "MigrateDeprecatedNettyHandlerApisTest", "FindNettyHandler41136BuildRisksTest", "FindNettyHandler41136SourceRisksTest", "FindNettyHandlerConfigurationRisksTest", "NettyHandlerRecommendedRecipeTest"]
     },
     {
       "id": "C-013",
@@ -595,11 +690,11 @@
       ],
       "dimension": "补丁行为 / 安全 / 回归",
       "excelNoteStatus": "table_fact",
-      "evidenceStatus": "unverified",
-      "disposition": "mark",
-      "treatment": "固定官方补丁说明和制品身份后才允许版本 AUTO；仍需验证安全修复、默认行为、序列化与协议回归。",
-      "recipe": null,
-      "tests": []
+      "evidenceStatus": "verified",
+      "disposition": "auto+mark",
+      "treatment": "严格白名单升级；复用官方参数配方并迁移有源码证明的 deprecated API；TLS、SNI、ALPN、native、pipeline、timeout 等精确 MARK；更高版本禁止降级。",
+      "recipe": "com.huawei.clouds.openrewrite.nettyhandler.MigrateNettyHandlerTo4_1_136",
+      "tests": ["UpgradeNettyHandlerDependencyTest", "MigrateDeprecatedNettyHandlerApisTest", "FindNettyHandler41136BuildRisksTest", "FindNettyHandler41136SourceRisksTest", "FindNettyHandlerConfigurationRisksTest", "NettyHandlerRecommendedRecipeTest"]
     },
     {
       "id": "C-014",
@@ -608,11 +703,11 @@
       ],
       "dimension": "补丁行为 / 安全 / 回归",
       "excelNoteStatus": "table_fact",
-      "evidenceStatus": "unverified",
-      "disposition": "mark",
-      "treatment": "固定官方补丁说明和制品身份后才允许版本 AUTO；仍需验证安全修复、默认行为、序列化与协议回归。",
-      "recipe": null,
-      "tests": []
+      "evidenceStatus": "verified",
+      "disposition": "auto+mark",
+      "treatment": "严格白名单升级；复用官方参数配方并迁移有源码证明的 deprecated API；TLS、SNI、ALPN、native、pipeline、timeout 等精确 MARK；更高版本禁止降级。",
+      "recipe": "com.huawei.clouds.openrewrite.nettyhandler.MigrateNettyHandlerTo4_1_136",
+      "tests": ["UpgradeNettyHandlerDependencyTest", "MigrateDeprecatedNettyHandlerApisTest", "FindNettyHandler41136BuildRisksTest", "FindNettyHandler41136SourceRisksTest", "FindNettyHandlerConfigurationRisksTest", "NettyHandlerRecommendedRecipeTest"]
     },
     {
       "id": "C-015",
@@ -621,11 +716,11 @@
       ],
       "dimension": "补丁行为 / 安全 / 回归",
       "excelNoteStatus": "table_fact",
-      "evidenceStatus": "unverified",
-      "disposition": "mark",
-      "treatment": "固定官方补丁说明和制品身份后才允许版本 AUTO；仍需验证安全修复、默认行为、序列化与协议回归。",
-      "recipe": null,
-      "tests": []
+      "evidenceStatus": "verified",
+      "disposition": "auto+mark",
+      "treatment": "严格白名单升级；复用官方参数配方并迁移有源码证明的 deprecated API；TLS、SNI、ALPN、native、pipeline、timeout 等精确 MARK；更高版本禁止降级。",
+      "recipe": "com.huawei.clouds.openrewrite.nettyhandler.MigrateNettyHandlerTo4_1_136",
+      "tests": ["UpgradeNettyHandlerDependencyTest", "MigrateDeprecatedNettyHandlerApisTest", "FindNettyHandler41136BuildRisksTest", "FindNettyHandler41136SourceRisksTest", "FindNettyHandlerConfigurationRisksTest", "NettyHandlerRecommendedRecipeTest"]
     },
     {
       "id": "C-016",
@@ -634,11 +729,11 @@
       ],
       "dimension": "补丁行为 / 安全 / 回归",
       "excelNoteStatus": "table_fact",
-      "evidenceStatus": "unverified",
-      "disposition": "mark",
-      "treatment": "固定官方补丁说明和制品身份后才允许版本 AUTO；仍需验证安全修复、默认行为、序列化与协议回归。",
-      "recipe": null,
-      "tests": []
+      "evidenceStatus": "verified",
+      "disposition": "auto+mark",
+      "treatment": "严格白名单升级；复用官方参数配方并迁移有源码证明的 deprecated API；TLS、SNI、ALPN、native、pipeline、timeout 等精确 MARK；更高版本禁止降级。",
+      "recipe": "com.huawei.clouds.openrewrite.nettyhandler.MigrateNettyHandlerTo4_1_136",
+      "tests": ["UpgradeNettyHandlerDependencyTest", "MigrateDeprecatedNettyHandlerApisTest", "FindNettyHandler41136BuildRisksTest", "FindNettyHandler41136SourceRisksTest", "FindNettyHandlerConfigurationRisksTest", "NettyHandlerRecommendedRecipeTest"]
     },
     {
       "id": "C-017",
@@ -647,11 +742,11 @@
       ],
       "dimension": "补丁行为 / 安全 / 回归",
       "excelNoteStatus": "table_fact",
-      "evidenceStatus": "unverified",
-      "disposition": "mark",
-      "treatment": "固定官方补丁说明和制品身份后才允许版本 AUTO；仍需验证安全修复、默认行为、序列化与协议回归。",
-      "recipe": null,
-      "tests": []
+      "evidenceStatus": "verified",
+      "disposition": "auto+mark",
+      "treatment": "严格白名单升级；复用官方参数配方并迁移有源码证明的 deprecated API；TLS、SNI、ALPN、native、pipeline、timeout 等精确 MARK；更高版本禁止降级。",
+      "recipe": "com.huawei.clouds.openrewrite.nettyhandler.MigrateNettyHandlerTo4_1_136",
+      "tests": ["UpgradeNettyHandlerDependencyTest", "MigrateDeprecatedNettyHandlerApisTest", "FindNettyHandler41136BuildRisksTest", "FindNettyHandler41136SourceRisksTest", "FindNettyHandlerConfigurationRisksTest", "NettyHandlerRecommendedRecipeTest"]
     },
     {
       "id": "C-018",
@@ -660,11 +755,11 @@
       ],
       "dimension": "补丁行为 / 安全 / 回归",
       "excelNoteStatus": "table_fact",
-      "evidenceStatus": "unverified",
-      "disposition": "mark",
-      "treatment": "固定官方补丁说明和制品身份后才允许版本 AUTO；仍需验证安全修复、默认行为、序列化与协议回归。",
-      "recipe": null,
-      "tests": []
+      "evidenceStatus": "verified",
+      "disposition": "auto+mark",
+      "treatment": "严格白名单升级；复用官方参数配方并迁移有源码证明的 deprecated API；TLS、SNI、ALPN、native、pipeline、timeout 等精确 MARK；更高版本禁止降级。",
+      "recipe": "com.huawei.clouds.openrewrite.nettyhandler.MigrateNettyHandlerTo4_1_136",
+      "tests": ["UpgradeNettyHandlerDependencyTest", "MigrateDeprecatedNettyHandlerApisTest", "FindNettyHandler41136BuildRisksTest", "FindNettyHandler41136SourceRisksTest", "FindNettyHandlerConfigurationRisksTest", "NettyHandlerRecommendedRecipeTest"]
     },
     {
       "id": "C-019",
@@ -673,16 +768,16 @@
       ],
       "dimension": "补丁行为 / 安全 / 回归",
       "excelNoteStatus": "table_fact",
-      "evidenceStatus": "unverified",
-      "disposition": "mark",
-      "treatment": "固定官方补丁说明和制品身份后才允许版本 AUTO；仍需验证安全修复、默认行为、序列化与协议回归。",
-      "recipe": null,
-      "tests": []
+      "evidenceStatus": "verified",
+      "disposition": "auto+mark",
+      "treatment": "严格白名单升级；复用官方参数配方并迁移有源码证明的 deprecated API；TLS、SNI、ALPN、native、pipeline、timeout 等精确 MARK；更高版本禁止降级。",
+      "recipe": "com.huawei.clouds.openrewrite.nettyhandler.MigrateNettyHandlerTo4_1_136",
+      "tests": ["UpgradeNettyHandlerDependencyTest", "MigrateDeprecatedNettyHandlerApisTest", "FindNettyHandler41136BuildRisksTest", "FindNettyHandler41136SourceRisksTest", "FindNettyHandlerConfigurationRisksTest", "NettyHandlerRecommendedRecipeTest"]
     }
   ],
   "status": {
     "spec": "complete",
-    "evidence": "pending",
-    "automation": "catalog-only"
+    "evidence": "verified",
+    "automation": "implemented"
   }
 }
