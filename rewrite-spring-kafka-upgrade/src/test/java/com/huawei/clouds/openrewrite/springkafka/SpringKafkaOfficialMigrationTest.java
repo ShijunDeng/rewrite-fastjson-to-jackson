@@ -1,13 +1,23 @@
 package com.huawei.clouds.openrewrite.springkafka;
 
 import org.junit.jupiter.api.Test;
+import org.openrewrite.Recipe;
+import org.openrewrite.config.DeclarativeRecipe;
 import org.openrewrite.config.Environment;
+import org.openrewrite.java.ChangeMethodName;
+import org.openrewrite.java.ChangeType;
+import org.openrewrite.java.ReplaceConstantWithAnotherConstant;
+import org.openrewrite.java.dependencies.UpgradeDependencyVersion;
 import org.openrewrite.test.RecipeSpec;
 import org.openrewrite.test.RewriteTest;
 
 import java.util.List;
+import java.util.stream.Stream;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.openrewrite.java.Assertions.java;
 
@@ -23,15 +33,69 @@ class SpringKafkaOfficialMigrationTest implements RewriteTest {
 
     @Test
     void reusesAllApplicableOfficialSpringKafkaComponentsButNotTheirBroadDependencyUpgrade() {
-        List<String> names = environment().activateRecipes(RECIPE).getRecipeList().stream()
-                .map(recipe -> recipe.getName()).toList();
-        assertTrue(names.contains("org.openrewrite.java.spring.kafka.KafkaOperationsSendReturnType"), names.toString());
-        assertTrue(names.contains("org.openrewrite.java.spring.kafka.KafkaTestUtilsDuration"), names.toString());
-        assertTrue(names.contains("org.openrewrite.java.spring.kafka.RemoveUsingCompletableFuture"), names.toString());
-        assertTrue(names.contains("org.openrewrite.java.spring.kafka.UpgradeSpringKafka_2_8_ErrorHandlers"),
-                names.toString());
-        assertFalse(names.contains("org.openrewrite.java.dependencies.UpgradeDependencyVersion"), names.toString());
-        assertFalse(names.contains("org.openrewrite.java.spring.kafka.UpgradeSpringKafka_3_0"), names.toString());
+        Environment environment = environment();
+        Recipe official = environment.activateRecipes(
+                "org.openrewrite.java.spring.kafka.UpgradeSpringKafka_3_0");
+        DeclarativeRecipe local = assertInstanceOf(
+                DeclarativeRecipe.class, environment.activateRecipes(RECIPE));
+
+        assertEquals(List.of(FindSpringKafkaAuthoredSourceFiles.class),
+                local.getPreconditions().stream().map(Object::getClass).toList());
+        List<Recipe> officialChildren = effectiveChildren(official);
+        UpgradeDependencyVersion broadUpgrade = officialChildren.stream()
+                .filter(UpgradeDependencyVersion.class::isInstance)
+                .map(UpgradeDependencyVersion.class::cast)
+                .findFirst()
+                .orElseThrow();
+        assertEquals("org.springframework.kafka", broadUpgrade.getGroupId());
+        assertEquals("spring-kafka", broadUpgrade.getArtifactId());
+        assertEquals("3.0.x", broadUpgrade.getNewVersion());
+        assertNull(broadUpgrade.getOverrideManagedVersion());
+
+        List<String> safeOfficialSignatures = officialChildren.stream()
+                .filter(recipe -> !(recipe instanceof UpgradeDependencyVersion))
+                .map(SpringKafkaOfficialMigrationTest::signature)
+                .toList();
+        List<String> localSignatures = effectiveChildren(local).stream()
+                .map(SpringKafkaOfficialMigrationTest::signature)
+                .toList();
+        assertEquals(safeOfficialSignatures, localSignatures);
+
+        assertFalse(flatten(local).map(SpringKafkaOfficialMigrationTest::unwrap)
+                .anyMatch(UpgradeDependencyVersion.class::isInstance));
+        assertFalse(flatten(local).map(Recipe::getName)
+                .anyMatch("org.openrewrite.java.spring.kafka.UpgradeSpringKafka_3_0"::equals));
+
+        Recipe futureMajor = environment.activateRecipes(
+                "org.openrewrite.java.spring.kafka.UpgradeSpringKafka_4_0");
+        assertEquals("org.openrewrite.java.spring.kafka.UpgradeSpringKafka_4_0",
+                futureMajor.getName());
+        assertFalse(flatten(local).map(Recipe::getName).anyMatch(futureMajor.getName()::equals));
+    }
+
+    @Test
+    void directlyReusedOfficialErrorHandlerCompositionHasExactFixedLeaves() {
+        Recipe official = environment().activateRecipes(
+                "org.openrewrite.java.spring.kafka.UpgradeSpringKafka_2_8_ErrorHandlers");
+        List<Recipe> children = effectiveChildren(official);
+        assertEquals(3, children.size());
+
+        ChangeMethodName handle = assertInstanceOf(ChangeMethodName.class, children.get(0));
+        assertEquals("org.springframework.kafka.listener.SeekToCurrentErrorHandler handle(..)",
+                handle.getMethodPattern());
+        assertEquals("handleRemaining", handle.getNewMethodName());
+
+        ChangeMethodName setter = assertInstanceOf(ChangeMethodName.class, children.get(1));
+        assertEquals(
+                "org.springframework.kafka.config.AbstractKafkaListenerContainerFactory setErrorHandler(..)",
+                setter.getMethodPattern());
+        assertEquals("setCommonErrorHandler", setter.getNewMethodName());
+
+        ChangeType handlerType = assertInstanceOf(ChangeType.class, children.get(2));
+        assertEquals("org.springframework.kafka.listener.SeekToCurrentErrorHandler",
+                handlerType.getOldFullyQualifiedTypeName());
+        assertEquals("org.springframework.kafka.listener.DefaultErrorHandler",
+                handlerType.getNewFullyQualifiedTypeName());
     }
 
     @Test
@@ -141,6 +205,27 @@ class SpringKafkaOfficialMigrationTest implements RewriteTest {
     }
 
     @Test
+    void migratesStaticImportsWithTheOfficialCoreConstantRecipe() {
+        rewriteRun(java("""
+                import static org.springframework.kafka.support.KafkaHeaders.MESSAGE_KEY;
+                import static org.springframework.kafka.support.KafkaHeaders.RECEIVED_PARTITION_ID;
+
+                class Headers {
+                    String key = MESSAGE_KEY;
+                    String partition = RECEIVED_PARTITION_ID;
+                }
+                """, """
+                import static org.springframework.kafka.support.KafkaHeaders.KEY;
+                import static org.springframework.kafka.support.KafkaHeaders.RECEIVED_PARTITION;
+
+                class Headers {
+                    String key = KEY;
+                    String partition = RECEIVED_PARTITION;
+                }
+                """));
+    }
+
+    @Test
     void migratesKafkaTestUtilsTimeoutsToDuration() {
         rewriteRun(java("""
                 import org.apache.kafka.clients.consumer.Consumer;
@@ -150,6 +235,8 @@ class SpringKafkaOfficialMigrationTest implements RewriteTest {
                         KafkaTestUtils.getRecords(consumer, 1000L);
                         KafkaTestUtils.getRecords(consumer, timeout, 1);
                         KafkaTestUtils.getSingleRecord(consumer, "topic", timeout);
+                        KafkaTestUtils.getOneRecord(
+                                "topic", "key", "value", 1, true, true, 1000L);
                     }
                 }
                 """, source -> source.after(actual -> actual).afterRecipe(after -> {
@@ -157,6 +244,8 @@ class SpringKafkaOfficialMigrationTest implements RewriteTest {
             assertTrue(printed.contains("import java.time.Duration;"), printed);
             assertTrue(printed.contains("Duration.ofMillis(1000L)"), printed);
             assertTrue(printed.contains("Duration.ofMillis(timeout)"), printed);
+            assertTrue(printed.contains(
+                    "\"topic\", \"key\", \"value\", 1, true, true, Duration.ofMillis(1000L)"), printed);
         })));
     }
 
@@ -178,10 +267,56 @@ class SpringKafkaOfficialMigrationTest implements RewriteTest {
                 })));
     }
 
+    @Test
+    void generatedSourceIsNoopForEveryOfficialComponent() {
+        rewriteRun(java("""
+                import org.springframework.kafka.core.KafkaOperations;
+                import org.springframework.kafka.core.KafkaOperations2;
+
+                class GeneratedProducer {
+                    KafkaOperations2<String, String> bridge(KafkaOperations<String, String> operations) {
+                        return operations.usingCompletableFuture();
+                    }
+                }
+                """, source -> source.path("target/generated-sources/GeneratedProducer.java")));
+    }
+
     private static Environment environment() {
         return Environment.builder()
                 .scanRuntimeClasspath("com.huawei.clouds.openrewrite.springkafka",
                                       "org.openrewrite.java.spring.kafka")
                 .build();
+    }
+
+    private static List<Recipe> effectiveChildren(Recipe recipe) {
+        return recipe.getRecipeList().stream()
+                .map(SpringKafkaOfficialMigrationTest::unwrap)
+                .filter(child -> !child.getClass().getName().endsWith("PreconditionBellwether"))
+                .toList();
+    }
+
+    private static Recipe unwrap(Recipe recipe) {
+        Recipe unwrapped = recipe;
+        while (unwrapped instanceof Recipe.DelegatingRecipe delegating) {
+            unwrapped = delegating.getDelegate();
+        }
+        return unwrapped;
+    }
+
+    private static Stream<Recipe> flatten(Recipe recipe) {
+        return Stream.concat(Stream.of(recipe),
+                recipe.getRecipeList().stream().flatMap(SpringKafkaOfficialMigrationTest::flatten));
+    }
+
+    private static String signature(Recipe recipe) {
+        if (recipe instanceof ChangeType changeType) {
+            return changeType.getName() + "|" + changeType.getOldFullyQualifiedTypeName() + "|" +
+                   changeType.getNewFullyQualifiedTypeName() + "|" + changeType.getIgnoreDefinition();
+        }
+        if (recipe instanceof ReplaceConstantWithAnotherConstant constant) {
+            return constant.getName() + "|" + constant.getExistingFullyQualifiedConstantName() + "|" +
+                   constant.getFullyQualifiedConstantName();
+        }
+        return recipe.getName();
     }
 }

@@ -195,34 +195,56 @@ converter、interceptor 等实现会被按可赋值类型标记，要求使用 3
 
 ## 官方能力复用审计
 
-审计基准为 `org.openrewrite.recipe:rewrite-spring:6.35.0`，对应
-`rewrite-spring` 固定提交
-[`d28afcb6661ad413539056de0936c5489ff9d8ee`](https://github.com/openrewrite/rewrite-spring/tree/d28afcb6661ad413539056de0936c5489ff9d8ee)。
-该制品 SHA-256 为
-`27df444210c8bfee7e9d0f04d6d6f7986d2bee36bcd472d8307912613e93e98b`。
+审计同时固定两个上游：
 
-官方清单见
-[`spring-kafka-30.yml`](https://github.com/openrewrite/rewrite-spring/blob/d28afcb6661ad413539056de0936c5489ff9d8ee/src/main/resources/META-INF/rewrite/spring-kafka-30.yml)，
-实现和上游用例见固定提交下的
-[`kafka` 源码目录](https://github.com/openrewrite/rewrite-spring/tree/d28afcb6661ad413539056de0936c5489ff9d8ee/src/main/java/org/openrewrite/java/spring/kafka)
-与
-[`kafka` 测试目录](https://github.com/openrewrite/rewrite-spring/tree/d28afcb6661ad413539056de0936c5489ff9d8ee/src/test/java/org/openrewrite/java/spring/kafka)。
+- `org.openrewrite.recipe:rewrite-spring:6.35.0` 的制品 manifest 对应
+  [`rewrite-spring@d28afcb6661ad413539056de0936c5489ff9d8ee`](https://github.com/openrewrite/rewrite-spring/tree/d28afcb6661ad413539056de0936c5489ff9d8ee)，
+  JAR SHA-256 为
+  `27df444210c8bfee7e9d0f04d6d6f7986d2bee36bcd472d8307912613e93e98b`。
+- 本工程的 OpenRewrite Core `8.87.5` 源码制品固定到
+  [`rewrite@b3008cc4a1f0c43f562da16e5933a2a56d9bc568`](https://github.com/openrewrite/rewrite/tree/b3008cc4a1f0c43f562da16e5933a2a56d9bc568)，
+  `rewrite-java-8.87.5-sources.jar` SHA-256 为
+  `57ef3f3ce17fd0e5c3688d64a8260f8802a72dd6814cdb59a4b2b807023275f9`。
 
-| 官方能力 | 结论 | 本模块处理 |
-|---|---|---|
-| `UpgradeSpringKafka_3_0` 聚合配方 | 不直接复用 | 其中的 `UpgradeDependencyVersion` 会升级到宽泛的 `3.0.x`，违反精确白名单和 3.3.15 目标 |
-| `KafkaOperationsSendReturnType` | 复用 | 自动迁移 send 返回类型与 callback |
-| `KafkaTestUtilsDuration` | 复用 | 自动迁移测试超时为 `Duration` |
-| `KafkaOperations2` ChangeType | 复用 | 在本地 YAML 中按官方参数组合 |
-| `RemoveUsingCompletableFuture` | 复用 | 删除过渡 bridge |
-| 四个 `KafkaHeaders` 替换 | 复用 | 在本地 YAML 中按官方映射组合 |
-| `UpgradeSpringKafka_2_8_ErrorHandlers` | 复用 | 自动迁移旧错误处理器类型和方法 |
-| 精确版本、禁止降级、owner/variant | 官方能力不满足本任务契约 | 自定义严格构建配方 |
-| 3.3.15 依赖族、语义和配置风险 | 官方聚合未覆盖 | 自定义类型归因和结构化 MARK 配方 |
+官方 Spring Kafka 3.0 清单见固定
+[`spring-kafka-30.yml`](https://github.com/openrewrite/rewrite-spring/blob/d28afcb6661ad413539056de0936c5489ff9d8ee/src/main/resources/META-INF/rewrite/spring-kafka-30.yml)；
+命名实现见
+[`kafka` 源码目录](https://github.com/openrewrite/rewrite-spring/tree/d28afcb6661ad413539056de0936c5489ff9d8ee/src/main/java/org/openrewrite/java/spring/kafka)，
+固定 before/after 示例见
+[`examples.yml`](https://github.com/openrewrite/rewrite-spring/blob/d28afcb6661ad413539056de0936c5489ff9d8ee/src/main/resources/META-INF/rewrite/examples.yml)。
 
-组合测试会检查运行时 recipe tree：必须包含上述官方组件，同时明确禁止
-`UpgradeDependencyVersion` 和 `UpgradeSpringKafka_3_0` 进入确定性组合。
-因此不是复制官方实现，也不会让官方宽泛版本策略绕过本模块的升级契约。
+### 已直接复用
+
+| 官方能力 | 本模块的复用方式 |
+|---|---|
+| `KafkaOperationsSendReturnType` | 直接激活官方 class recipe；不复制 `ListenableToCompletableFuture` 访问器 |
+| `KafkaTestUtilsDuration` | 直接激活官方 class recipe，覆盖 `getRecords`、`getSingleRecord`、`getOneRecord` 的 `Duration.ofMillis` 改写 |
+| `RemoveUsingCompletableFuture` | 直接激活官方 class recipe；链式调用删除由官方 Core visitor 执行 |
+| `UpgradeSpringKafka_2_8_ErrorHandlers` | 直接复用完整官方组合，其中两个 `ChangeMethodName` 和一个 `ChangeType` 的固定参数由运行时 recipe-tree 测试校验 |
+| `KafkaOperations2` → `KafkaOperations` | 上游没有独立命名 recipe；本地声明与固定官方 YAML 相同参数的 Core [`ChangeType`](https://github.com/openrewrite/rewrite/blob/b3008cc4a1f0c43f562da16e5933a2a56d9bc568/rewrite-java/src/main/java/org/openrewrite/java/ChangeType.java) |
+| 四个 `KafkaHeaders` 常量 | 上游没有独立命名 recipe；本地逐项声明固定官方映射，实际 AST 改写由 Core [`ReplaceConstantWithAnotherConstant`](https://github.com/openrewrite/rewrite/blob/b3008cc4a1f0c43f562da16e5933a2a56d9bc568/rewrite-java/src/main/java/org/openrewrite/java/ReplaceConstantWithAnotherConstant.java) 执行 |
+
+模块内不存在与这些能力重复的自研 Java AST 变换；源代码迁移全部交给上述
+官方 Spring/Core recipe。本地只提供 authored-source precondition，阻止官方组件改写
+`target`、`build`、缓存、vendor 等生成/依赖树。运行时测试会将本地 9 个确定性子项与官方
+`UpgradeSpringKafka_3_0` 的子项逐一比较，要求二者只相差下面唯一被拒绝的
+宽泛依赖升级，包含顺序、类型名和四组常量参数都不能漂移。
+
+### 明确拒绝或保留本地边界
+
+| 官方能力 | 结论与原因 |
+|---|---|
+| `UpgradeSpringKafka_3_0` 整体聚合 | 不直接激活。其首个子项是 `UpgradeDependencyVersion(group=org.springframework.kafka, artifact=spring-kafka, newVersion=3.0.x)`；会扩大源版本并把精确 `3.3.15` 目标变成浮动 3.0 线 |
+| Core `UpgradeDependencyVersion` | 不用于本模块版本变换；没有工作簿两项白名单、唯一属性 owner、variant、根 Gradle scope 和高版本禁止降级契约 |
+| `UpgradeSpringKafka_4_0` | 方向超前；它把 3.x JSON 类型迁到 Spring Kafka 4 / Jackson 3 名称，目标 `3.3.15` 不适用 |
+| `UpgradeSpringFramework_6_0`、`UpgradeSpringBoot_3_0` 等栈级聚合 | 会改 Spring Framework、Boot、Java 基线及其它依赖，超出单一 `spring-kafka` 工作簿项的授权范围 |
+| Spring Boot 3.1/3.3/3.4 Kafka property recipes | 属性所有者是 Spring Boot 而非 Spring Kafka；本任务没有 Boot 源/目标版本，不能依据局部 Kafka 依赖擅自改键 |
+| 精确版本、禁止降级、owner/variant | 官方能力不满足任务契约，继续由严格本地构建配方处理 |
+| 3.3.15 依赖族、交付语义和配置风险 | 官方 3.0 聚合未覆盖，继续由类型归因和结构化 MARK 配方定位，不猜业务决策 |
+
+测试还会真实激活 3.0、错误处理器和 4.0 官方组合，解开运行时 precondition
+包装后核对实际 recipe tree，并证明本地推荐入口中递归不存在
+`UpgradeDependencyVersion`、`UpgradeSpringKafka_3_0` 或 `UpgradeSpringKafka_4_0`。
 
 ## 目标版本证据
 
@@ -292,12 +314,13 @@ mvn org.openrewrite.maven:rewrite-maven-plugin:run \
 mvn -f rewrite-spring-kafka-upgrade/pom.xml test
 ```
 
-当前测试共 93 项，覆盖：
+当前测试共 96 项，覆盖：
 
 - Maven、Groovy Gradle、Kotlin Gradle 的白名单、属性 owner、profile、
   dependency management、variant 和生成目录；
 - 所有高版本不降级及精确冲突文案；
-- 官方 recipe tree 和每个可复用迁移组件；
+- 官方 3.0 安全子树等价、错误处理器精确叶子、4.0 排除、authored-source precondition，以及每个可复用迁移组件；
+- 固定官方示例的 `getOneRecord(..., long)`、四个 Header 常量和 static import before/after；
 - 构建、源码、properties、YAML、XML 的风险定位；
 - 五组固定真实仓库 fixture；
 - AUTO、MARK 与推荐聚合配方的双周期幂等性。
