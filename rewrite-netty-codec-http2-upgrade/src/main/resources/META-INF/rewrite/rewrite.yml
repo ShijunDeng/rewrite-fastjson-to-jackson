@@ -1,0 +1,23 @@
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.nettycodechttp2.UpgradeNettyCodecHttp2To4_1_136
+displayName: Upgrade workbook-selected Netty HTTP/2 codec dependencies to 4.1.136.Final
+description: >-
+  Upgrade only the thirteen approved io.netty:netty-codec-http2 4.1.x versions in owned standard
+  Maven or root Gradle declarations. The listed 4.2.10.Final and 4.2.12.Final sources are target-version
+  conflicts and are deliberately kept unchanged.
+recipeList:
+  - com.huawei.clouds.openrewrite.nettycodechttp2.UpgradeSelectedNettyCodecHttp2Dependency
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.nettycodechttp2.MigrateNettyCodecHttp2To4_1_136
+displayName: Migrate Netty HTTP/2 codec to 4.1.136.Final
+description: >-
+  Mark target-version conflicts and exact build risks before dependency changes, apply the strict 4.1.x
+  upgrade, migrate behavior-preserving deprecated constructors, and mark source compatibility decisions
+  that require application evidence.
+recipeList:
+  - com.huawei.clouds.openrewrite.nettycodechttp2.FindNettyCodecHttp2BuildRisks
+  - com.huawei.clouds.openrewrite.nettycodechttp2.UpgradeNettyCodecHttp2To4_1_136
+  - com.huawei.clouds.openrewrite.nettycodechttp2.MigrateDeprecatedHttp2Constructors
+  - com.huawei.clouds.openrewrite.nettycodechttp2.FindNettyCodecHttp2SourceRisks

@@ -156,6 +156,7 @@
     <module>rewrite-log4j-core-upgrade</module>
     <module>rewrite-bcprov-jdk18on-upgrade</module>
     <module>rewrite-netty-codec-http-upgrade</module>
+    <module>rewrite-netty-codec-http2-upgrade</module>
   </modules>
 
   <dependencyManagement>
