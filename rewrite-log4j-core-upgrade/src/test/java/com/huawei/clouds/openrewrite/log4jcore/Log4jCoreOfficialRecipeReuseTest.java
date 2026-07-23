@@ -2,13 +2,24 @@ package com.huawei.clouds.openrewrite.log4jcore;
 
 import org.junit.jupiter.api.Test;
 import org.openrewrite.Recipe;
+import org.openrewrite.apache.commons.codec.ApacheBase64ToJavaBase64;
 import org.openrewrite.config.Environment;
 import org.openrewrite.java.ChangeMethodName;
 import org.openrewrite.java.JavaParser;
 import org.openrewrite.java.dependencies.UpgradeDependencyVersion;
+import org.openrewrite.java.logging.log4j.LoggerSetLevelToConfiguratorRecipe;
 import org.openrewrite.test.RewriteTest;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.security.MessageDigest;
+import java.util.HexFormat;
 import java.util.List;
+import java.util.Locale;
+import java.util.jar.JarFile;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -24,6 +35,22 @@ class Log4jCoreOfficialRecipeReuseTest implements RewriteTest {
             "org.openrewrite.java.logging.log4j.UpgradeLog4J2DependencyVersion";
     private static final String OFFICIAL_LOG4J1_CLASS_RECIPE =
             "org.openrewrite.java.logging.log4j.LoggerSetLevelToConfiguratorRecipe";
+
+    @Test
+    void pinsEveryAuditedOfficialArtifact() throws Exception {
+        assertArtifact(Recipe.class, "8.87.5",
+                "b3008cc4a1f0c43f562da16e5933a2a56d9bc568",
+                "a7ff59eebc8072353ec5c3aee3e2033bc69a844b3c9ce2e9be8d4adaec10cbf8");
+        assertArtifact(ChangeMethodName.class, "8.88.0-SNAPSHOT",
+                "91e23c2858176877428ddc03e146d2bb023217a8",
+                "a378253fe0c0865ab39d1743e468fe3d2557d7760e0a6897de294ca18ea90043");
+        assertArtifact(LoggerSetLevelToConfiguratorRecipe.class, "3.30.0",
+                "c357a7209d721078dc942a777b1d8cc95941f722",
+                "366a1cd43ee8e0f4378cac52036831df07d74d1648222d0664de2c63f7e26827");
+        assertArtifact(ApacheBase64ToJavaBase64.class, "2.28.0",
+                "b0424eb13da62085a34a7e84a3987ac78227b70b",
+                "1841723a57e3dad3a47777a311275f1d18fed8e197c99aa3526503e7c8a06d17");
+    }
 
     @Test
     void builderMigrationUsesExactOfficialCoreDelegates() {
@@ -77,6 +104,33 @@ class Log4jCoreOfficialRecipeReuseTest implements RewriteTest {
     }
 
     @Test
+    void recommendedRuntimeTreeExposesOnlyTheThreeAcceptedOfficialLeaves() {
+        Recipe recommended = Environment.builder().scanRuntimeClasspath().build()
+                .activateRecipes(LOCAL_RECOMMENDED);
+        List<ChangeMethodName> officialLeaves = flatten(recommended)
+                .filter(ChangeMethodName.class::isInstance)
+                .map(ChangeMethodName.class::cast)
+                .toList();
+
+        assertEquals(MigrateLoggerConfigFilterBuilders.officialCoreRecipes(), officialLeaves);
+        assertFalse(flatten(recommended).anyMatch(UpgradeDependencyVersion.class::isInstance));
+        assertFalse(flatten(recommended).anyMatch(recipe -> OFFICIAL_UPGRADE.equals(recipe.getName())));
+        assertFalse(flatten(recommended).anyMatch(
+                recipe -> OFFICIAL_LOG4J1_CLASS_RECIPE.equals(recipe.getName())));
+    }
+
+    @Test
+    void rewriteApacheCatalogContainsNoLog4jRecipeToReuse() throws Exception {
+        Path jar = artifact(ApacheBase64ToJavaBase64.class);
+        try (JarFile artifact = new JarFile(jar.toFile());
+             InputStream input = artifact.getInputStream(
+                     artifact.getJarEntry("META-INF/rewrite/recipes.csv"))) {
+            String catalog = new String(input.readAllBytes(), StandardCharsets.UTF_8);
+            assertFalse(catalog.toLowerCase(Locale.ROOT).contains("log4j"));
+        }
+    }
+
+    @Test
     void officialCoreRenamesAndTheNarrowNoLookupsGapRunTogether() {
         rewriteRun(spec -> spec.recipe(new MigrateLog4jCore25())
                         .parser(JavaParser.fromJavaVersion().dependsOn(Log4jCoreTestApi.legacySources())),
@@ -110,9 +164,10 @@ class Log4jCoreOfficialRecipeReuseTest implements RewriteTest {
     }
 
     private static Stream<Recipe> flatten(Recipe recipe) {
+        Recipe effective = unwrap(recipe);
         return Stream.concat(
-                Stream.of(recipe),
-                recipe.getRecipeList().stream().flatMap(Log4jCoreOfficialRecipeReuseTest::flatten));
+                Stream.of(effective),
+                effective.getRecipeList().stream().flatMap(Log4jCoreOfficialRecipeReuseTest::flatten));
     }
 
     private static Recipe unwrap(Recipe recipe) {
@@ -121,5 +176,34 @@ class Log4jCoreOfficialRecipeReuseTest implements RewriteTest {
             unwrapped = delegating.getDelegate();
         }
         return unwrapped;
+    }
+
+    private static void assertArtifact(
+            Class<?> type, String version, String commit, String checksum) throws Exception {
+        assertEquals(version, type.getPackage().getImplementationVersion());
+        assertEquals(commit, manifestAttribute(type, "Full-Change"));
+        assertEquals(checksum, sha256(type));
+    }
+
+    private static String manifestAttribute(Class<?> type, String name) throws Exception {
+        Path jar = artifact(type);
+        try (JarFile artifact = new JarFile(jar.toFile())) {
+            String value = artifact.getManifest().getMainAttributes().getValue(name);
+            if (value == null) throw new IOException("Missing " + name + " in " + jar);
+            return value;
+        }
+    }
+
+    private static String sha256(Class<?> type) throws Exception {
+        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+        try (InputStream input = Files.newInputStream(artifact(type))) {
+            byte[] buffer = new byte[8192];
+            for (int read; (read = input.read(buffer)) >= 0; ) digest.update(buffer, 0, read);
+        }
+        return HexFormat.of().formatHex(digest.digest());
+    }
+
+    private static Path artifact(Class<?> type) throws Exception {
+        return Path.of(type.getProtectionDomain().getCodeSource().getLocation().toURI());
     }
 }

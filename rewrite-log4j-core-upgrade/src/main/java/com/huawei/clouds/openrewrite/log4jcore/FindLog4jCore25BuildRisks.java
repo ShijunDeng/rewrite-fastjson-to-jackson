@@ -28,6 +28,16 @@ public final class FindLog4jCore25BuildRisks extends Recipe {
     private static final Pattern FIXED = Pattern.compile(
             "[0-9]+(?:\\.[0-9]+)*(?:[-.][A-Za-z0-9]+)*");
     private static final Pattern PROPERTY = Pattern.compile("\\$\\{([^}]+)}");
+    private static final Pattern DISABLED_TRANSITIVITY = Pattern.compile(
+            "\\b(?:isTransitive|transitive)\\s*(?::|=)\\s*false\\b");
+    private static final Pattern API_EXCLUSION = Pattern.compile(
+            "\\bexclude\\s*(?:\\(|\\s).*?\\bgroup\\s*[:=]\\s*['\"]org\\.apache\\.logging\\.log4j['\"]" +
+            ".*?\\bmodule\\s*[:=]\\s*['\"]log4j-api['\"]",
+            Pattern.DOTALL);
+    private static final Pattern REVERSED_API_EXCLUSION = Pattern.compile(
+            "\\bexclude\\s*(?:\\(|\\s).*?\\bmodule\\s*[:=]\\s*['\"]log4j-api['\"]" +
+            ".*?\\bgroup\\s*[:=]\\s*['\"]org\\.apache\\.logging\\.log4j['\"]",
+            Pattern.DOTALL);
     private static final Set<String> REMOVED_MODULES = Set.of(
             "log4j-flume-ng", "log4j-kubernetes", "log4j-mongodb3");
 
@@ -56,6 +66,9 @@ public final class FindLog4jCore25BuildRisks extends Recipe {
     static final String JANSI =
             "Log4j 2.25 removed its JAnsi 1.x dependency and uses native Windows ANSI support; verify why this explicit " +
             "JAnsi dependency remains and test console, redirected and non-TTY output";
+    static final String API_TRANSITIVITY =
+            "log4j-core requires its non-optional log4j-api dependency; disabled transitivity or an API exclusion can " +
+            "break compilation or initialization, so declare and align log4j-api 2.25.5 explicitly or restore transitivity";
     static final String PACKAGING =
             "Shading, OSGi, JPMS or native packaging must preserve/merge Log4j2Plugins.dat, provider services and " +
             "GraalVM reachability metadata; validate plugin discovery in the packaged artifact";
@@ -67,7 +80,7 @@ public final class FindLog4jCore25BuildRisks extends Recipe {
 
     @Override
     public String getDescription() {
-        return "Mark unresolved/outside core versions, Log4j family skew, removed modules, routing loops, optional runtimes and packaging integrations.";
+        return "Mark unresolved/outside core versions, Log4j family skew, required API transitivity, removed modules, routing loops, optional runtimes and packaging integrations.";
     }
 
     @Override
@@ -111,10 +124,12 @@ public final class FindLog4jCore25BuildRisks extends Recipe {
                 if (Log4jCoreSupport.GROUP.equals(group) &&
                     Log4jCoreSupport.ARTIFACT.equals(artifact)) {
                     if (!Log4jCoreSupport.standardJar(visited)) return mark(visited, VARIANT);
-                    if (Log4jCoreSupport.TARGET.equals(resolved)) return visited;
+                    Xml.Tag result = excludesLog4jApi(visited)
+                            ? mark(visited, API_TRANSITIVITY) : visited;
+                    if (Log4jCoreSupport.TARGET.equals(resolved)) return result;
                     if (resolved == null || Log4jCoreSupport.SOURCES.contains(resolved) ||
-                        !FIXED.matcher(resolved).matches()) return markVersion(visited, OWNER);
-                    return markVersion(visited, higherThanTarget(resolved)
+                        !FIXED.matcher(resolved).matches()) return markVersion(result, OWNER);
+                    return markVersion(result, higherThanTarget(resolved)
                             ? targetConflictMessage(resolved) : OUTSIDE);
                 }
                 String companion = companionMessage(group, artifact, resolved);
@@ -148,11 +163,14 @@ public final class FindLog4jCore25BuildRisks extends Recipe {
                     variant = Log4jCoreSupport.hasVariant(map);
                 }
                 String message = dependencyMessage(group, artifact, version, variant);
-                if (message != null) return mark(visited, message);
-                if (visited.getArguments().stream().anyMatch(FindLog4jCore25BuildRisks::dynamicCore)) {
-                    return mark(visited, OWNER);
+                J.MethodInvocation result = message == null ? visited : mark(visited, message);
+                if (invocationMentionsPrimary(visited) && blocksLog4jApi(visited, getCursor())) {
+                    result = mark(result, API_TRANSITIVITY);
                 }
-                return visited;
+                if (visited.getArguments().stream().anyMatch(FindLog4jCore25BuildRisks::dynamicCore)) {
+                    result = mark(result, OWNER);
+                }
+                return result;
             }
 
             @Override
@@ -172,9 +190,15 @@ public final class FindLog4jCore25BuildRisks extends Recipe {
             public J.MethodInvocation visitMethodInvocation(J.MethodInvocation method, ExecutionContext ec) {
                 boolean dependency = Log4jCoreSupport.isGradleDependencyInvocation(getCursor(), method);
                 J.MethodInvocation visited = super.visitMethodInvocation(method, ec);
-                return dependency &&
-                       visited.getArguments().stream().anyMatch(FindLog4jCore25BuildRisks::dynamicCore)
-                        ? mark(visited, OWNER) : visited;
+                if (!dependency) return visited;
+                J.MethodInvocation result = visited;
+                if (invocationMentionsPrimary(visited) && blocksLog4jApi(visited, getCursor())) {
+                    result = mark(result, API_TRANSITIVITY);
+                }
+                if (visited.getArguments().stream().anyMatch(FindLog4jCore25BuildRisks::dynamicCore)) {
+                    result = mark(result, OWNER);
+                }
+                return result;
             }
 
             @Override
@@ -253,6 +277,24 @@ public final class FindLog4jCore25BuildRisks extends Recipe {
             if (comparison != 0) return comparison > 0;
         }
         return false;
+    }
+
+    private static boolean excludesLog4jApi(Xml.Tag dependency) {
+        return dependency.getChild("exclusions").stream()
+                .flatMap(exclusions -> exclusions.getChildren("exclusion").stream())
+                .anyMatch(exclusion -> {
+                    String group = exclusion.getChildValue("groupId").orElse("");
+                    String artifact = exclusion.getChildValue("artifactId").orElse("");
+                    return ("*".equals(group) || Log4jCoreSupport.GROUP.equals(group)) &&
+                           ("*".equals(artifact) || "log4j-api".equals(artifact));
+                });
+    }
+
+    private static boolean blocksLog4jApi(J.MethodInvocation invocation, Cursor cursor) {
+        String source = invocation.printTrimmed(cursor);
+        return DISABLED_TRANSITIVITY.matcher(source).find() ||
+               API_EXCLUSION.matcher(source).find() ||
+               REVERSED_API_EXCLUSION.matcher(source).find();
     }
 
     private static boolean supportedDisruptor(String version) {

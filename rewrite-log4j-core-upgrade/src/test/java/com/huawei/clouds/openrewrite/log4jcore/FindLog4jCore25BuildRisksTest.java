@@ -72,6 +72,13 @@ class FindLog4jCore25BuildRisksTest implements RewriteTest {
     }
 
     @Test
+    void arbitrarilyLargeHigherVersionCannotOverflowOrDowngrade() {
+        String version = "999999999999999999999999999999999999999999.0.0";
+        markedXml(UpgradeLog4jCoreDependencyTest.pom(version),
+                FindLog4jCore25BuildRisks.targetConflictMessage(version));
+    }
+
+    @Test
     void recommendedRecipeMarksSharedPropertyOwner() {
         String pom = UpgradeLog4jCoreDependencyTest.project(
                 "<properties><v>2.13.3</v></properties><dependencies>" +
@@ -136,6 +143,54 @@ class FindLog4jCore25BuildRisksTest implements RewriteTest {
     @Test
     void marksExplicitJansiDependency() {
         markedXml(withCompanion("org.fusesource.jansi", "jansi", "1.18"), FindLog4jCore25BuildRisks.JANSI);
+    }
+
+    @Test
+    void marksMavenExclusionOfTheRequiredTransitiveApi() {
+        String exact = "<exclusions><exclusion><groupId>org.apache.logging.log4j</groupId>" +
+                "<artifactId>log4j-api</artifactId></exclusion></exclusions>";
+        String wildcard = "<exclusions><exclusion><groupId>*</groupId>" +
+                "<artifactId>*</artifactId></exclusion></exclusions>";
+        rewriteRun(
+                markedXmlSpec(UpgradeLog4jCoreDependencyTest.project("<dependencies>" +
+                                UpgradeLog4jCoreDependencyTest.dep("2.25.5", exact) + "</dependencies>"),
+                        "exact/pom.xml", FindLog4jCore25BuildRisks.API_TRANSITIVITY),
+                markedXmlSpec(UpgradeLog4jCoreDependencyTest.project("<dependencies>" +
+                                UpgradeLog4jCoreDependencyTest.dep("2.25.5", wildcard) + "</dependencies>"),
+                        "wildcard/pom.xml", FindLog4jCore25BuildRisks.API_TRANSITIVITY));
+    }
+
+    @Test
+    void marksGradleDisabledTransitivityAndApiExclusions() {
+        rewriteRun(
+                markedGradle("dependencies { implementation group: 'org.apache.logging.log4j', " +
+                                "name: 'log4j-core', version: '2.25.5', transitive: false }",
+                        FindLog4jCore25BuildRisks.API_TRANSITIVITY),
+                markedGradle("dependencies { implementation('org.apache.logging.log4j:log4j-core:2.25.5') { " +
+                                "exclude group: 'org.apache.logging.log4j', module: 'log4j-api' } }",
+                        FindLog4jCore25BuildRisks.API_TRANSITIVITY),
+                markedGradle("dependencies { implementation('org.apache.logging.log4j:log4j-core:2.25.5') { " +
+                                "exclude module: 'log4j-api', group: 'org.apache.logging.log4j' } }",
+                        FindLog4jCore25BuildRisks.API_TRANSITIVITY),
+                buildGradleKts("dependencies { implementation(\"org.apache.logging.log4j:log4j-core:2.25.5\") { " +
+                                "isTransitive = false } }",
+                        source -> source.after(actual -> actual).afterRecipe(after ->
+                                assertContains(after.printAll(), FindLog4jCore25BuildRisks.API_TRANSITIVITY))),
+                buildGradleKts("dependencies { implementation(\"org.apache.logging.log4j:log4j-core:2.25.5\") { " +
+                                "exclude(group = \"org.apache.logging.log4j\", module = \"log4j-api\") } }",
+                        source -> source.after(actual -> actual).afterRecipe(after ->
+                                assertContains(after.printAll(), FindLog4jCore25BuildRisks.API_TRANSITIVITY))));
+    }
+
+    @Test
+    void enabledTransitivityAndUnrelatedExclusionsAreNoop() {
+        rewriteRun(
+                buildGradle("dependencies { implementation group: 'org.apache.logging.log4j', " +
+                                "name: 'log4j-core', version: '2.25.5', transitive: true }",
+                        source -> source.afterRecipe(after -> assertNoMarker(after.printAll()))),
+                buildGradleKts("dependencies { implementation(\"org.apache.logging.log4j:log4j-core:2.25.5\") { " +
+                                "exclude(group = \"example\", module = \"log4j-api\") } }",
+                        source -> source.afterRecipe(after -> assertNoMarker(after.printAll()))));
     }
 
     @ParameterizedTest(name = "Maven packaging {0}")

@@ -58,28 +58,45 @@ public final class MigrateLoggerConfigFilterBuilders extends Recipe {
     }
 
     private static Recipe projectSourcesOnly(Recipe delegate) {
-        return new Recipe() {
-            @Override
-            public String getDisplayName() {
-                return delegate.getDisplayName();
-            }
+        return new ProjectSourceRecipe(delegate);
+    }
 
-            @Override
-            public String getDescription() {
-                return delegate.getDescription();
-            }
+    /**
+     * Preserve the official recipe as the visible runtime delegate while applying this repository's
+     * generated-source policy to its visitor.
+     */
+    private static final class ProjectSourceRecipe extends Recipe implements Recipe.DelegatingRecipe {
+        private final Recipe delegate;
 
-            @Override
-            public TreeVisitor<?, ExecutionContext> getVisitor() {
-                return Preconditions.check(new TreeVisitor<Tree, ExecutionContext>() {
-                    @Override
-                    public Tree visit(Tree tree, ExecutionContext ctx) {
-                        return tree instanceof SourceFile source &&
-                               !Log4jCoreSupport.generated(source.getSourcePath())
-                                ? SearchResult.found(tree) : tree;
-                    }
-                }, delegate.getVisitor());
-            }
-        };
+        private ProjectSourceRecipe(Recipe delegate) {
+            this.delegate = delegate;
+        }
+
+        @Override
+        public Recipe getDelegate() {
+            return delegate;
+        }
+
+        @Override
+        public String getDisplayName() {
+            return delegate.getDisplayName();
+        }
+
+        @Override
+        public String getDescription() {
+            return delegate.getDescription();
+        }
+
+        @Override
+        public TreeVisitor<?, ExecutionContext> getVisitor() {
+            return Preconditions.check(new TreeVisitor<Tree, ExecutionContext>() {
+                @Override
+                public Tree visit(Tree tree, ExecutionContext ctx) {
+                    return tree instanceof SourceFile source &&
+                           !Log4jCoreSupport.generated(source.getSourcePath())
+                            ? SearchResult.found(tree) : tree;
+                }
+            }, delegate.getVisitor());
+        }
     }
 }

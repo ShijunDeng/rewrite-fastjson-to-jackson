@@ -14,7 +14,7 @@ name: com.huawei.clouds.openrewrite.log4jcore.MigrateLog4jCoreTo2_25_5
 displayName: Migrate Apache Log4j Core to 2.25.5
 description: >-
   Apply the strict workbook dependency upgrade, migrate deterministic LoggerConfig and removed
-  Pattern Layout APIs, then mark exact dependency-family, plugin, packaging, security, JMX,
+  Pattern Layout APIs, then mark exact dependency-family/transitivity, plugin, packaging, security, JMX,
   date/time, exception-rendering, JNDI, script and serialization decisions.
 recipeList:
   - com.huawei.clouds.openrewrite.log4jcore.UpgradeLog4jCoreTo2_25_5

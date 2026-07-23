@@ -9,6 +9,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.openrewrite.gradle.Assertions.buildGradle;
 import static org.openrewrite.java.Assertions.java;
 import static org.openrewrite.xml.Assertions.xml;
 
@@ -83,6 +84,28 @@ class Log4jCoreRecommendedRecipeTest implements RewriteTest {
                     assertTrue(printed.contains(
                             FindLog4jCore25BuildRisks.targetConflictMessage("2.26.0")), printed);
                 })));
+    }
+
+    @Test
+    void recommendedRecipeUpgradesThenMarksBrokenApiTransitivity() {
+        String exclusion = "<exclusions><exclusion><groupId>org.apache.logging.log4j</groupId>" +
+                "<artifactId>log4j-api</artifactId></exclusion></exclusions>";
+        rewriteRun(
+                xml(UpgradeLog4jCoreDependencyTest.project("<dependencies>" +
+                                UpgradeLog4jCoreDependencyTest.dep("2.13.3", exclusion) +
+                                "</dependencies>"),
+                        source -> source.path("pom.xml").after(actual -> actual).afterRecipe(after -> {
+                            String printed = after.printAll();
+                            assertTrue(printed.contains("<version>2.25.5</version>"), printed);
+                            assertTrue(printed.contains(FindLog4jCore25BuildRisks.API_TRANSITIVITY), printed);
+                        })),
+                buildGradle("dependencies { implementation group: 'org.apache.logging.log4j', " +
+                                "name: 'log4j-core', version: '2.24.1', transitive: false }",
+                        source -> source.after(actual -> actual).afterRecipe(after -> {
+                            String printed = after.printAll();
+                            assertTrue(printed.contains("version: '2.25.5'"), printed);
+                            assertTrue(printed.contains(FindLog4jCore25BuildRisks.API_TRANSITIVITY), printed);
+                        })));
     }
 
     @Test
