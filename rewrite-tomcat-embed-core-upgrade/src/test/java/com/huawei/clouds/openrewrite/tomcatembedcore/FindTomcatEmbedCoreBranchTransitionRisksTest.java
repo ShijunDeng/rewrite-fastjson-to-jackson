@@ -32,7 +32,7 @@ class FindTomcatEmbedCoreBranchTransitionRisksTest implements RewriteTest {
     void marksAndPreservesBlockedTomcat11Conflict(String version) {
         rewriteRun(xml(UpgradeTomcatEmbedCoreDependencyTest.pom(version), source -> source.path("pom.xml")
                 .after(actual -> actual).afterRecipe(after ->
-                        assertTrue(after.printAll().contains("automatic migration is intentionally blocked"), after::printAll))));
+                        assertTrue(after.printAll().contains(FindTomcatEmbedCoreBranchTransitionRisks.TOMCAT_11), after::printAll))));
     }
 
     @Test
@@ -44,7 +44,7 @@ class FindTomcatEmbedCoreBranchTransitionRisksTest implements RewriteTest {
                         UpgradeTomcatEmbedCoreDependencyTest.dep("${profileTomcat}") + "</dependencies></profile></profiles>"),
                 source -> source.path("pom.xml").after(actual -> actual).afterRecipe(after -> {
                     assertTrue(after.printAll().contains("Java EE javax.* to Jakarta EE jakarta.*"), after::printAll);
-                    assertTrue(after.printAll().contains("automatic migration is intentionally blocked"), after::printAll);
+                    assertTrue(after.printAll().contains(FindTomcatEmbedCoreBranchTransitionRisks.TOMCAT_11), after::printAll);
                 })));
     }
 
@@ -56,7 +56,7 @@ class FindTomcatEmbedCoreBranchTransitionRisksTest implements RewriteTest {
                                 after.printAll().contains("Java EE javax.* to Jakarta EE jakarta.*"), after::printAll))),
                 buildGradleKts("dependencies { implementation(\"org.apache.tomcat.embed:tomcat-embed-core:11.0.21\") }",
                         source -> source.after(actual -> actual).afterRecipe(after -> assertTrue(
-                                after.printAll().contains("automatic migration is intentionally blocked"), after::printAll))),
+                                after.printAll().contains(FindTomcatEmbedCoreBranchTransitionRisks.TOMCAT_11), after::printAll))),
                 buildGradle("dependencies { implementation group: 'org.apache.tomcat.embed', name: 'tomcat-embed-core', version: '9.0.91' }",
                         source -> source.after(actual -> actual).afterRecipe(after -> assertTrue(
                                 after.printAll().contains("Java EE javax.* to Jakarta EE jakarta.*"), after::printAll)))

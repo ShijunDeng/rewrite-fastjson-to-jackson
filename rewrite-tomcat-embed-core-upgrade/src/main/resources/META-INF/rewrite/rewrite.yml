@@ -4,7 +4,7 @@ name: com.huawei.clouds.openrewrite.tomcatembedcore.UpgradeTomcatEmbedCoreTo10_1
 displayName: Upgrade workbook-selected Tomcat Embed Core dependencies to 10.1.57
 description: >-
   Upgrade only the 38 approved Tomcat 9.0/10.1 org.apache.tomcat.embed:tomcat-embed-core versions and block
-  the supplied Tomcat 11 to 10.1 downgrade conflict, in declarations owned by the current build file.
+  supplied 10.1 target conflicts for Tomcat 11 sources without editing those sources, in declarations owned by the current build file.
 recipeList:
   - com.huawei.clouds.openrewrite.tomcatembedcore.FindTomcatEmbedCoreBranchTransitionRisks
   - com.huawei.clouds.openrewrite.tomcatembedcore.UpgradeSelectedTomcatEmbedCoreDependency

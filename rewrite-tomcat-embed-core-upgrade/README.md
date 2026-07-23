@@ -6,7 +6,7 @@ This module migrates `org.apache.tomcat.embed:tomcat-embed-core` to `10.1.57`. I
 
 | Recipe | Mode | What it does |
 | --- | --- | --- |
-| `com.huawei.clouds.openrewrite.tomcatembedcore.FindTomcatEmbedCoreBranchTransitionRisks` | MARK | Preserves the Tomcat 9 namespace boundary and blocks the conflicting Tomcat 11→10.1 downgrade request before a version is edited. |
+| `com.huawei.clouds.openrewrite.tomcatembedcore.FindTomcatEmbedCoreBranchTransitionRisks` | MARK | Preserves the Tomcat 9 namespace boundary and reports Tomcat 11 sources as conflicting with the supplied 10.1 target; Tomcat 11 versions are never edited. |
 | `com.huawei.clouds.openrewrite.tomcatembedcore.UpgradeTomcatEmbedCoreTo10_1_57` | AUTO/MARK | Strict approved-version dependency upgrade plus the branch-transition guard. |
 | `com.huawei.clouds.openrewrite.tomcatembedcore.MigrateTomcatEmbedCore101Java` | AUTO | Rewrites documented direct-equivalent Servlet 5 calls and `MethodExpression.isParmetersProvided()`; reorders the removed `ServletContext.log(Exception,String)` overload. |
 | `com.huawei.clouds.openrewrite.tomcatembedcore.MigrateTomcat9JakartaNamespaces` | AUTO | Migrates type-attributed `javax.servlet`/`javax.el` Java source to Jakarta, while refusing to manufacture removed Servlet 6 types. |
@@ -32,7 +32,7 @@ The latest highest-priority remediation list supplied by the project owner super
 9.0.107, 9.0.108, 9.0.111, 9.0.115, 9.0.117
 ```
 
-All resolve to `10.1.57`. The same list also contained `11.0.18` and `11.0.21`, but `10.1.57` is lower than either source and would move Servlet 6.1 back to Servlet 6.0. The owner clarified that this programme permits upgrades only. Those two values are therefore deliberately excluded from AUTO, remain byte-for-byte unchanged, and receive a target-conflict marker until an approved Tomcat 11 target is supplied. The formerly visible `10.0.27` value is not in the superseding list and is now a strict NOOP.
+All resolve to `10.1.57`. The same list also contained `11.0.18` and `11.0.21`; those rows conflict with the supplied 10.1 target because this programme permits upgrades only. They are not a 11→10.1 migration path: both values are deliberately excluded from AUTO, remain byte-for-byte unchanged, and receive a target-conflict marker until an approved Tomcat 11 target is supplied. The formerly visible `10.0.27` value is not in the superseding list and is now a strict NOOP.
 
 AUTO ownership rules are also strict:
 
@@ -76,7 +76,7 @@ For Tomcat 9 source, a compilation unit using `SingleThreadModel`, `HttpSessionC
 - DIGEST authentication in 10.1.57 requires a valid RFC 7616 `qop`; algorithm/client/credential policy cannot be inferred.
 - `EncryptInterceptor` changed its wire data in 10.1.56. An upgrade crossing that boundary requires a full-cluster stop/restart; rolling mixed versions fail.
 - Tomcat Embed sibling modules must resolve to the same release; BOM/catalog/parent owners remain explicit work.
-- A Servlet 4/5 deployment descriptor is marked for schema review. A Servlet 6.1 descriptor is also marked because it indicates the blocked Tomcat 11→10.1 target conflict; it is never silently lowered.
+- A Servlet 4/5 deployment descriptor is marked for schema review. A Servlet 6.1 descriptor is also marked because it indicates that the supplied 10.1 target is invalid for a Tomcat 11 source; it is never silently lowered.
 
 ## Usage
 
@@ -117,4 +117,4 @@ Tests follow OpenRewrite's pinned [`RewriteTest`/cycle assertions](https://githu
 
 ## Known limits
 
-The recipe does not infer effective versions from remote parents/BOMs/catalogs, edit external files, choose security limits, select a native/TLS architecture, coordinate a cluster shutdown, or prove runtime compatibility of Tomcat internals. It never treats the two conflicting Tomcat 11 rows as upgrades. Those boundaries are visible MARK/NOOP behavior and are covered by exact-whitelist, blocked-downgrade, negative, ownership, generated-source, type-attribution, overload, lookalike, idempotence and aggregate-parity tests.
+The recipe does not infer effective versions from remote parents/BOMs/catalogs, edit external files, choose security limits, select a native/TLS architecture, coordinate a cluster shutdown, or prove runtime compatibility of Tomcat internals. It never treats the two conflicting Tomcat 11 rows as upgrade candidates for a 10.1 target. Those boundaries are visible MARK/NOOP behavior and are covered by exact-whitelist, target-conflict, negative, ownership, generated-source, type-attribution, overload, lookalike, idempotence and aggregate-parity tests.

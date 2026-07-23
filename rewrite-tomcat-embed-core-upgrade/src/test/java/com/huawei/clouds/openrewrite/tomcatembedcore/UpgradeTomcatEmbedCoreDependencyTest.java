@@ -163,7 +163,7 @@ class UpgradeTomcatEmbedCoreDependencyTest implements RewriteTest {
         rewriteRun(xml(pom(version), source -> source.path("pom.xml")));
     }
 
-    @ParameterizedTest(name = "blocked downgrade {0}")
+    @ParameterizedTest(name = "blocked target conflict {0}")
     @ValueSource(strings = {"11.0.18", "11.0.21"})
     void higherMajorSourcesAreNeverDowngraded(String version) {
         rewriteRun(xml(pom(version), source -> source.path("pom.xml")));

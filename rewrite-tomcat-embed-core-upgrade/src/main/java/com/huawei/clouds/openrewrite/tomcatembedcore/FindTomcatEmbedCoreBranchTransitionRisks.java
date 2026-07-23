@@ -25,8 +25,8 @@ public final class FindTomcatEmbedCoreBranchTransitionRisks extends Recipe {
             "migrate every Servlet/EL dependency, source type, descriptor, service provider and framework integration, " +
             "then run container-level compatibility tests";
     static final String TOMCAT_11 =
-            "The supplied 10.1.57 target is lower than this Tomcat 11 source and would downgrade Servlet 6.1 to 6.0; " +
-            "automatic migration is intentionally blocked until an approved Tomcat 11 target is supplied";
+            "This Tomcat 11 source conflicts with the supplied 10.1.57 target; the upgrade-only policy keeps the " +
+            "source unchanged until an approved Tomcat 11 target is supplied";
     private static final String PREFIX = UpgradeSelectedTomcatEmbedCoreDependency.GROUP + ":" +
                                          UpgradeSelectedTomcatEmbedCoreDependency.ARTIFACT + ":";
 
@@ -37,8 +37,8 @@ public final class FindTomcatEmbedCoreBranchTransitionRisks extends Recipe {
 
     @Override
     public String getDescription() {
-        return "Marks selected Tomcat 9 to 10.1 namespace transitions and explicit Tomcat 11 to 10.1 downgrades " +
-               "before the dependency literal is rewritten.";
+        return "Marks selected Tomcat 9 to 10.1 namespace transitions and Tomcat 11 target conflicts; Tomcat 11 " +
+               "dependency literals remain unchanged.";
     }
 
     @Override

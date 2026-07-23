@@ -102,7 +102,7 @@ class RecommendedTomcatEmbedCoreMigrationTest implements RewriteTest {
     void tomcat11ConflictIsMarkedButNeverDowngraded() {
         rewriteRun(xml(UpgradeTomcatEmbedCoreDependencyTest.pom("11.0.21"), source -> source.path("pom.xml")
                 .after(actual -> actual).afterRecipe(after -> {
-                    assertTrue(after.printAll().contains("automatic migration is intentionally blocked"), after::printAll);
+                    assertTrue(after.printAll().contains(FindTomcatEmbedCoreBranchTransitionRisks.TOMCAT_11), after::printAll);
                     assertTrue(after.printAll().contains("<version>11.0.21</version>"), after::printAll);
                     assertFalse(after.printAll().contains("<version>10.1.57</version>"), after::printAll);
                 })));
