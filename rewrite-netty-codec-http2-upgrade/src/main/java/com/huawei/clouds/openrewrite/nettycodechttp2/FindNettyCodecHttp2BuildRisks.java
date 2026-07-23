@@ -27,12 +27,8 @@ public final class FindNettyCodecHttp2BuildRisks extends Recipe {
     private static final Pattern FIXED = Pattern.compile("[0-9]+(?:\\.[0-9]+)*(?:[-.][A-Za-z0-9]+)*");
     private static final Pattern PROPERTY = Pattern.compile("\\$\\{([^}]+)}");
 
-    static final String TARGET_CONFLICT_4_2_10 =
-            "目标版本冲突（禁止降级）: 4.2.10.Final belongs to Netty's newer 4.2 branch while the requested target " +
-            "is 4.1.136.Final; this declaration is intentionally unchanged and needs an explicit target decision";
-    static final String TARGET_CONFLICT_4_2_12 =
-            "目标版本冲突（禁止降级）: 4.2.12.Final belongs to Netty's newer 4.2 branch while the requested target " +
-            "is 4.1.136.Final; this declaration is intentionally unchanged and needs an explicit target decision";
+    static final String TARGET_CONFLICT_4_2_10 = targetConflictMessage("4.2.10.Final");
+    static final String TARGET_CONFLICT_4_2_12 = targetConflictMessage("4.2.12.Final");
     static final String OWNER =
             "This netty-codec-http2 version is absent, variable, ranged, dynamic, catalog/platform/BOM-managed, " +
             "shared or externally owned; migrate the real owner and verify 4.1.136.Final resolves without violating " +
@@ -185,9 +181,14 @@ public final class FindNettyCodecHttp2BuildRisks extends Recipe {
     private static String primaryMessage(String version) {
         if (NettyCodecHttp2Support.TARGET.equals(version) ||
             version != null && NettyCodecHttp2Support.AUTO_SOURCES.contains(version)) return null;
-        if ("4.2.10.Final".equals(version)) return TARGET_CONFLICT_4_2_10;
-        if ("4.2.12.Final".equals(version)) return TARGET_CONFLICT_4_2_12;
+        if (NettyCodecHttp2Support.targetConflict(version)) return targetConflictMessage(version);
         return version == null || !FIXED.matcher(version).matches() ? OWNER : OUTSIDE;
+    }
+
+    static String targetConflictMessage(String version) {
+        return "目标版本冲突（禁止降级）: " + version +
+               " is newer than the requested 4.1.136.Final target or belongs to a newer Netty branch; this " +
+               "declaration is intentionally unchanged and needs an explicit forward-target decision";
     }
 
     private static String coordinateMessage(Object value) {

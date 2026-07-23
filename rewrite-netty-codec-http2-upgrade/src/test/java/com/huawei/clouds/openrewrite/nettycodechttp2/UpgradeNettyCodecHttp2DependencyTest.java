@@ -43,8 +43,10 @@ class UpgradeNettyCodecHttp2DependencyTest implements RewriteTest {
     }
 
     @ParameterizedTest(name = "never downgrades {0}")
-    @ValueSource(strings = {"4.2.10.Final", "4.2.12.Final"})
-    void neverDowngrades42Sources(String version) {
+    @ValueSource(strings = {
+            "4.1.137.Final", "4.2.0.Final", "4.2.10.Final", "4.2.12.Final", "5.0.0.Alpha1"
+    })
+    void neverDowngradesHigherSources(String version) {
         rewriteRun(xml(pom(version), source -> source.path(version + "/pom.xml")),
                 buildGradle("dependencies { implementation 'io.netty:netty-codec-http2:" + version + "' }"),
                 buildGradleKts("dependencies { implementation(\"io.netty:netty-codec-http2:" + version + "\") }"));

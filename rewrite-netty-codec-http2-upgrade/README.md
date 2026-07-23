@@ -19,13 +19,13 @@ com.huawei.clouds.openrewrite.nettycodechttp2.UpgradeNettyCodecHttp2To4_1_136
 | 阶段 | 配方 | 行为 |
 | ---: | --- | --- |
 | 1 | `FindNettyCodecHttp2BuildRisks` | 修改前标记目标冲突、版本所有者、Netty 家族、TLS/ALPN 与打包风险 |
-| 2 | `UpgradeNettyCodecHttp2To4_1_136` | 只把工作簿批准的十三个 4.1.x 版本升级为 `4.1.136.Final` |
-| 3 | `MigrateDeprecatedHttp2Constructors` | 显式化三个有官方等价关系的 deprecated constructor |
+| 2 | `UpgradeNettyCodecHttp2To4_1_136` | 只把工作簿/用户清单批准的十三个 4.1.x 版本升级为 `4.1.136.Final` |
+| 3 | `MigrateDeprecatedHttp2Constructors` | 复用官方参数配方显式化三个 deprecated overload，并安全删除一个字面量 no-op 参数 |
 | 4 | `FindNettyCodecHttp2SourceRisks` | 标记 header、HPACK、滥用防护、流控、升级、生命周期和 4.2-only API 决策 |
 
 ## 版本边界：只升级，不降级
 
-自动配方只接受下表十三个精确 4.1.x 源版本。`4.2.10.Final` 与 `4.2.12.Final` 来自更新的 4.2 分支，因此 `4.1.136.Final` 不是它们的可用升级目标；配方保持原版本不变，并给出精确的“目标版本冲突（禁止降级）”标记。
+自动配方只接受下表十三个精确 4.1.x 源版本。`4.2.10.Final` 与 `4.2.12.Final` 来自更新的 4.2 分支，因此 `4.1.136.Final` 不是它们的可用升级目标；配方保持原版本不变，并给出精确的“目标版本冲突（禁止降级）”标记。同一规则覆盖清单外所有固定 `4.2.x` 以及其他高于 `4.1.136.Final` 的固定版本（例如 `4.1.137.Final`、`5.0.0.Alpha1`）：只 MARK，绝不回退。范围、动态版本和无法解析的 owner 使用独立所有权标记，不参与版本比较。
 
 | 源版本 | 行为 | 固定官方源码 |
 | --- | --- | --- |
@@ -46,15 +46,17 @@ com.huawei.clouds.openrewrite.nettycodechttp2.UpgradeNettyCodecHttp2To4_1_136
 | `4.2.12.Final` | **目标版本冲突（禁止降级）+ MARK** | [`67ce541`](https://github.com/netty/netty/tree/67ce541e4692853e24fc506466960db35bb64914) |
 | 目标 `4.1.136.Final` | NO-OP | [`fca0764`](https://github.com/netty/netty/tree/fca0764703b3bb59c6e6dc5d29c6d9710d35c0e6) |
 
-目标发布页是 [Netty 4.1.136.Final](https://github.com/netty/netty/releases/tag/netty-4.1.136.Final)。逐一用 JApiCmp 对比十三个 4.1.x JAR 与目标 JAR，没有发现 public binary-incompatible API；这不代表运行时行为不变，因此本模块仍处理 deprecated API，并对协议语义和资源边界做精确 MARK。4.2 两个版本到 4.1 目标存在明确的公开 API 逆向不兼容，见后文。
+目标发布页是 [Netty 4.1.136.Final](https://github.com/netty/netty/releases/tag/netty-4.1.136.Final)。不可变发布身份是 annotated tag object `065d4d60874ca3a2e8a86c2775693fa225454901`，peeled commit [`fca0764703b3bb59c6e6dc5d29c6d9710d35c0e6`](https://github.com/netty/netty/tree/fca0764703b3bb59c6e6dc5d29c6d9710d35c0e6)。Maven Central 固定坐标的 [JAR](https://repo.maven.apache.org/maven2/io/netty/netty-codec-http2/4.1.136.Final/netty-codec-http2-4.1.136.Final.jar) SHA-256 为 `14f67ae095c056b062aa0ee2c7b01f6b78004cf3620a6e9061bcb637f079387a`，[POM](https://repo.maven.apache.org/maven2/io/netty/netty-codec-http2/4.1.136.Final/netty-codec-http2-4.1.136.Final.pom) SHA-256 为 `12cb4cd0e09ffe327369ad5f568ef5be5de471c70e264a2fb5e861038c4ba9a3`；两者均有 detached `.asc`。
+
+逐一用 JApiCmp 对比十三个 4.1.x JAR 与目标 JAR，没有发现 public binary-incompatible API；这不代表运行时行为不变，因此本模块仍处理 deprecated API，并对协议语义和资源边界做精确 MARK。两个清单内 4.2 版本到 4.1 目标存在明确的公开 API 逆向不兼容，见后文。
 
 ## AUTO、MARK 与 NO-OP
 
 | 类别 | 本模块实际行为 |
 | --- | --- |
-| **AUTO** | 严格依赖白名单；三个可证明等价的 constructor 改写 |
-| **MARK** | 目标冲突、版本所有权、artifact 变体、Netty 家族、TLS/ALPN、shade、header/HPACK、滥用限制、解压、流控、ACK/preface、h2c/ALPN、HTTP 转换、multiplex、PUSH/CONNECT、encoder 关闭、自定义 codec 和 4.2-only API |
-| **NO-OP** | 目标版本、表外版本、4.2 版本、范围/动态/catalog/BOM/platform 管理、共享或重复属性、classifier/非 JAR、插件依赖、嵌套 Gradle DSL、同名业务 API、匿名子类、带求值副作用的待删除参数和生成目录 |
+| **AUTO** | 严格依赖白名单；三个 deprecated overload 的默认参数显式化；一个字面量 no-op 参数删除 |
+| **MARK** | 任意高于目标的固定版本/全部 4.2.x、版本所有权、artifact 变体、Netty 家族、TLS/ALPN、shade、header/HPACK、滥用限制、解压、流控、ACK/preface、h2c/ALPN、HTTP 转换、multiplex、PUSH/CONNECT、encoder 关闭、自定义 codec 和 4.2-only API |
+| **NO-OP** | 目标版本；表外低版本；范围/动态/catalog/BOM/platform 管理；共享或重复属性；classifier/非 JAR；插件依赖；嵌套 Gradle DSL；同名业务 API；匿名子类；带求值副作用的待删除参数和生成目录。高版本/4.2 的依赖文本也保持不变，但会追加禁止降级 MARK |
 
 `SearchResult` 是待验证的迁移任务，不是执行失败。相同 marker 在第二个 recipe cycle 不会叠加；依赖、Java AUTO、构建/源码 MARK 和推荐组合均有幂等测试。
 
@@ -72,6 +74,27 @@ profile primary 只激活根和本 profile 的审计，不读取 sibling profile
 Gradle 只处理根级真实 `dependencies {}` 中的 Groovy/Kotlin 字符串坐标，以及 Groovy `group/name/version` Map。`buildscript`、`subprojects`、`allprojects`、`project(...)`、`constraints`、version catalog、platform、插值、带 receiver 的自定义调用、classifier/ext/type 和嵌套 lookalike 均不猜测修改。Gradle shade 标记只认顶层 `shadowJar { relocate "io.netty", ... }`。
 
 `target`、`build`、`out`、`dist`、`generated*`、`install*`、`.gradle`、`.mvn`、`.m2`、IDE/cache/report、`node_modules` 等产物目录被排除。
+
+## 官方能力复用审计
+
+审计基线固定为 OpenRewrite Core `8.87.5` 的 commit
+[`b3008cc`](https://github.com/openrewrite/rewrite/tree/b3008cc4a1f0c43f562da16e5933a2a56d9bc568)
+和 `rewrite-netty 0.10.3` JAR manifest 中的 commit
+[`9546824`](https://github.com/openrewrite/rewrite-netty/tree/9546824604ff662eb73bd4cabdd9a9d54bc0ae63)。
+后者的[固定 recipe 目录](https://github.com/openrewrite/rewrite-netty/tree/9546824604ff662eb73bd4cabdd9a9d54bc0ae63/src/main/resources/META-INF/rewrite)
+只有 3.2→4.1 与 4.1→4.2 两条版本迁移，没有 4.1.x patch 内迁移。
+
+| 官方能力 | 审计结论 | 本模块实际处理 |
+| --- | --- | --- |
+| [`AddLiteralMethodArgument`](https://github.com/openrewrite/rewrite/blob/b3008cc4a1f0c43f562da16e5933a2a56d9bc568/rewrite-java/src/main/java/org/openrewrite/java/AddLiteralMethodArgument.java) | 能按完整 constructor signature 在指定索引增加 primitive literal，并同步 method type | **直接复用 3 次**：connection decoder 加 `true`，decompressor 两个旧 overload 加 `0` |
+| [`DeleteMethodArgument`](https://github.com/openrewrite/rewrite/blob/b3008cc4a1f0c43f562da16e5933a2a56d9bc568/rewrite-java/src/main/java/org/openrewrite/java/DeleteMethodArgument.java) | 能删除指定 constructor 参数并同步类型与 import，但本身不判断表达式是否有副作用 | **直接复用 1 次**；本地代码只保留类型、签名、匿名类、生成目录及 `J.Literal<Integer>` 守卫，变量/调用/递增/cast 不交给官方删除配方 |
+| [`org.openrewrite.netty.UpgradeNetty_4_1_to_4_2`](https://github.com/openrewrite/rewrite-netty/blob/9546824604ff662eb73bd4cabdd9a9d54bc0ae63/src/main/resources/META-INF/rewrite/netty-4_1_to_4_2.yml) | 将 `io.netty:*` 统一升级到 `4.2.x`，并迁移 io_uring/EventLoop API；目标与本任务精确的 `4.1.136.Final` 相反 | 不组合；测试依赖中真实扫描并激活该官方 aggregate，断言它不进入本地 patch recipe |
+| [`org.openrewrite.netty.UpgradeNetty_3_2_to_4_1`](https://github.com/openrewrite/rewrite-netty/blob/9546824604ff662eb73bd4cabdd9a9d54bc0ae63/src/main/resources/META-INF/rewrite/netty-3_2_to_4_1.yml) | 输入是 `org.jboss.netty` 3.2，包含 group/package/type 大迁移 | 不组合；本模块输入已经是 `io.netty` 4.1/4.2 |
+| 官方 [Maven](https://github.com/openrewrite/rewrite/blob/b3008cc4a1f0c43f562da16e5933a2a56d9bc568/rewrite-maven/src/main/java/org/openrewrite/maven/UpgradeDependencyVersion.java) / [Gradle](https://github.com/openrewrite/rewrite/blob/b3008cc4a1f0c43f562da16e5933a2a56d9bc568/rewrite-gradle/src/main/java/org/openrewrite/gradle/UpgradeDependencyVersion.java) `UpgradeDependencyVersion` | 能做常规 semver 升级，但不能同时表达十三个精确源版本、root/profile owner 与 shadow 隔离、共享属性拒绝、Gradle 嵌套 DSL 边界和每个高版本的 **`目标版本冲突（禁止降级）`** MARK | 依赖层保留严格 visitor；没有把通用版本配方包装成会扩大作用域的伪复用 |
+
+`rewrite-netty:0.10.3` 仅为 test scope，用于验证官方 aggregate 确实能从运行时 classpath
+发现并激活，不进入本模块生产依赖。组合测试同时执行四个官方 core delegate，证明本地守卫只负责
+官方配方无法表达的安全边界，AST 参数增删不再由本模块重复实现。
 
 ## 已自动处理的 Java 迁移
 
@@ -192,13 +215,14 @@ JApiCmp 对 `4.2.10.Final`、`4.2.12.Final` 到目标执行逆向比较时，两
 
 测试结构固定参考与本工程 OpenRewrite `8.87.5` 对应提交中的 [`RewriteTest`](https://github.com/openrewrite/rewrite/blob/b3008cc4a1f0c43f562da16e5933a2a56d9bc568/rewrite-test/src/main/java/org/openrewrite/test/RewriteTest.java)、[Maven `UpgradeDependencyVersionTest`](https://github.com/openrewrite/rewrite/blob/b3008cc4a1f0c43f562da16e5933a2a56d9bc568/rewrite-maven/src/test/java/org/openrewrite/maven/UpgradeDependencyVersionTest.java) 和 [Gradle `UpgradeDependencyVersionTest`](https://github.com/openrewrite/rewrite/blob/b3008cc4a1f0c43f562da16e5933a2a56d9bc568/rewrite-gradle/src/test/java/org/openrewrite/gradle/UpgradeDependencyVersionTest.java)：before→after、精确 marker、类型归属、真实 AST scope、NO-OP 边界、recipe discovery 和 two-cycle idempotency 都必须通过。
 
-当前执行 **257 个 JUnit invocation**：
+当前执行 **277 个 JUnit invocation**：
 
-- 83 个严格依赖升级：十三版本 Maven/Groovy 矩阵、Kotlin/Map、属性/profile/dependencyManagement、所有权/variant/嵌套 DSL/路径边界和幂等；
-- 41 个构建 MARK：两个 4.2 目标冲突、root/profile 可见性、owner/family/TLS/shade、真实 Maven/Gradle AST 激活和误报边界；
-- 18 个 Java AUTO：三个 constructor、求值顺序、真实最早版本 JAR、CXF/Aleph fixture、side-effect/同名/匿名/生成目录负例和幂等；
+- 86 个严格依赖升级：十三版本 Maven/Groovy 矩阵、Kotlin/Map、属性/profile/dependencyManagement、任意高版本禁止回退、所有权/variant/嵌套 DSL/路径边界和幂等；
+- 52 个构建 MARK：4.1 patch、任意 4.2 minor 和更高 major 的目标冲突、root/profile 可见性、owner/family/TLS/shade、真实 Maven/Gradle AST 激活和误报边界；
+- 18 个 Java AUTO：四个参数迁移规则、求值顺序、真实最早版本 JAR、CXF/Aleph fixture、side-effect/同名/匿名/生成目录负例和幂等；
 - 107 个源码 MARK：全部 marker 类别与具体 API、4.2-only API、CXF/Vert.x/Zuul fixture、精确类型反例、生成目录和两周期幂等；
-- 8 个推荐配方组合：descriptor discovery、阶段顺序、4.1 AUTO、两个 4.2 禁止降级、AUTO+MARK 与组合幂等。
+- 11 个推荐配方组合：descriptor discovery、阶段顺序、4.1 AUTO、任意更高分支禁止降级、AUTO+MARK 与组合幂等；
+- 3 个官方能力审计：四个 core delegate 的完整参数、官方 Netty aggregate 真实激活/排除，以及官方参数变换与本地安全守卫的同文件组合。
 
 ## 使用与验收
 
@@ -224,7 +248,7 @@ mvn -U org.openrewrite.maven:rewrite-maven-plugin:6.44.0:dryRun \
 
 提交迁移前应满足：
 
-1. `4.2.10.Final`、`4.2.12.Final` 均未降级，每个目标冲突已有明确的前向分支方案。
+1. 所有高于 `4.1.136.Final` 的固定版本（特别是全部 `4.2.x`）均未降级，每个目标冲突已有明确的前向分支方案。
 2. dependency tree/insight 只解析预期 Netty family；BOM、native TLS provider、classifier 和 shaded 最终包已核验。
 3. 所有 `SearchResult` 已转化为测试、人工决策或有期限的风险记录，而不是直接删除。
 4. malformed headers/pseudo-headers、HPACK/CONTINUATION、Rapid Reset、decompression、flow control、ACK/preface、h2c/ALPN、multiplex、PUSH/CONNECT 和 ByteBuf lifecycle 已在真实 pipeline 压测。

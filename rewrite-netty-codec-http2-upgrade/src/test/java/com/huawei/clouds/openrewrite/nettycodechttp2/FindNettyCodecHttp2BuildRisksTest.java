@@ -30,7 +30,8 @@ class FindNettyCodecHttp2BuildRisksTest implements RewriteTest {
     }
 
     static Stream<Arguments> targetConflictDeclarations() {
-        return Stream.of("4.2.10.Final", "4.2.12.Final").flatMap(version -> {
+        return Stream.of("4.1.137.Final", "4.2.0.Final", "4.2.10.Final", "4.2.12.Final", "5.0.0.Alpha1")
+                .flatMap(version -> {
             String message = conflictMessage(version);
             return Stream.of(
                     Arguments.of(version, "Maven", xml(UpgradeNettyCodecHttp2DependencyTest.pom(version), source ->
@@ -71,6 +72,10 @@ class FindNettyCodecHttp2BuildRisksTest implements RewriteTest {
 
     static Stream<Arguments> targetConflictProperties() {
         return Stream.of(
+                Arguments.of("4.1.137.Final",
+                        FindNettyCodecHttp2BuildRisks.targetConflictMessage("4.1.137.Final")),
+                Arguments.of("4.2.0.Final",
+                        FindNettyCodecHttp2BuildRisks.targetConflictMessage("4.2.0.Final")),
                 Arguments.of("4.2.10.Final", FindNettyCodecHttp2BuildRisks.TARGET_CONFLICT_4_2_10),
                 Arguments.of("4.2.12.Final", FindNettyCodecHttp2BuildRisks.TARGET_CONFLICT_4_2_12));
     }
@@ -320,8 +325,7 @@ class FindNettyCodecHttp2BuildRisksTest implements RewriteTest {
     }
 
     private static String conflictMessage(String version) {
-        return "4.2.10.Final".equals(version) ? FindNettyCodecHttp2BuildRisks.TARGET_CONFLICT_4_2_10 :
-                FindNettyCodecHttp2BuildRisks.TARGET_CONFLICT_4_2_12;
+        return FindNettyCodecHttp2BuildRisks.targetConflictMessage(version);
     }
 
     private static String companion(String artifact, String version) {

@@ -35,7 +35,7 @@ public final class UpgradeSelectedNettyCodecHttp2Dependency extends Recipe {
     @Override
     public String getDescription() {
         return "Upgrade only the thirteen exact 4.1.x io.netty:netty-codec-http2 source versions in owned " +
-               "standard Maven or root Gradle declarations; never downgrade 4.2.10.Final or 4.2.12.Final.";
+               "standard Maven or root Gradle declarations; never downgrade a version above 4.1.136.Final.";
     }
 
     @Override

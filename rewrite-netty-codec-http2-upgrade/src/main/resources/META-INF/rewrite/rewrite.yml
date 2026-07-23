@@ -4,8 +4,8 @@ name: com.huawei.clouds.openrewrite.nettycodechttp2.UpgradeNettyCodecHttp2To4_1_
 displayName: Upgrade workbook-selected Netty HTTP/2 codec dependencies to 4.1.136.Final
 description: >-
   Upgrade only the thirteen approved io.netty:netty-codec-http2 4.1.x versions in owned standard
-  Maven or root Gradle declarations. The listed 4.2.10.Final and 4.2.12.Final sources are target-version
-  conflicts and are deliberately kept unchanged.
+  Maven or root Gradle declarations. Any fixed version newer than 4.1.136.Final, including every 4.2.x
+  source, is a target-version conflict and is deliberately kept unchanged.
 recipeList:
   - com.huawei.clouds.openrewrite.nettycodechttp2.UpgradeSelectedNettyCodecHttp2Dependency
 ---

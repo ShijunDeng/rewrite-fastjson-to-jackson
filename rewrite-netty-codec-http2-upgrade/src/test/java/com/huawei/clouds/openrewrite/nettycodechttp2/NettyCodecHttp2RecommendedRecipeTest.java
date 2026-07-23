@@ -56,7 +56,7 @@ class NettyCodecHttp2RecommendedRecipeTest implements RewriteTest {
 
     @ParameterizedTest(name = "never downgrades {0}")
     @MethodSource("targetConflicts")
-    void recommendedRecipeNeverDowngrades42Branches(String version, String exactMarker) {
+    void recommendedRecipeNeverDowngradesHigherBranches(String version, String exactMarker) {
         rewriteRun(xml(UpgradeNettyCodecHttp2DependencyTest.pom(version), source ->
                 source.path(version + "/pom.xml").after(actual -> actual).afterRecipe(after -> {
                     String printed = after.printAll();
@@ -68,8 +68,14 @@ class NettyCodecHttp2RecommendedRecipeTest implements RewriteTest {
 
     static Stream<Arguments> targetConflicts() {
         return Stream.of(
+                Arguments.of("4.1.137.Final",
+                        FindNettyCodecHttp2BuildRisks.targetConflictMessage("4.1.137.Final")),
+                Arguments.of("4.2.0.Final",
+                        FindNettyCodecHttp2BuildRisks.targetConflictMessage("4.2.0.Final")),
                 Arguments.of("4.2.10.Final", FindNettyCodecHttp2BuildRisks.TARGET_CONFLICT_4_2_10),
-                Arguments.of("4.2.12.Final", FindNettyCodecHttp2BuildRisks.TARGET_CONFLICT_4_2_12));
+                Arguments.of("4.2.12.Final", FindNettyCodecHttp2BuildRisks.TARGET_CONFLICT_4_2_12),
+                Arguments.of("5.0.0.Alpha1",
+                        FindNettyCodecHttp2BuildRisks.targetConflictMessage("5.0.0.Alpha1")));
     }
 
     @Test

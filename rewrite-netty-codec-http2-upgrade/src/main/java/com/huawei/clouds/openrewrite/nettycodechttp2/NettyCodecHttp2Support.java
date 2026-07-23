@@ -5,9 +5,12 @@ import org.openrewrite.groovy.tree.G;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.xml.tree.Xml;
 
+import java.math.BigInteger;
 import java.nio.file.Path;
 import java.util.Locale;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 final class NettyCodecHttp2Support {
     static final String GROUP = "io.netty";
@@ -26,6 +29,8 @@ final class NettyCodecHttp2Support {
             "api", "implementation", "compile", "compileOnly", "compileOnlyApi", "runtime", "runtimeOnly",
             "annotationProcessor", "testCompile", "testCompileOnly", "testImplementation", "testRuntime",
             "testRuntimeOnly", "testFixturesApi", "testFixturesImplementation", "testFixturesRuntimeOnly", "kapt", "ksp");
+    private static final Pattern NUMERIC_VERSION_PREFIX =
+            Pattern.compile("^(\\d+)\\.(\\d+)\\.(\\d+)(?:[.-][A-Za-z0-9][A-Za-z0-9.-]*)?$");
     private static final Set<String> GENERATED_DIRECTORIES = Set.of(
             "target", "build", "out", "dist", "generated", "install", ".gradle", ".mvn", ".idea", ".m2",
             "node_modules", "vendor", ".cache", "coverage", "reports", "test-results", "tmp", "temp");
@@ -42,6 +47,25 @@ final class NettyCodecHttp2Support {
                 value.startsWith("install")) return true;
         }
         return false;
+    }
+
+    /**
+     * A higher fixed Netty line is never a valid input to an upgrade-only recipe targeting 4.1.136.Final.
+     * Comparing the numeric prefix also covers prerelease labels on a later minor/major line, such as
+     * 5.0.0.Alpha1, without pretending that arbitrary Maven ranges or dynamic selectors are fixed versions.
+     */
+    static boolean targetConflict(String version) {
+        if (version == null) return false;
+        Matcher matcher = NUMERIC_VERSION_PREFIX.matcher(version);
+        if (!matcher.matches()) return false;
+        BigInteger major = new BigInteger(matcher.group(1));
+        BigInteger minor = new BigInteger(matcher.group(2));
+        BigInteger patch = new BigInteger(matcher.group(3));
+        int majorOrder = major.compareTo(BigInteger.valueOf(4));
+        int minorOrder = minor.compareTo(BigInteger.ONE);
+        return majorOrder > 0 ||
+               majorOrder == 0 && minorOrder > 0 ||
+               majorOrder == 0 && minorOrder == 0 && patch.compareTo(BigInteger.valueOf(136)) > 0;
     }
 
     static boolean isCodecHttp2Dependency(Cursor cursor, Xml.Tag tag) {
