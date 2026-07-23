@@ -35,16 +35,19 @@ class Log4j12ApiOfficialRecipeAuditTest {
             "org.openrewrite.java.logging.log4j.Log4j1ToLog4j2";
 
     @Test
-    void pinsAllThreeAuditedOfficialArtifacts() throws Exception {
+    void pinsEveryAuditedOfficialArtifact() throws Exception {
         assertArtifact(LoggerSetLevelToConfiguratorRecipe.class, "3.30.0",
                 "c357a7209d721078dc942a777b1d8cc95941f722",
                 "366a1cd43ee8e0f4378cac52036831df07d74d1648222d0664de2c63f7e26827");
         assertArtifact(ApacheBase64ToJavaBase64.class, "2.28.0",
                 "b0424eb13da62085a34a7e84a3987ac78227b70b",
                 "1841723a57e3dad3a47777a311275f1d18fed8e197c99aa3526503e7c8a06d17");
-        assertArtifact(Recipe.class, "8.87.5",
-                "b3008cc4a1f0c43f562da16e5933a2a56d9bc568",
-                "a7ff59eebc8072353ec5c3aee3e2033bc69a844b3c9ce2e9be8d4adaec10cbf8");
+        assertArtifact(Recipe.class, "8.87.7",
+                "af06bb1b159249695dc92187093cd0909da6c843",
+                "a4fb7cd35ada08af9e9585a8d63de4d7b2f12b70af1dc506aff963a6f5434448");
+        assertArtifact(ChangeType.class, "8.88.0-SNAPSHOT",
+                "ea77ee7c7471c17423726ae2612de17b6fc8b111",
+                "015cca0c660685f8107ee1c173db1063302926bb5f7e4598ed908428b0a9550f");
         assertEquals("2.25.5", org.apache.log4j.Category.class.getPackage()
                 .getImplementationVersion());
         assertEquals("4dd812dc5a6343f542a9e0046b1ec78ecf10bdd5a8c15745101cdd8b9aa24974",

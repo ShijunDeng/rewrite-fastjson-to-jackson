@@ -230,8 +230,8 @@ EE 环境选择是不同决策。`jetty-http` 本身不能决定应用应使用 
 | 官方能力 | 固定制品 | 复用方式 |
 | --- | --- | --- |
 | `org.openrewrite.java.migrate.UpgradeJavaVersion` | `rewrite-migrate-java:3.40.0`; manifest `Full-Change=658481254a6ee678f5f162e51d8d49ee01c75877`; JAR SHA-256 `8c00217ff2cf4dc9c139a1eff49ed1403fe20e010e42295f5aeb1dd9a5872dc6` | 参数固定为 `17`，并用本模块 precondition 限定到含精确 AUTO 来源的 authored build |
-| `org.openrewrite.java.ChangeMethodName` | `rewrite-java:8.87.5`; manifest/hash 同下 | 两个 `HttpContent` ByteBuffer accessor 调用收敛到 `getByteBuffer()`；匹配 override 但忽略定义，避免双定义碰撞 |
-| `org.openrewrite.java.ChangeType` | `rewrite-java:8.87.5`; manifest `Full-Change=91e23c2858176877428ddc03e146d2bb023217a8`; JAR SHA-256 `a378253fe0c0865ab39d1743e468fe3d2557d7760e0a6897de294ca18ea90043` | 三个 content 类型的一一对应迁移，`ignoreDefinition=true` |
+| `org.openrewrite.java.ChangeMethodName` | `rewrite-java:8.87.7`; manifest/hash 同下 | 两个 `HttpContent` ByteBuffer accessor 调用收敛到 `getByteBuffer()`；匹配 override 但忽略定义，避免双定义碰撞 |
+| `org.openrewrite.java.ChangeType` | `rewrite-java:8.87.7`; manifest `Full-Change=ea77ee7c7471c17423726ae2612de17b6fc8b111`; JAR SHA-256 `015cca0c660685f8107ee1c173db1063302926bb5f7e4598ed908428b0a9550f` | 三个 content 类型的一一对应迁移，`ignoreDefinition=true` |
 
 许可证分别沿用 `rewrite-migrate-java` 的 Moderne Source Available License 和
 OpenRewrite Core 的 Apache-2.0。固定制品与运行时树测试可防止上游 recipe 内容在

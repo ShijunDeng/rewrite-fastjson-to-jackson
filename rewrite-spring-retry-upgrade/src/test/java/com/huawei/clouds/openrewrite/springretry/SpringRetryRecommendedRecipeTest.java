@@ -74,7 +74,7 @@ class SpringRetryRecommendedRecipeTest implements RewriteTest {
                 .anyMatch("org.openrewrite.java.ChangeMethodName"::equals));
         assertTrue(javaMigration.getRecipeList().stream()
                 .allMatch(child -> child.getClass().getProtectionDomain().getCodeSource()
-                        .getLocation().toString().contains("/8.87.5/")),
+                        .getLocation().toString().contains("/8.87.7/")),
                 javaMigration.getRecipeList().toString());
         Recipe selectedRisks = recipe.getRecipeList().get(4);
         assertEquals(List.of(

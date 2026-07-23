@@ -42,8 +42,8 @@ class OfficialJunrarRecipeAuditTest {
 
     @Test
     void pinsAuditedCoreAndJavaDependenciesArtifacts() throws Exception {
-        assertEquals("8.87.5", Recipe.class.getPackage().getImplementationVersion());
-        assertEquals("b3008cc4a1f0c43f562da16e5933a2a56d9bc568",
+        assertEquals("8.87.7", Recipe.class.getPackage().getImplementationVersion());
+        assertEquals("af06bb1b159249695dc92187093cd0909da6c843",
                 manifestAttribute(Recipe.class, "Full-Change"));
         assertEquals("1.59.0", ChangeDependency.class.getPackage().getImplementationVersion());
         assertEquals("decb8dbb2b5b726f8815efc51c85c34a60268bb0",

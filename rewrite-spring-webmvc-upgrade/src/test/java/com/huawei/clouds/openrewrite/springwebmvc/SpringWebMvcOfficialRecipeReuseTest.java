@@ -62,12 +62,12 @@ class SpringWebMvcOfficialRecipeReuseTest {
 
     @Test
     void pinsEveryAuditedRuntimeArtifactAndTarget() throws Exception {
-        assertArtifact(Recipe.class, "rewrite-core-8.87.5.jar",
-                "b3008cc4a1f0c43f562da16e5933a2a56d9bc568",
-                "a7ff59eebc8072353ec5c3aee3e2033bc69a844b3c9ce2e9be8d4adaec10cbf8");
-        assertArtifact(ChangePackage.class, "rewrite-java-8.87.5.jar",
-                "91e23c2858176877428ddc03e146d2bb023217a8",
-                "a378253fe0c0865ab39d1743e468fe3d2557d7760e0a6897de294ca18ea90043");
+        assertArtifact(Recipe.class, "rewrite-core-8.87.7.jar",
+                "af06bb1b159249695dc92187093cd0909da6c843",
+                "a4fb7cd35ada08af9e9585a8d63de4d7b2f12b70af1dc506aff963a6f5434448");
+        assertArtifact(ChangePackage.class, "rewrite-java-8.87.7.jar",
+                "ea77ee7c7471c17423726ae2612de17b6fc8b111",
+                "015cca0c660685f8107ee1c173db1063302926bb5f7e4598ed908428b0a9550f");
         assertArtifact(MigrateWebMvcConfigurerAdapter.class,
                 "rewrite-spring-6.35.0.jar",
                 "d28afcb6661ad413539056de0936c5489ff9d8ee",

@@ -267,24 +267,24 @@ Validate the resolved graph against the organization's security targets, then sm
 ## Official OpenRewrite capability reuse audit
 
 The audit pins the actual runtime JAR, manifest commit and SHA-256 rather than trusting a Maven
-version string alone. This matters here: the freshly downloaded `rewrite-java:8.87.5` JAR identifies
-itself in its manifest as `8.88.0-SNAPSHOT` at commit `91e23c...`; the coordinate and exact binary
+version string alone. This matters here: the freshly downloaded `rewrite-java:8.87.7` JAR identifies
+itself in its manifest as `8.88.0-SNAPSHOT` at commit `ea77ee7...`; the coordinate and exact binary
 hash are therefore both asserted by tests instead of hiding that upstream publishing anomaly.
 
 | Audited artifact | Immutable runtime evidence | Scope |
 | --- | --- | --- |
-| `org.openrewrite:rewrite-java:8.87.5` | manifest [`91e23c2858176877428ddc03e146d2bb023217a8`](https://github.com/openrewrite/rewrite/tree/91e23c2858176877428ddc03e146d2bb023217a8); SHA-256 `a378253fe0c0865ab39d1743e468fe3d2557d7760e0a6897de294ca18ea90043` | Provides the two Java leaves used at runtime. |
-| `org.openrewrite:rewrite-properties:8.87.5` | manifest [`b3008cc4a1f0c43f562da16e5933a2a56d9bc568`](https://github.com/openrewrite/rewrite/tree/b3008cc4a1f0c43f562da16e5933a2a56d9bc568); SHA-256 `887bc2c9802e8824e47103fcd9cef614161c9cbef1b0b66adfe996c999f3f656` | Provides the exact old/new Properties leaf. |
-| `org.openrewrite:rewrite-yaml:8.87.5` | manifest [`b3008cc4a1f0c43f562da16e5933a2a56d9bc568`](https://github.com/openrewrite/rewrite/tree/b3008cc4a1f0c43f562da16e5933a2a56d9bc568); SHA-256 `ee7b98ffc6360ee2407516de0a7a5dc6595e462a9d2f33e462afe6fe0298354e` | Audited for `ChangeValue`; not composed because it lacks an old-value guard. |
+| `org.openrewrite:rewrite-java:8.87.7` | manifest [`ea77ee7c7471c17423726ae2612de17b6fc8b111`](https://github.com/openrewrite/rewrite/tree/ea77ee7c7471c17423726ae2612de17b6fc8b111); SHA-256 `015cca0c660685f8107ee1c173db1063302926bb5f7e4598ed908428b0a9550f` | Provides the two Java leaves used at runtime. |
+| `org.openrewrite:rewrite-properties:8.87.7` | manifest [`af06bb1b159249695dc92187093cd0909da6c843`](https://github.com/openrewrite/rewrite/tree/af06bb1b159249695dc92187093cd0909da6c843); SHA-256 `cbdb145d82eac0ac8d030a7289571db07c2b0cd28f52b13447bd3bf1dec01eea` | Provides the exact old/new Properties leaf. |
+| `org.openrewrite:rewrite-yaml:8.87.7` | manifest [`af06bb1b159249695dc92187093cd0909da6c843`](https://github.com/openrewrite/rewrite/tree/af06bb1b159249695dc92187093cd0909da6c843); SHA-256 `780d596a6646f59112083715af64af862309740df19e842979615ebf30c97f7d` | Audited for `ChangeValue`; not composed because it lacks an old-value guard. |
 | `org.openrewrite.recipe:rewrite-java-dependencies:1.59.0` | manifest [`decb8dbb2b5b726f8815efc51c85c34a60268bb0`](https://github.com/openrewrite/rewrite-java-dependencies/tree/decb8dbb2b5b726f8815efc51c85c34a60268bb0); SHA-256 `b5c5ffaa0aea06cbbb8ae110ed138261bce621806c789f14ea0f3fe92cf95550` | Test-scope audit of the rejected generic dependency selector. |
 | `org.openrewrite.recipe:rewrite-apache:2.28.0` | manifest [`b0424eb13da62085a34a7e84a3987ac78227b70b`](https://github.com/openrewrite/rewrite-apache/tree/b0424eb13da62085a34a7e84a3987ac78227b70b); SHA-256 `1841723a57e3dad3a47777a311275f1d18fed8e197c99aa3526503e7c8a06d17` | Test-scope catalog audit only. Its Moderne Source Available code is not copied into this module. |
 
 | Official capability | Decision | Actual use / reason |
 | --- | --- | --- |
-| [`ChangeMethodName`](https://github.com/openrewrite/rewrite/blob/91e23c2858176877428ddc03e146d2bb023217a8/rewrite-java/src/main/java/org/openrewrite/java/ChangeMethodName.java) | **DIRECTLY COMPOSED** | Exact method pattern `org.apache.zookeeper.server.persistence.FileTxnSnapLog getDataDir()`, new name `getDataLogDir`, `matchOverrides=false`, `ignoreDefinition=true`. Calls and method references are type-aware. |
-| [`ChangeType`](https://github.com/openrewrite/rewrite/blob/91e23c2858176877428ddc03e146d2bb023217a8/rewrite-java/src/main/java/org/openrewrite/java/ChangeType.java) | **DIRECTLY COMPOSED** | Exact old/new audit logger FQCNs with `ignoreDefinition=true`. |
-| [`ChangePropertyValue`](https://github.com/openrewrite/rewrite/blob/b3008cc4a1f0c43f562da16e5933a2a56d9bc568/rewrite-properties/src/main/java/org/openrewrite/properties/ChangePropertyValue.java) | **DIRECTLY COMPOSED** | Exact key, exact old/new value, `regex=false`, `relaxedBinding=false`. |
-| [`ChangeValue`](https://github.com/openrewrite/rewrite/blob/b3008cc4a1f0c43f562da16e5933a2a56d9bc568/rewrite-yaml/src/main/java/org/openrewrite/yaml/ChangeValue.java) | **AUDITED, EXCLUDED** | Its public options are only `keyPath`, replacement `value` and `filePattern`; it has no `oldValue`. A file-level precondition is still unsafe when one YAML document contains the retired FQCN and another contains `${AUDIT_LOGGER}`. The small local visitor changes only the exact old scalar. |
+| [`ChangeMethodName`](https://github.com/openrewrite/rewrite/blob/ea77ee7c7471c17423726ae2612de17b6fc8b111/rewrite-java/src/main/java/org/openrewrite/java/ChangeMethodName.java) | **DIRECTLY COMPOSED** | Exact method pattern `org.apache.zookeeper.server.persistence.FileTxnSnapLog getDataDir()`, new name `getDataLogDir`, `matchOverrides=false`, `ignoreDefinition=true`. Calls and method references are type-aware. |
+| [`ChangeType`](https://github.com/openrewrite/rewrite/blob/ea77ee7c7471c17423726ae2612de17b6fc8b111/rewrite-java/src/main/java/org/openrewrite/java/ChangeType.java) | **DIRECTLY COMPOSED** | Exact old/new audit logger FQCNs with `ignoreDefinition=true`. |
+| [`ChangePropertyValue`](https://github.com/openrewrite/rewrite/blob/af06bb1b159249695dc92187093cd0909da6c843/rewrite-properties/src/main/java/org/openrewrite/properties/ChangePropertyValue.java) | **DIRECTLY COMPOSED** | Exact key, exact old/new value, `regex=false`, `relaxedBinding=false`. |
+| [`ChangeValue`](https://github.com/openrewrite/rewrite/blob/af06bb1b159249695dc92187093cd0909da6c843/rewrite-yaml/src/main/java/org/openrewrite/yaml/ChangeValue.java) | **AUDITED, EXCLUDED** | Its public options are only `keyPath`, replacement `value` and `filePattern`; it has no `oldValue`. A file-level precondition is still unsafe when one YAML document contains the retired FQCN and another contains `${AUDIT_LOGGER}`. The small local visitor changes only the exact old scalar. |
 | [`UpgradeDependencyVersion`](https://github.com/openrewrite/rewrite-java-dependencies/blob/decb8dbb2b5b726f8815efc51c85c34a60268bb0/src/main/java/org/openrewrite/java/dependencies/UpgradeDependencyVersion.java) | **AUDITED, EXCLUDED** | A generic version selector cannot encode the five-value AUTO allow-list, local-owner isolation, exact workbook conflicts, or the `目标版本冲突（禁止降级）` no-downgrade contract. |
 | broad Apache/Java migration aggregates | **AUDITED, EXCLUDED** | They would change unrelated dependencies, language baselines or APIs beyond the ZooKeeper task. Runtime-tree tests reject every `org.openrewrite.apache.*`, `org.openrewrite.java.migrate.*`, generic Maven/Gradle dependency selector and non-local ZooKeeper node. |
 | ZooKeeper-specific official recipe | **UNAVAILABLE** | The fixed `rewrite-apache:2.28.0` source tree and activated catalog contain no path or recipe name containing `zookeeper`; the test first proves the catalog loaded, then proves this absence. |
@@ -318,10 +318,10 @@ that explicitly supplies `target/`, `build/`, generated, installation, cache or 
 having those files changed.
 
 The before/after, attributed-type, no-op and cycle structure follows the fixed OpenRewrite Core
-tests for [`ChangeMethodName`](https://github.com/openrewrite/rewrite/blob/b3008cc4a1f0c43f562da16e5933a2a56d9bc568/rewrite-java-test/src/test/java/org/openrewrite/java/ChangeMethodNameTest.java),
-[`ChangeType`](https://github.com/openrewrite/rewrite/blob/b3008cc4a1f0c43f562da16e5933a2a56d9bc568/rewrite-java-test/src/test/java/org/openrewrite/java/ChangeTypeTest.java),
-[`ChangePropertyValue`](https://github.com/openrewrite/rewrite/blob/b3008cc4a1f0c43f562da16e5933a2a56d9bc568/rewrite-properties/src/test/java/org/openrewrite/properties/ChangePropertyValueTest.java)
-and [`ChangeValue`](https://github.com/openrewrite/rewrite/blob/b3008cc4a1f0c43f562da16e5933a2a56d9bc568/rewrite-yaml/src/test/java/org/openrewrite/yaml/ChangeValueTest.java).
+tests for [`ChangeMethodName`](https://github.com/openrewrite/rewrite/blob/ea77ee7c7471c17423726ae2612de17b6fc8b111/rewrite-java-test/src/test/java/org/openrewrite/java/ChangeMethodNameTest.java),
+[`ChangeType`](https://github.com/openrewrite/rewrite/blob/ea77ee7c7471c17423726ae2612de17b6fc8b111/rewrite-java-test/src/test/java/org/openrewrite/java/ChangeTypeTest.java),
+[`ChangePropertyValue`](https://github.com/openrewrite/rewrite/blob/af06bb1b159249695dc92187093cd0909da6c843/rewrite-properties/src/test/java/org/openrewrite/properties/ChangePropertyValueTest.java)
+and [`ChangeValue`](https://github.com/openrewrite/rewrite/blob/af06bb1b159249695dc92187093cd0909da6c843/rewrite-yaml/src/test/java/org/openrewrite/yaml/ChangeValueTest.java).
 
 ## Real-repository fixtures
 

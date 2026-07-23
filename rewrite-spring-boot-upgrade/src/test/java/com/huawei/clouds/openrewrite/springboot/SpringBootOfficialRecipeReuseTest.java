@@ -59,9 +59,9 @@ class SpringBootOfficialRecipeReuseTest {
                 "d28afcb6661ad413539056de0936c5489ff9d8ee",
                 "27df444210c8bfee7e9d0f04d6d6f7986d2bee36bcd472d8307912613e93e98b");
         assertArtifact(ChangePackage.class,
-                "rewrite-java-8.87.5.jar", "8.88.0-SNAPSHOT",
-                "91e23c2858176877428ddc03e146d2bb023217a8",
-                "a378253fe0c0865ab39d1743e468fe3d2557d7760e0a6897de294ca18ea90043");
+                "rewrite-java-8.87.7.jar", "8.88.0-SNAPSHOT",
+                "ea77ee7c7471c17423726ae2612de17b6fc8b111",
+                "015cca0c660685f8107ee1c173db1063302926bb5f7e4598ed908428b0a9550f");
     }
 
     @Test
