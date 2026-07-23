@@ -15,6 +15,7 @@ import org.openrewrite.marker.SearchResult;
 import org.openrewrite.xml.XmlIsoVisitor;
 import org.openrewrite.xml.tree.Xml;
 
+import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -40,6 +41,7 @@ public final class FindSpringWebMvc6BuildRisks extends Recipe {
             "spring-webmvc is versionless, variable, ranged, dynamic, catalog/platform/BOM-managed, shared, or externally owned; migrate the actual owner and verify that 6.2.19 resolves";
     static final String OUTSIDE =
             "This fixed spring-webmvc version is outside the workbook-visible source set and target; it is intentionally not auto-upgraded";
+    static final String TARGET_CONFLICT = "目标版本冲突（禁止降级）";
     static final String VARIANT =
             "This classified or non-JAR spring-webmvc artifact is outside deterministic scope; verify the exact 6.2.19 artifact shape manually";
     static final String JAVA =
@@ -220,7 +222,7 @@ public final class FindSpringWebMvc6BuildRisks extends Recipe {
         if (resolved == null || !FIXED.matcher(resolved).matches()) return OWNER;
         if (UpgradeSelectedSpringWebMvcDependency.SOURCE_VERSIONS.contains(resolved) ||
             UpgradeSelectedSpringWebMvcDependency.TARGET.equals(resolved)) return null;
-        return OUTSIDE;
+        return higherThanTarget(resolved) ? TARGET_CONFLICT : OUTSIDE;
     }
 
     private static String coordinateMessage(Object literal, boolean companions) {
@@ -234,7 +236,8 @@ public final class FindSpringWebMvc6BuildRisks extends Recipe {
             if (parts.length > 3 || parts.length == 3 && parts[2].contains("@")) return VARIANT;
             if (parts.length != 3 || !FIXED.matcher(parts[2]).matches()) return OWNER;
             if (UpgradeSelectedSpringWebMvcDependency.SOURCE_VERSIONS.contains(parts[2])) return null;
-            return UpgradeSelectedSpringWebMvcDependency.TARGET.equals(parts[2]) ? null : OUTSIDE;
+            return UpgradeSelectedSpringWebMvcDependency.TARGET.equals(parts[2]) ? null :
+                    higherThanTarget(parts[2]) ? TARGET_CONFLICT : OUTSIDE;
         }
         if (!companions) return null;
         String coordinate = group + ":" + artifact;
@@ -277,10 +280,25 @@ public final class FindSpringWebMvc6BuildRisks extends Recipe {
             if (variant) return VARIANT;
             if (version == null || !FIXED.matcher(version).matches()) return OWNER;
             if (UpgradeSelectedSpringWebMvcDependency.SOURCE_VERSIONS.contains(version)) return null;
-            return UpgradeSelectedSpringWebMvcDependency.TARGET.equals(version) ? null : OUTSIDE;
+            return UpgradeSelectedSpringWebMvcDependency.TARGET.equals(version) ? null :
+                    higherThanTarget(version) ? TARGET_CONFLICT : OUTSIDE;
         }
         if (!companions || group == null || artifact == null) return null;
         return coordinateMessage(group + ":" + artifact + ":" + (version == null ? "" : version), true);
+    }
+
+    private static boolean higherThanTarget(String version) {
+        String[] candidate = version.split("[^0-9]+");
+        String[] target = UpgradeSelectedSpringWebMvcDependency.TARGET.split("\\.");
+        int length = Math.max(candidate.length, target.length);
+        for (int index = 0; index < length; index++) {
+            BigInteger left = new BigInteger(index < candidate.length && !candidate[index].isEmpty()
+                    ? candidate[index] : "0");
+            BigInteger right = new BigInteger(index < target.length ? target[index] : "0");
+            int comparison = left.compareTo(right);
+            if (comparison != 0) return comparison > 0;
+        }
+        return false;
     }
 
     private static J.MethodInvocation markDynamicTemplateArgument(J.MethodInvocation invocation, boolean companions) {

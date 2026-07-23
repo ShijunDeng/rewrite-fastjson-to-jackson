@@ -17,6 +17,10 @@
   <dependencies>
     <dependency>
       <groupId>org.openrewrite.recipe</groupId>
+      <artifactId>rewrite-spring</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.openrewrite.recipe</groupId>
       <artifactId>rewrite-java-dependencies</artifactId>
     </dependency>
     <dependency>

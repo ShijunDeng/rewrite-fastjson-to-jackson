@@ -19,14 +19,23 @@ recipeList:
 type: specs.openrewrite.org/v1beta/recipe
 name: com.huawei.clouds.openrewrite.springwebmvc.MigrateDeterministicSpringWebMvc6Java
 displayName: Migrate deterministic Spring Web MVC 6 Java APIs
-description: Migrate type-attributed javax.servlet APIs and direct removed MVC adapter subclasses where inherited behavior is provably unused.
+description: Reuse precise official Spring Framework recipes for Servlet namespaces, removed MVC adapters, exception status types, and response status accessors; retain a local interceptor migration only to preserve the removed adapter's async contract and existing interfaces.
 tags:
   - spring
   - spring-webmvc
   - jakarta-ee
   - source-migration
+preconditions:
+  - com.huawei.clouds.openrewrite.springwebmvc.IsSpringWebMvcNonGeneratedSource
 recipeList:
-  - com.huawei.clouds.openrewrite.springwebmvc.MigrateSpringWebMvcDeterministicJava
+  - org.openrewrite.java.ChangePackage:
+      oldPackageName: javax.servlet
+      newPackageName: jakarta.servlet
+      recursive: true
+  - org.openrewrite.java.spring.framework.MigrateWebMvcConfigurerAdapter
+  - com.huawei.clouds.openrewrite.springwebmvc.MigrateHandlerInterceptorAdapterPreservingAsyncContract
+  - org.openrewrite.java.spring.framework.MigrateResponseEntityExceptionHandlerHttpStatusToHttpStatusCode
+  - org.openrewrite.java.spring.framework.MigrateResponseStatusException
 ---
 type: specs.openrewrite.org/v1beta/recipe
 name: com.huawei.clouds.openrewrite.springwebmvc.FindSpringWebMvc6BuildMigrationRisks

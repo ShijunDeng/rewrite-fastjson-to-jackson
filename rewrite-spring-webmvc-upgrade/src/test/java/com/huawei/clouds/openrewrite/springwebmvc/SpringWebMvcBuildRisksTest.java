@@ -30,6 +30,29 @@ class SpringWebMvcBuildRisksTest implements RewriteTest {
     }
 
     @Test
+    void marksHigherPrimaryVersionsWithExactNoDowngradeMessage() {
+        rewriteRun(
+                pomXml(project("<dependencies>" + target("7.0.0", "") + "</dependencies>"),
+                        source -> source.after(actual -> {
+                            assertTrue(actual.contains(FindSpringWebMvc6BuildRisks.TARGET_CONFLICT));
+                            return actual;
+                        })),
+                buildGradle("dependencies { implementation 'org.springframework:spring-webmvc:6.2.20' }",
+                        source -> source.after(actual -> {
+                            assertTrue(actual.contains(FindSpringWebMvc6BuildRisks.TARGET_CONFLICT));
+                            return actual;
+                        })),
+                buildGradleKts("""
+                        dependencies {
+                            implementation("org.springframework:spring-webmvc:999999999999999999999999.0.0")
+                        }
+                        """, source -> source.after(actual -> {
+                            assertTrue(actual.contains(FindSpringWebMvc6BuildRisks.TARGET_CONFLICT));
+                            return actual;
+                        })));
+    }
+
+    @Test
     void variantAloneDoesNotGateCompanionOrJavaMarkers() {
         rewriteRun(pomXml(project("<properties><java.version>8</java.version></properties><dependencies>" +
                 target("5.3.23", "<classifier>sources</classifier>") +

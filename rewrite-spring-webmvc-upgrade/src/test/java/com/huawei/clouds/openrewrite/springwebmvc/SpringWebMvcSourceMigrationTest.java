@@ -63,7 +63,7 @@ class SpringWebMvcSourceMigrationTest implements RewriteTest {
 
     @Test
     void adapterMigrationMaintainsAttributedClassHierarchy() {
-        rewriteRun(spec -> spec.recipe(new MigrateRemovedMvcAdapters()).parser(parser()),
+        rewriteRun(spec -> spec.recipe(recipe(AUTO)).parser(parser()).typeValidationOptions(TypeValidation.none()),
                 java(
                         "import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter; class Config extends WebMvcConfigurerAdapter {}",
                         "import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;\n\nclass Config implements WebMvcConfigurer {}"));
@@ -87,6 +87,29 @@ class SpringWebMvcSourceMigrationTest implements RewriteTest {
                     JavaType.Class type = (JavaType.Class) after.getClasses().get(0).getType();
                     assertTrue(type.getInterfaces().stream().anyMatch(candidate -> TypeUtils.isOfClassType(
                             candidate, "org.springframework.web.servlet.AsyncHandlerInterceptor")));
+                })));
+    }
+
+    @Test
+    void localHandlerGapPreservesAsyncCallbackAndExistingInterface() {
+        rewriteRun(java(
+                """
+                  import java.io.Serializable;
+                  import javax.servlet.http.HttpServletRequest;
+                  import javax.servlet.http.HttpServletResponse;
+                  import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
+                  class StreamingInterceptor extends HandlerInterceptorAdapter implements Serializable {
+                      @Override
+                      public void afterConcurrentHandlingStarted(
+                              HttpServletRequest request, HttpServletResponse response) {
+                      }
+                  }
+                  """,
+                source -> source.after(actual -> actual).afterRecipe(after -> {
+                    String migrated = after.printAll();
+                    assertTrue(migrated.contains("implements Serializable, AsyncHandlerInterceptor"), migrated);
+                    assertTrue(migrated.contains("import jakarta.servlet.http.HttpServletRequest;"), migrated);
+                    assertTrue(migrated.contains("import jakarta.servlet.http.HttpServletResponse;"), migrated);
                 })));
     }
 
@@ -148,26 +171,43 @@ class SpringWebMvcSourceMigrationTest implements RewriteTest {
     }
 
     @Test
-    void preservesAdapterSubclassThatCallsSuperBehavior() {
-        rewriteRun(java("""
-                import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
-                class WebConfig extends WebMvcConfigurerAdapter {
-                    void configure() { super.configure(); }
-                    int marker() { return super.marker; }
-                }
-                """));
+    void officialRecipeRemovesNoopWebMvcAdapterSuperCall() {
+        rewriteRun(java(
+                """
+                  import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
+                  class WebConfig extends WebMvcConfigurerAdapter {
+                      void configure() { super.configure(); }
+                  }
+                  """,
+                """
+                  import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+                  class WebConfig implements WebMvcConfigurer {
+                      void configure() { }
+                  }
+                  """));
     }
 
     @Test
-    void preservesAnonymousAdapterAndNonAttributedLookalike() {
-        rewriteRun(java("""
-                import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
-                class WebConfig {
-                    Object bean() { return new WebMvcConfigurerAdapter() {}; }
-                }
-                class CustomWebMvcConfigurerAdapter {}
-                class Other extends CustomWebMvcConfigurerAdapter {}
-                """));
+    void officialRecipeMigratesAnonymousAdapterButPreservesLookalike() {
+        rewriteRun(java(
+                """
+                  import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
+                  class WebConfig {
+                      Object bean() { return new WebMvcConfigurerAdapter() {}; }
+                  }
+                  class CustomWebMvcConfigurerAdapter {}
+                  class Other extends CustomWebMvcConfigurerAdapter {}
+                  """,
+                """
+                  import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+                  class WebConfig {
+                      Object bean() { return new WebMvcConfigurer() {}; }
+                  }
+                  class CustomWebMvcConfigurerAdapter {}
+                  class Other extends CustomWebMvcConfigurerAdapter {}
+                  """));
     }
 
     @Test
@@ -432,7 +472,7 @@ class SpringWebMvcSourceMigrationTest implements RewriteTest {
                 "package jakarta.servlet.http; public interface HttpServletRequest {}",
                 "package jakarta.servlet.http; public interface HttpServletResponse {}",
                 "package org.springframework.web.servlet.config.annotation; public interface WebMvcConfigurer { default void addResourceHandlers(ResourceHandlerRegistry registry) {} }",
-                "package org.springframework.web.servlet.config.annotation; public class WebMvcConfigurerAdapter implements WebMvcConfigurer { protected int marker; public void configure() {} }",
+                "package org.springframework.web.servlet.config.annotation; public class WebMvcConfigurerAdapter implements WebMvcConfigurer { public void configure() {} }",
                 "package org.springframework.web.servlet; public interface HandlerInterceptor {}",
                 "package org.springframework.web.servlet; public interface AsyncHandlerInterceptor extends HandlerInterceptor { " +
                 "default void afterConcurrentHandlingStarted(javax.servlet.http.HttpServletRequest r, javax.servlet.http.HttpServletResponse s) {} }",

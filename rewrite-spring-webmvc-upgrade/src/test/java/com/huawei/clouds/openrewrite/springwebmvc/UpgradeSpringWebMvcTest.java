@@ -9,6 +9,7 @@ import org.openrewrite.test.RecipeSpec;
 import org.openrewrite.test.RewriteTest;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.openrewrite.gradle.Assertions.buildGradle;
 import static org.openrewrite.gradle.Assertions.buildGradleKts;
@@ -33,6 +34,15 @@ class UpgradeSpringWebMvcTest implements RewriteTest {
     })
     void upgradesEveryVisibleWorkbookVersion(String version) {
         rewriteRun(xml(pom(version), pom("6.2.19"), source -> source.path("pom.xml")));
+    }
+
+    @Test
+    void whitelistAndTargetExactlyMatchTheVisibleWorkbookContract() {
+        assertEquals(java.util.Set.of(
+                        "5.2.5.RELEASE", "5.2.9.RELEASE", "5.3.21", "5.3.23", "5.3.26",
+                        "5.3.27", "5.3.30", "5.3.31", "5.3.32", "5.3.33"),
+                UpgradeSelectedSpringWebMvcDependency.SOURCE_VERSIONS);
+        assertEquals("6.2.19", UpgradeSelectedSpringWebMvcDependency.TARGET);
     }
 
     @Test
@@ -88,6 +98,22 @@ class UpgradeSpringWebMvcTest implements RewriteTest {
                 target(null, "") + target("${missing}", "") + target("[5.3,6)", "") +
                 target("5.3.22", "") + target("6.2.19", "") + target("7.0.0", "") +
                 "</dependencies>"), source -> source.path("pom.xml")));
+    }
+
+    @ParameterizedTest(name = "higher source {0} is never downgraded")
+    @ValueSource(strings = {"6.2.20", "6.3.0", "7.0.0"})
+    void higherVersionsAreNeverDowngraded(String version) {
+        rewriteRun(xml(pom(version), source -> source.path("pom.xml")));
+    }
+
+    @Test
+    void recommendedCompositionMarksButNeverDowngradesHigherVersion() {
+        rewriteRun(specification -> specification.recipe(recipe(MIGRATE)),
+                pomXml(pom("7.0.0"), source -> source.after(actual -> actual).afterRecipe(after -> {
+                    assertTrue(after.printAll().contains("<version>7.0.0</version>"), after::printAll);
+                    assertTrue(after.printAll().contains(FindSpringWebMvc6BuildRisks.TARGET_CONFLICT), after::printAll);
+                    assertFalse(after.printAll().contains("<version>6.2.19</version>"), after::printAll);
+                })));
     }
 
     @Test
