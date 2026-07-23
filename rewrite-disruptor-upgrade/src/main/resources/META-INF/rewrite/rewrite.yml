@@ -1,0 +1,21 @@
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.disruptor.UpgradeDisruptorTo4_0_0
+displayName: Upgrade workbook-selected Disruptor dependencies to 4.0.0
+description: >-
+  Upgrade only exact Disruptor 3.4.2 and 3.4.4 declarations owned by the current Maven or root Gradle build,
+  preserving unsupported versions, external owners, artifact variants, nested DSL, and generated files.
+recipeList:
+  - com.huawei.clouds.openrewrite.disruptor.UpgradeSelectedDisruptorDependency
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.disruptor.MigrateDisruptorTo4_0_0
+displayName: Migrate Disruptor 3.4.x to 4.0.0
+description: >-
+  Reuse the public strict dependency upgrade, migrate deterministic BatchEventProcessor and EventHandler APIs,
+  then mark worker topology, executor, batching, removed API, logging, input, version-owner, and Java 11 decisions.
+recipeList:
+  - com.huawei.clouds.openrewrite.disruptor.UpgradeDisruptorTo4_0_0
+  - com.huawei.clouds.openrewrite.disruptor.MigrateDisruptor4Java
+  - com.huawei.clouds.openrewrite.disruptor.FindDisruptor4SourceRisks
+  - com.huawei.clouds.openrewrite.disruptor.FindDisruptor4BuildRisks
