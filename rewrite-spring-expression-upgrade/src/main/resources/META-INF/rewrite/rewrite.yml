@@ -19,14 +19,32 @@ recipeList:
 type: specs.openrewrite.org/v1beta/recipe
 name: com.huawei.clouds.openrewrite.springexpression.ConfigureSpringExpression6Build
 displayName: Configure Spring Expression 6 build prerequisites
-description: Conditionally compose official OpenRewrite Java 17 and Maven parameter-metadata recipes for a locally owned Spring Expression declaration.
+description: Directly compose official OpenRewrite Java 17 and Maven parameter-metadata recipes for a locally owned Spring Expression declaration.
 tags:
   - spring
   - spel
   - java
   - build
+preconditions:
+  - com.huawei.clouds.openrewrite.springexpression.FindSpringExpressionBuildOwner
 recipeList:
-  - com.huawei.clouds.openrewrite.springexpression.ConfigureSpringExpressionBuild
+  - org.openrewrite.maven.UpdateMavenProjectPropertyJavaVersion:
+      version: 17
+  - org.openrewrite.maven.AddProperty:
+      key: maven.compiler.parameters
+      value: "true"
+      preserveExistingValue: true
+      trustParent: false
+  - org.openrewrite.gradle.UpdateJavaCompatibility:
+      version: 17
+      compatibilityType: source
+      allowDowngrade: false
+      addIfMissing: false
+  - org.openrewrite.gradle.UpdateJavaCompatibility:
+      version: 17
+      compatibilityType: target
+      allowDowngrade: false
+      addIfMissing: false
 ---
 type: specs.openrewrite.org/v1beta/recipe
 name: com.huawei.clouds.openrewrite.springexpression.FindSpringExpression6_2Risks

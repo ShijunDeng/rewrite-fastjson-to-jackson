@@ -1,10 +1,13 @@
 package com.huawei.clouds.openrewrite.springexpression;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.openrewrite.Recipe;
 import org.openrewrite.SourceFile;
 import org.openrewrite.Tree;
 import org.openrewrite.TreeVisitor;
+import org.openrewrite.config.DeclarativeRecipe;
 import org.openrewrite.config.Environment;
 import org.openrewrite.marker.SearchResult;
 import org.openrewrite.test.RecipeSpec;
@@ -36,14 +39,21 @@ class SpringExpressionRecommendedRecipeTest implements RewriteTest {
     }
 
     @Test
-    void runtimeRecipeTreeHasDeterministicOrderAndOfficialBuildWrapper() {
+    void runtimeRecipeTreeHasDeterministicOrderAndDirectOfficialBuildLeaves() {
         Recipe aggregate = environment().activateRecipes(MIGRATE);
         assertEquals(List.of(UPGRADE, CONFIGURE, RISKS),
                 aggregate.getRecipeList().stream().map(Recipe::getName).toList());
 
-        Recipe configure = aggregate.getRecipeList().get(1);
-        assertEquals(1, configure.getRecipeList().size());
-        assertInstanceOf(ConfigureSpringExpressionBuild.class, configure.getRecipeList().get(0));
+        DeclarativeRecipe configure = assertInstanceOf(
+                DeclarativeRecipe.class, aggregate.getRecipeList().get(1));
+        assertEquals(List.of(FindSpringExpressionBuildOwner.class),
+                configure.getPreconditions().stream().map(Object::getClass).toList());
+        assertEquals(List.of(
+                        "org.openrewrite.maven.UpdateMavenProjectPropertyJavaVersion",
+                        "org.openrewrite.maven.AddProperty",
+                        "org.openrewrite.gradle.UpdateJavaCompatibility",
+                        "org.openrewrite.gradle.UpdateJavaCompatibility"),
+                effectiveChildren(configure).stream().map(Recipe::getName).toList());
 
         Recipe risks = aggregate.getRecipeList().get(2);
         assertEquals(List.of(
@@ -55,6 +65,10 @@ class SpringExpressionRecommendedRecipeTest implements RewriteTest {
         List<String> names = flatten(aggregate);
         assertFalse(names.contains(
                 "com.huawei.clouds.openrewrite.springexpression.PreserveLegacyUnlimitedSpelOperations"));
+        assertFalse(names.contains(
+                "org.openrewrite.java.spring.framework.UpgradeSpringFramework_6_2"));
+        assertFalse(names.contains(
+                "org.openrewrite.java.dependencies.UpgradeDependencyVersion"));
         assertTrue(aggregate.validate().isValid(), aggregate.validate().toString());
     }
 
@@ -76,12 +90,13 @@ class SpringExpressionRecommendedRecipeTest implements RewriteTest {
         );
     }
 
-    @Test
-    void recommendedRecipeNeverDowngradesAndAddsExactConflictMarker() {
+    @ParameterizedTest
+    @ValueSource(strings = {"6.2.20", "6.3.0", "7.0.0"})
+    void recommendedRecipeNeverDowngradesAndAddsExactConflictMarker(String version) {
         rewriteRun(
                 spec -> spec.expectedCyclesThatMakeChanges(1),
                 xml(
-                        pom("<dependencies>" + dependency("7.0.0") + "</dependencies>"),
+                        pom("<dependencies>" + dependency(version) + "</dependencies>"),
                         source -> source.path("pom.xml").after(actual -> actual).afterRecipe(after -> {
                             List<String> messages = markerDescriptions(after);
                             assertEquals(1, messages.size(), messages.toString());
@@ -101,6 +116,21 @@ class SpringExpressionRecommendedRecipeTest implements RewriteTest {
             names.addAll(flatten(child));
         }
         return names;
+    }
+
+    private static List<Recipe> effectiveChildren(Recipe recipe) {
+        return recipe.getRecipeList().stream()
+                .map(SpringExpressionRecommendedRecipeTest::unwrap)
+                .filter(child -> !child.getClass().getName().endsWith("PreconditionBellwether"))
+                .toList();
+    }
+
+    private static Recipe unwrap(Recipe recipe) {
+        Recipe current = recipe;
+        while (current instanceof Recipe.DelegatingRecipe delegating) {
+            current = delegating.getDelegate();
+        }
+        return current;
     }
 
     private static String pom(String body) {

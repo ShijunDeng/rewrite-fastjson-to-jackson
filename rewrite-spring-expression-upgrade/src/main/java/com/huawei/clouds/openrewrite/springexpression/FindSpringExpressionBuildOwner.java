@@ -5,33 +5,29 @@ import org.openrewrite.Recipe;
 import org.openrewrite.SourceFile;
 import org.openrewrite.Tree;
 import org.openrewrite.TreeVisitor;
-import org.openrewrite.gradle.UpdateJavaCompatibility;
 import org.openrewrite.groovy.GroovyIsoVisitor;
 import org.openrewrite.groovy.tree.G;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.kotlin.KotlinIsoVisitor;
 import org.openrewrite.kotlin.tree.K;
-import org.openrewrite.maven.AddProperty;
-import org.openrewrite.maven.UpdateMavenProjectPropertyJavaVersion;
+import org.openrewrite.marker.SearchResult;
 import org.openrewrite.xml.XmlIsoVisitor;
 import org.openrewrite.xml.tree.Xml;
 
-import java.util.List;
-
 /**
- * Apply the narrowly reusable official OpenRewrite build recipes only when this
- * project locally owns a selected or target Spring Expression declaration.
+ * Declarative precondition that limits official build recipes to a build file
+ * which unambiguously owns a selected or target Spring Expression declaration.
  */
-public final class ConfigureSpringExpressionBuild extends Recipe {
+public final class FindSpringExpressionBuildOwner extends Recipe {
     @Override
     public String getDisplayName() {
-        return "Configure Java 17 and parameter metadata for Spring Expression 6.2";
+        return "Find a local Spring Expression build owner";
     }
 
     @Override
     public String getDescription() {
-        return "Conditionally compose official OpenRewrite Maven/Gradle Java compatibility and Maven property " +
-               "recipes for locally owned Spring Expression declarations.";
+        return "Match only a non-generated Maven or Gradle build file which locally owns a standard " +
+               "Spring Expression dependency at one of the 17 selected versions or at 6.2.19.";
     }
 
     @Override
@@ -44,45 +40,19 @@ public final class ConfigureSpringExpressionBuild extends Recipe {
                 String fileName = source.getSourcePath().getFileName().toString();
                 if (tree instanceof Xml.Document pom && "pom.xml".equals(fileName) &&
                     ownsSelectedMavenDeclaration(pom, ctx)) {
-                    Tree updated = pom;
-                    for (Recipe official : officialMavenRecipes()) {
-                        updated = official.getVisitor().visitNonNull(updated, ctx);
-                    }
-                    return updated;
+                    return SearchResult.found(pom);
                 }
                 if (tree instanceof G.CompilationUnit gradle && fileName.endsWith(".gradle") &&
                     ownsSelectedGradleDeclaration(gradle, ctx)) {
-                    return updateGradleJava(gradle, ctx);
+                    return SearchResult.found(gradle);
                 }
                 if (tree instanceof K.CompilationUnit gradleKts && fileName.endsWith(".gradle.kts") &&
                     ownsSelectedGradleDeclaration(gradleKts, ctx)) {
-                    return updateGradleJava(gradleKts, ctx);
+                    return SearchResult.found(gradleKts);
                 }
                 return tree;
             }
         };
-    }
-
-    private static Tree updateGradleJava(Tree source, ExecutionContext ctx) {
-        Tree updated = source;
-        for (Recipe official : officialGradleRecipes()) {
-            updated = official.getVisitor().visitNonNull(updated, ctx);
-        }
-        return updated;
-    }
-
-    static List<Recipe> officialMavenRecipes() {
-        return List.of(
-                new UpdateMavenProjectPropertyJavaVersion(17),
-                new AddProperty("maven.compiler.parameters", "true", true, false));
-    }
-
-    static List<Recipe> officialGradleRecipes() {
-        return List.of(
-                new UpdateJavaCompatibility(
-                        17, UpdateJavaCompatibility.CompatibilityType.source, null, false, false),
-                new UpdateJavaCompatibility(
-                        17, UpdateJavaCompatibility.CompatibilityType.target, null, false, false));
     }
 
     private static boolean ownsSelectedMavenDeclaration(Xml.Document document, ExecutionContext ctx) {

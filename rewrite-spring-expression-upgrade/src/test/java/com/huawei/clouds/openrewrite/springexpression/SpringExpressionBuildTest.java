@@ -158,12 +158,7 @@ class SpringExpressionBuildTest implements RewriteTest {
     }
 
     @Test
-    void configureComposesOfficialMavenRecipes() {
-        assertEquals(List.of(
-                        "org.openrewrite.maven.UpdateMavenProjectPropertyJavaVersion",
-                        "org.openrewrite.maven.AddProperty"),
-                ConfigureSpringExpressionBuild.officialMavenRecipes().stream()
-                        .map(org.openrewrite.Recipe::getName).toList());
+    void configureExecutesOfficialMavenRecipesDirectly() {
         rewriteRun(
                 spec -> spec.recipe(Environment.builder().scanRuntimeClasspath().build()
                         .activateRecipes(CONFIGURE)),
@@ -197,12 +192,7 @@ class SpringExpressionBuildTest implements RewriteTest {
     }
 
     @Test
-    void configureComposesOfficialGradleCompatibilityWithoutDowngrade() {
-        assertEquals(List.of(
-                        "org.openrewrite.gradle.UpdateJavaCompatibility",
-                        "org.openrewrite.gradle.UpdateJavaCompatibility"),
-                ConfigureSpringExpressionBuild.officialGradleRecipes().stream()
-                        .map(org.openrewrite.Recipe::getName).toList());
+    void configureExecutesOfficialGradleCompatibilityWithoutDowngrade() {
         rewriteRun(
                 spec -> spec.recipe(Environment.builder().scanRuntimeClasspath().build()
                         .activateRecipes(CONFIGURE)),

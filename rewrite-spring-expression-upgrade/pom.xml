@@ -47,6 +47,18 @@
       <artifactId>rewrite-kotlin</artifactId>
       <version>${rewrite.version}</version>
     </dependency>
+    <!-- Audit-only: activate the fixed official Spring aggregate and prove that
+         its broad dependency selector never enters this module's runtime tree. -->
+    <dependency>
+      <groupId>org.openrewrite.recipe</groupId>
+      <artifactId>rewrite-spring</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.openrewrite.recipe</groupId>
+      <artifactId>rewrite-java-dependencies</artifactId>
+      <scope>test</scope>
+    </dependency>
     <dependency>
       <groupId>org.openrewrite</groupId>
       <artifactId>rewrite-test</artifactId>
