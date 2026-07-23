@@ -178,6 +178,29 @@ shade/relocation `io.netty` 也会被标记。需要验证：
 - HTTP client/server、TLS、proxy、WebSocket、native transport 在最终打包物中完成 smoke test；
 - 所有编译 Netty handler/extension 的内部 JAR 均 clean rebuild，避免 `NoSuchMethodError`。
 
+## OpenRewrite 官方能力复用审计
+
+本模块按“先固定官方实现、再证明能否精确复用”的顺序审计。实际构建与测试输入固定如下：
+
+| 上游 | 固定证据 | 结论 |
+| --- | --- | --- |
+| OpenRewrite Core `8.87.5` | [`rewrite@b3008cc4`](https://github.com/openrewrite/rewrite/tree/b3008cc4a1f0c43f562da16e5933a2a56d9bc568)；`rewrite-core` SHA-256 `a7ff59eebc8072353ec5c3aee3e2033bc69a844b3c9ce2e9be8d4adaec10cbf8`；`rewrite-java` SHA-256 `a378253fe0c0865ab39d1743e468fe3d2557d7760e0a6897de294ca18ea90043` | 继续复用官方类型归属、visitor 与 [`JavaTemplate`](https://github.com/openrewrite/rewrite/blob/b3008cc4a1f0c43f562da16e5933a2a56d9bc568/rewrite-java/src/main/java/org/openrewrite/java/JavaTemplate.java) API；Core 没有能表达本模块完整 decoder 构造器迁移合同的独立配方。 |
+| `rewrite-netty` `0.10.3` | [`rewrite-netty@95468246`](https://github.com/openrewrite/rewrite-netty/tree/9546824604ff662eb73bd4cabdd9a9d54bc0ae63)；发布 JAR SHA-256 `f4fc380174c591200c342206d9979da99080dd0e4f13484cced6a572a0c7e1a5` | 官方 catalog 只有 3.2→4.1 与 4.1→4.2 分支聚合，没有 `HttpDecoderConfig` 配方；因此仅作为 test-scope 审计输入，不进入发布物的 runtime recipe tree。 |
+
+以下官方节点经过固定源码和运行时展开检查，但明确不能组合到本模块：
+
+| 排除项 | 排除原因 |
+| --- | --- |
+| [`org.openrewrite.netty.UpgradeNetty_4_1_to_4_2`](https://github.com/openrewrite/rewrite-netty/blob/9546824604ff662eb73bd4cabdd9a9d54bc0ae63/src/main/resources/META-INF/rewrite/netty-4_1_to_4_2.yml) | 把全部 `io.netty:*` 升到动态 `4.2.x`，同时迁移 incubator IO_uring 坐标、package/type 和 EventLoopGroup；它会越过精确 `netty-codec-http:4.1.136.Final` 目标与十三值白名单。 |
+| `org.openrewrite.netty.UpgradeNetty_3_2_to_4_1` | 面向 Netty 3 API，包含 channel/buffer/bootstrap 的整代迁移；本工作簿输入全为 4.1/4.2，应用会扩大无关范围。 |
+| [`EventLoopGroupToMultiThreadIoEventLoopGroupRecipes`](https://github.com/openrewrite/rewrite-netty/blob/9546824604ff662eb73bd4cabdd9a9d54bc0ae63/src/main/java/org/openrewrite/java/netty/EventLoopGroupToMultiThreadIoEventLoopGroup.java) | 输出 `MultiThreadIoEventLoopGroup` 和 `*IoHandler` 是 4.2 分支迁移，不存在于 4.1.136 目标合同。 |
+| Core/recipe 的通用 `UpgradeDependencyVersion`、`ChangeDependency` | 没有“仅十三个旧版本 + owner/profile/variant/path 隔离”的单节点合同；直接采用会覆盖表外版本或扩大到整个 Netty 家族，不能替换严格本地升级器。 |
+| Core 的参数增删/重排、type/method rename | 无法按 4–7 参数 arity 构造 fluent `HttpDecoderConfig`、仅接受字面量 `true`、保留表达式顺序与求值次数并处理 simple-name 冲突；本地 gap recipe 继续使用官方 `JavaTemplate` 实现这一组合变换。 |
+
+`NettyCodecHttpOfficialRecipeReuseTest` 会展开实际运行时配方树：官方 4.2 aggregate 必须能被识别为包含通用依赖升级、incubator dependency 迁移、package/type 和 EventLoopGroup 节点，而本模块推荐入口必须不包含这些节点。这样将来升级官方 bundle 时，宽泛 4.2 能力不会静默进入 4.1.136 配方，也不会破坏禁止降级。
+
+固定官方测试证据包括 [`UpgradeNetty_4_1_to_4_2Test`](https://github.com/openrewrite/rewrite-netty/blob/9546824604ff662eb73bd4cabdd9a9d54bc0ae63/src/test/java/org/openrewrite/java/netty/UpgradeNetty_4_1_to_4_2Test.java)、[`EventLoopGroupToMultiThreadIoEventLoopGroupTest`](https://github.com/openrewrite/rewrite-netty/blob/9546824604ff662eb73bd4cabdd9a9d54bc0ae63/src/test/java/org/openrewrite/java/netty/EventLoopGroupToMultiThreadIoEventLoopGroupTest.java) 与 Core [`JavaTemplateSubstitutionsTest`](https://github.com/openrewrite/rewrite/blob/b3008cc4a1f0c43f562da16e5933a2a56d9bc568/rewrite-java-test/src/test/java/org/openrewrite/java/JavaTemplateSubstitutionsTest.java)。
+
 ## 真实公开仓库 fixture
 
 测试不是只根据 README 手写示例；以下用例从固定公开提交中提取并最小化，保留真实 API 形态：
@@ -188,15 +211,16 @@ shade/relocation `io.netty` 也会被标记。需要验证：
 | [Apache Dubbo `HttpCommandDecoder` @ `eb1d8ab`](https://github.com/apache/dubbo/blob/eb1d8abaebdc2ce1e15d6236cf9f9179d34e9082/dubbo-plugin/dubbo-qos/src/main/java/org/apache/dubbo/qos/command/decoder/HttpCommandDecoder.java#L37-L82) | `QueryStringDecoder`、`HttpPostRequestDecoder.getBodyHttpDatas()`、`destroy()` | query 与 multipart/lifecycle 风险标记落在真实调用节点 |
 | [Apache Dubbo `HttpUtils` @ `eb1d8ab`](https://github.com/apache/dubbo/blob/eb1d8abaebdc2ce1e15d6236cf9f9179d34e9082/dubbo-remoting/dubbo-remoting-http12/src/main/java/org/apache/dubbo/remoting/http12/HttpUtils.java#L220-L227) | `new DefaultHttpHeaders(false)` 与 multipart decoder | 关闭 header validation 的安全 MARK 及 multipart 识别依据 |
 
-JavaTemplate 的类型化替换与测试组织参考 OpenRewrite 官方固定提交 [`JavaTemplateSubstitutionsTest` @ `af06bb1`](https://github.com/openrewrite/rewrite/blob/af06bb1b159249695dc92187093cd0909da6c843/rewrite-java-test/src/test/java/org/openrewrite/java/JavaTemplateSubstitutionsTest.java)。
+JavaTemplate 的类型化替换与测试组织参考上述 OpenRewrite Core `8.87.5` 固定提交；额外测试直接把 `netty-codec-http:4.1.136.Final` 真实 JAR 放入 parser classpath，避免只依赖手写 stub 验证输出。
 
-当前模块执行 **184 个 JUnit invocation**：
+当前模块执行 **189 个 JUnit invocation**：
 
 - 76 个严格依赖升级：十三版本 Maven/Groovy 矩阵、Kotlin、property/profile/dependencyManagement、所有者/variant/嵌套 DSL/路径负例和幂等；
-- 21 个构造器 AUTO：三类型 × 四种 arity、表达式顺序/次数、真实 Netty fixture、本地/导入同名 config FQN、安全负例和幂等；
+- 23 个构造器 AUTO：三类型 × 四种 arity、表达式顺序/次数、真实 Netty fixture、真实 4.1.136 target classpath、本地/导入同名 config FQN、安全负例和幂等；
 - 36 个构建 MARK：4.2 禁止降级、owner-aware root/profile、sibling 隔离、插件边界、Gradle AST 激活、所有者/variant、Netty family、shade、RFC 9112 和幂等；
 - 45 个源码 MARK：validation/parser、multipart/query、aggregation/compression/date、SPDY、4.2-only API、真实 Dubbo fixture、同名负例、路径隔离和幂等；
 - 6 个推荐配方组合：descriptor discovery、阶段顺序、4.1 AUTO/4.2 NO_DOWNGRADE、AUTO+MARK 组合和两周期幂等。
+- 3 个官方能力审计：固定 catalog 能力、宽泛 4.2 runtime tree 展开、本模块严格 runtime tree 排除断言。
 
 ## 使用与验收
 
