@@ -12,6 +12,9 @@ Excel 全量迁移清单已拆分为
 README、机器可读 manifest 和禁降级契约，不进入默认 Maven reactor；配方代码仍按下表
 逐模块核验、完善和提交。
 
+用户指定的高优先级 Java 清单已完成 25/25，官方能力复用与提交记录见
+[`docs/high-priority-java-ledger.md`](docs/high-priority-java-ledger.md)。
+
 ## Modules
 
 | Module | Recipe | Description |
