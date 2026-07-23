@@ -1,0 +1,35 @@
+---
+type: specs.openrewrite.org/v1beta/category
+name: com.huawei.clouds.openrewrite.mermaid
+packageName: com.huawei.clouds.openrewrite.mermaid
+description: Upgrade spreadsheet-selected Mermaid 9 declarations and expose Mermaid 11 ESM, async API, rendering, configuration, and security work.
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.mermaid.UpgradeMermaidTo11_15_0
+displayName: Upgrade Mermaid to 11.15.0
+description: Update only exact, caret, or tilde direct mermaid declarations anchored to the four spreadsheet-selected v9 versions, preserving the operator.
+tags:
+  - mermaid
+  - javascript
+  - nodejs
+  - dependency-upgrade
+recipeList:
+  - com.huawei.clouds.openrewrite.mermaid.UpgradeSelectedMermaidDependency
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.mermaid.MigrateMermaidTo11_15_0
+displayName: Migrate Mermaid to 11.15.0
+description: Reuse the strict public upgrade, migrate signature-equivalent async aliases, and mark exact manifest, source, rendering, security, theme, markup, bundler, and SSR decisions.
+tags:
+  - mermaid
+  - diagram
+  - javascript
+  - typescript
+  - nodejs
+  - migration
+recipeList:
+  - com.huawei.clouds.openrewrite.mermaid.UpgradeMermaidTo11_15_0
+  - com.huawei.clouds.openrewrite.mermaid.MigrateDeterministicMermaidApis
+  - com.huawei.clouds.openrewrite.mermaid.FindMermaid11ManifestRisks
+  - com.huawei.clouds.openrewrite.mermaid.FindMermaid11JavaScriptRisks
+  - com.huawei.clouds.openrewrite.mermaid.FindMermaid11MarkupRisks

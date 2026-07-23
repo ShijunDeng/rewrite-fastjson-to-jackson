@@ -128,6 +128,7 @@
     <module>rewrite-feign-httpclient-upgrade</module>
     <module>rewrite-feign-okhttp-upgrade</module>
     <module>rewrite-sql-formatter-upgrade</module>
+    <module>rewrite-mermaid-upgrade</module>
   </modules>
 
   <dependencyManagement>
