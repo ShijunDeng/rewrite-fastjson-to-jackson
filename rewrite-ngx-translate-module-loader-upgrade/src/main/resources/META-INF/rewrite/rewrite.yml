@@ -1,0 +1,32 @@
+---
+type: specs.openrewrite.org/v1beta/category
+name: com.huawei.clouds.openrewrite.ngxtranslatemoduleloader
+packageName: com.huawei.clouds.openrewrite.ngxtranslatemoduleloader
+description: Upgrade workbook-selected ngx-translate-module-loader declarations with executable API, peer dependency, HTTP parsing, DI, and merge compatibility guidance.
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.ngxtranslatemoduleloader.UpgradeNgxTranslateModuleLoaderTo5_1_0
+displayName: Upgrade ngx-translate-module-loader to 5.1.0
+description: Update only workbook-selected exact, caret, or tilde direct package.json declarations from 3.1.1 or 3.1.2 to 5.1.0.
+tags:
+  - ngx-translate
+  - angular
+  - nodejs
+  - dependency-upgrade
+recipeList:
+  - com.huawei.clouds.openrewrite.ngxtranslatemoduleloader.UpgradeSelectedNgxTranslateModuleLoaderDependency
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.ngxtranslatemoduleloader.MigrateNgxTranslateModuleLoaderTo5_1_0
+displayName: Migrate ngx-translate-module-loader to 5.1.0
+description: Apply the strict dependency update, migrate deterministic removed type imports, and mark peer, provider, parsing, merge, and removed API decisions.
+tags:
+  - ngx-translate
+  - angular
+  - typescript
+  - migration
+recipeList:
+  - com.huawei.clouds.openrewrite.ngxtranslatemoduleloader.UpgradeNgxTranslateModuleLoaderTo5_1_0
+  - com.huawei.clouds.openrewrite.ngxtranslatemoduleloader.MigrateNgxTranslateModuleLoaderTypeImports
+  - com.huawei.clouds.openrewrite.ngxtranslatemoduleloader.FindNgxTranslateModuleLoaderManifestRisks
+  - com.huawei.clouds.openrewrite.ngxtranslatemoduleloader.FindNgxTranslateModuleLoaderSourceRisks
