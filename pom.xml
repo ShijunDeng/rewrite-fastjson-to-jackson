@@ -126,6 +126,7 @@
     <module>rewrite-ngx-translate-module-loader-upgrade</module>
     <module>rewrite-element-plus-icons-vue-upgrade</module>
     <module>rewrite-feign-httpclient-upgrade</module>
+    <module>rewrite-feign-okhttp-upgrade</module>
   </modules>
 
   <dependencyManagement>

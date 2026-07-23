@@ -1,0 +1,20 @@
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.feignokhttp.UpgradeFeignOkHttpTo13_6
+displayName: Upgrade workbook-selected Feign OkHttp dependencies to 13.6
+description: >-
+  Upgrade only io.github.openfeign:feign-okhttp versions explicitly listed in the migration
+  workbook, preserving external version owners, unsupported ranges, variants, and unrelated declarations.
+recipeList:
+  - com.huawei.clouds.openrewrite.feignokhttp.UpgradeSelectedFeignOkHttpDependency
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.feignokhttp.MigrateFeignOkHttpTo13_6
+displayName: Migrate Feign OkHttp 10/11/12 to 13.6
+description: >-
+  Strictly upgrade selected Feign OkHttp declarations, then mark exact source and build nodes whose
+  OkHttp 4.12, Feign 13.6, request, timeout, protocol, TLS, compression, or lifecycle semantics need review.
+recipeList:
+  - com.huawei.clouds.openrewrite.feignokhttp.UpgradeFeignOkHttpTo13_6
+  - com.huawei.clouds.openrewrite.feignokhttp.FindFeignOkHttp13SourceRisks
+  - com.huawei.clouds.openrewrite.feignokhttp.FindFeignOkHttp13BuildRisks
