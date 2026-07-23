@@ -1,0 +1,20 @@
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.postgresql.UpgradePostgresqlTo42_7_13
+displayName: Upgrade workbook-selected PostgreSQL JDBC dependencies to 42.7.13
+description: >-
+  Upgrade only org.postgresql:postgresql source versions explicitly visible in the migration workbook,
+  preserving external version owners, unsupported ranges, variants, and unrelated declarations.
+recipeList:
+  - com.huawei.clouds.openrewrite.postgresql.UpgradeSelectedPostgresqlDependency
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.postgresql.MigratePostgresqlTo42_7_13
+displayName: Migrate PostgreSQL JDBC to 42.7.13
+description: >-
+  Strictly upgrade selected PostgreSQL JDBC declarations, then mark exact source and build nodes whose
+  URL, SSL, XA, batching, updatable result, COPY, LOB, replication, or version ownership semantics need review.
+recipeList:
+  - com.huawei.clouds.openrewrite.postgresql.UpgradePostgresqlTo42_7_13
+  - com.huawei.clouds.openrewrite.postgresql.FindPostgresql42SourceRisks
+  - com.huawei.clouds.openrewrite.postgresql.FindPostgresql42BuildRisks

@@ -130,6 +130,7 @@
     <module>rewrite-sql-formatter-upgrade</module>
     <module>rewrite-mermaid-upgrade</module>
     <module>rewrite-spring-cloud-context-upgrade</module>
+    <module>rewrite-postgresql-upgrade</module>
   </modules>
 
   <dependencyManagement>
