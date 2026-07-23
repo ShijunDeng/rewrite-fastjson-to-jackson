@@ -83,6 +83,7 @@ README、机器可读 manifest 和禁降级契约，不进入默认 Maven reacto
 | [`rewrite-spring-kafka-upgrade`](rewrite-spring-kafka-upgrade) | `com.huawei.clouds.openrewrite.springkafka.MigrateSpringKafkaTo3_3_15` | 将 Spring Kafka 2.8.11/2.9.5 精确升级到 3.3.15，直接复用官方 Future、error handler、Header 与测试工具迁移，并定位 Java 17、JSON、listener、事务/EOS、retry/DLT 和可观测性风险 |
 | [`rewrite-spring-expression-upgrade`](rewrite-spring-expression-upgrade) | `com.huawei.clouds.openrewrite.springexpression.MigrateSpringExpressionTo6_2_19` | 将 17 个精确 Spring Expression 版本升级到 6.2.19，复用官方 Java 17/参数元数据构建配方，并定位 SpEL 信任边界、accessor/resolver、编译、内部 API 与操作上限风险 |
 | [`rewrite-spring-web-upgrade`](rewrite-spring-web-upgrade) | `com.huawei.clouds.openrewrite.springweb.MigrateSpringWebTo6_2_19` | 将 14 个精确 Spring Web 版本升级到 6.2.19，直接复用官方 MediaType、ResponseStatusException 与 ClientHttpResponse 配方，并定位 Jakarta、HTTP client、URI、multipart、validation 和配置风险 |
+| [`rewrite-logback-core-upgrade`](rewrite-logback-core-upgrade) | `com.huawei.clouds.openrewrite.logbackcore.MigrateLogbackCoreTo1_5_34` | 将 Logback Core 1.2.5/1.2.9 精确升级到 1.5.34，直接复用官方 core/XML 类型、方法和属性配方，并定位 Joran、rolling、DB、receiver、配置安全、JPMS/OSGi 和依赖族风险 |
 
 后续迁移应新增独立模块，例如：
 

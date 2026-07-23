@@ -1,0 +1,61 @@
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.logbackcore.UpgradeLogbackCoreTo1_5_34
+displayName: Upgrade workbook-selected Logback Core dependencies to 1.5.34
+description: >-
+  Upgrade only exact ch.qos.logback:logback-core versions 1.2.5 and 1.2.9 in
+  unambiguous owned standard Maven or Gradle declarations. Target, higher,
+  outside, dynamic, catalog/BOM-managed and variant declarations are not changed.
+recipeList:
+  - com.huawei.clouds.openrewrite.logbackcore.UpgradeSelectedLogbackCoreDependency
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.logbackcore.MigrateDeterministicLogbackCore1_5_34
+displayName: Migrate deterministic Logback Core 1.5.34 APIs and XML
+description: >-
+  Apply only exact official type, method and XML class-name replacements whose
+  semantics are proved by the fixed v_1.2.5/v_1.2.9 to v_1.5.34 sources.
+recipeList:
+  - com.huawei.clouds.openrewrite.logbackcore.MigrateLogback1534Java
+  - com.huawei.clouds.openrewrite.logbackcore.MigrateLogback1534Configuration
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.logbackcore.FindLogbackCore1_5_34BuildRisks
+displayName: Find Logback Core 1.5.34 build risks
+description: >-
+  Mark unresolved owners, Java 11 baseline gaps, Logback/SLF4J skew,
+  competing providers, optional integrations, variants and packaging boundaries.
+recipeList:
+  - com.huawei.clouds.openrewrite.logbackcore.FindLogbackCore1534BuildRisks
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.logbackcore.FindLogbackCore1_5_34SourceRisks
+displayName: Find Logback Core 1.5.34 source risks
+description: >-
+  Mark Joran, database, rolling/time, status/listener, Jakarta, receiver,
+  deserialization, Context and internal API migration decisions.
+recipeList:
+  - com.huawei.clouds.openrewrite.logbackcore.FindLogbackCore1534SourceRisks
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.logbackcore.FindLogbackCore1_5_34ConfigurationRisks
+displayName: Find Logback Core 1.5.34 configuration risks
+description: >-
+  Mark Groovy, JNDI, conditionals, rolling/compression, listener/lifecycle,
+  serialization, scan, XML entity, escape and JPMS/OSGi decisions.
+recipeList:
+  - com.huawei.clouds.openrewrite.logbackcore.FindLogbackCore1534ConfigurationRisks
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.logbackcore.MigrateLogbackCoreTo1_5_34
+displayName: Migrate Logback Core 1.2.5/1.2.9 to 1.5.34
+description: >-
+  Run the strict upgrade, deterministic Java/XML migrations, and exact build,
+  source and configuration risk markers. Companion Logback and SLF4J versions
+  are audited but never changed by this module.
+recipeList:
+  - com.huawei.clouds.openrewrite.logbackcore.UpgradeLogbackCoreTo1_5_34
+  - com.huawei.clouds.openrewrite.logbackcore.MigrateDeterministicLogbackCore1_5_34
+  - com.huawei.clouds.openrewrite.logbackcore.FindLogbackCore1_5_34BuildRisks
+  - com.huawei.clouds.openrewrite.logbackcore.FindLogbackCore1_5_34SourceRisks
+  - com.huawei.clouds.openrewrite.logbackcore.FindLogbackCore1_5_34ConfigurationRisks

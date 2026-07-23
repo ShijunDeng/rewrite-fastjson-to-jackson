@@ -220,7 +220,7 @@ migration-spec-nodejs-camelcase-keys,camelcase-keys,nodejs,nodejs,9.1.2,1,1735,c
 migration-spec-nodejs-caniuse-lite,caniuse-lite,nodejs,nodejs,1.0.30001739,1,4753,complete,pending,catalog-only,
 migration-spec-nodejs-case-anything,case-anything,nodejs,nodejs,3.1.2,1,1809,complete,pending,catalog-only,
 migration-spec-java-maven-ch-qos-logback-logback-classic,ch.qos.logback:logback-classic,java,java,1.5.34,5,3650 | 3651 | 3652 | 3653 | 3654,complete,pending,catalog-only,
-migration-spec-java-maven-ch-qos-logback-logback-core,ch.qos.logback:logback-core | logback-core,java,java,1.5.34,4,4198 | 4199 | 4837 | 4838,complete,pending,catalog-only,
+migration-spec-java-maven-ch-qos-logback-logback-core,ch.qos.logback:logback-core | logback-core,java,java,1.5.34,4,4198 | 4199 | 4837 | 4838,complete,verified,implemented,rewrite-logback-core-upgrade
 migration-spec-java-maven-ch-qos-reload4j-reload4j,ch.qos.reload4j:reload4j,java,java,1.2.26,1,4197,complete,pending,catalog-only,
 migration-spec-java-maven-ch-vorburger-exec-exec,ch.vorburger.exec:exec,java,java,3.3.2,1,3908,complete,pending,catalog-only,
 migration-spec-java-maven-ch-vorburger-mariadb4j-mariadb4j,ch.vorburger.mariaDB4j:mariaDB4j,java,java,3.1.0,1,1858,complete,pending,catalog-only,

@@ -14,11 +14,17 @@
     ],
     "canonicalIdentity": {
       "value": "ch.qos.logback:logback-core",
-      "status": "unverified",
-      "evidence": []
+      "status": "verified",
+      "evidence": [
+        "https://github.com/qos-ch/logback/tree/e62272ac152469aec1ede056c3c7d0d7314e7bfe",
+        "maven-central:jar-sha256:42eda264c0c650c2bec59e66151a88b708a8663dc1b49d788202d53e78b8caae",
+        "maven-central:pom-sha256:5230a2f36dcfe19d310351c7c372edf57cdfde78527fa39ac45f6e7aa8602f95"
+      ]
     },
     "targetVersion": "1.5.34",
-    "candidateImplementationModules": []
+    "candidateImplementationModules": [
+      "rewrite-logback-core-upgrade"
+    ]
   },
   "workbook": {
     "sha256": "17020a54165808d7a90801b56cf6c7dff428f3b6dfa931b089e84f9946104309",
@@ -37,9 +43,9 @@
         "sourceAtomic": true,
         "direction": {
           "relation": "upgrade-candidate",
-          "action": "mark",
+          "action": "auto",
           "comparator": "conservative-numeric-prefix-v1",
-          "reason": "表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。"
+          "reason": "制品身份、迁移方向和两个精确原子版本已由固定证据验证；允许执行受所有权守卫约束的 AUTO。"
         }
       },
       {
@@ -56,9 +62,9 @@
         "sourceAtomic": true,
         "direction": {
           "relation": "upgrade-candidate",
-          "action": "mark",
+          "action": "auto",
           "comparator": "conservative-numeric-prefix-v1",
-          "reason": "表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。"
+          "reason": "制品身份、迁移方向和两个精确原子版本已由固定证据验证；允许执行受所有权守卫约束的 AUTO。"
         }
       },
       {
@@ -75,9 +81,9 @@
         "sourceAtomic": true,
         "direction": {
           "relation": "upgrade-candidate",
-          "action": "mark",
+          "action": "auto",
           "comparator": "conservative-numeric-prefix-v1",
-          "reason": "表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。"
+          "reason": "制品身份、迁移方向和两个精确原子版本已由固定证据验证；允许执行受所有权守卫约束的 AUTO。"
         }
       },
       {
@@ -94,9 +100,9 @@
         "sourceAtomic": true,
         "direction": {
           "relation": "upgrade-candidate",
-          "action": "mark",
+          "action": "auto",
           "comparator": "conservative-numeric-prefix-v1",
-          "reason": "表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。"
+          "reason": "制品身份、迁移方向和两个精确原子版本已由固定证据验证；允许执行受所有权守卫约束的 AUTO。"
         }
       }
     ]
@@ -105,11 +111,11 @@
   "policy": {
     "allowDowngrade": false,
     "conflictMarker": "目标版本冲突（禁止降级）",
-    "autoSourceWhitelist": [],
-    "upgradeCandidatesPendingEvidence": [
+    "autoSourceWhitelist": [
       "1.2.5",
       "1.2.9"
     ],
+    "upgradeCandidatesPendingEvidence": [],
     "noopVersions": [],
     "conflictVersions": [],
     "unresolvedVersions": []
@@ -118,22 +124,54 @@
     {
       "id": "E-001",
       "claim": "制品身份、源版本与目标制品身份",
-      "status": "unverified",
-      "officialSources": [],
-      "realFixtures": []
+      "status": "verified",
+      "officialSources": [
+        "https://github.com/qos-ch/logback/tree/1650e8db0941a87717b0f247acfefd4811cfaf41",
+        "https://github.com/qos-ch/logback/tree/3b9cd0efe0b3390026a04a6092aa03e433ddd330",
+        "https://github.com/qos-ch/logback/tree/e62272ac152469aec1ede056c3c7d0d7314e7bfe",
+        "maven-central:jar-sha256:42eda264c0c650c2bec59e66151a88b708a8663dc1b49d788202d53e78b8caae",
+        "maven-central:pom-sha256:5230a2f36dcfe19d310351c7c372edf57cdfde78527fa39ac45f6e7aa8602f95"
+      ],
+      "realFixtures": [
+        "qos-ch/logback@e62272ac152469aec1ede056c3c7d0d7314e7bfe"
+      ]
     },
     {
       "id": "E-002",
       "claim": "迁移边的 API、配置与默认行为变化",
-      "status": "unverified",
-      "officialSources": [],
+      "status": "verified",
+      "officialSources": [
+        "https://logback.qos.ch/news.html",
+        "https://logback.qos.ch/manual/appenders.html#SizeAndTimeBasedRollingPolicy",
+        "https://github.com/qos-ch/logback/blob/e62272ac152469aec1ede056c3c7d0d7314e7bfe/logback-core/src/main/java/module-info.java",
+        "https://github.com/qos-ch/logback/blob/e62272ac152469aec1ede056c3c7d0d7314e7bfe/logback-core/src/main/java/ch/qos/logback/core/joran/spi/ConfigurationWatchList.java"
+      ],
       "realFixtures": []
     },
     {
       "id": "E-003",
       "claim": "真实工程用法、负例与行为验收",
-      "status": "unverified",
-      "officialSources": [],
+      "status": "verified",
+      "officialSources": [
+        "https://github.com/openrewrite/rewrite/blob/fb933bdb74f2f4dc10ec79387e29aa8f5a8a9503/rewrite-test/src/main/java/org/openrewrite/test/RewriteTest.java"
+      ],
+      "realFixtures": [
+        "apache/shenyu@ea4f1770676522e0f36ffd14b3c35ae9af0c212f",
+        "twitter/the-algorithm@c54bec0d4e029fe34926ef3258a86ccacc0d0182",
+        "OpenTSDB/opentsdb@0f681b7545d9999506900da5f1c4dbe433dbfb43"
+      ]
+    },
+    {
+      "id": "E-004",
+      "claim": "OpenRewrite 官方能力已检索、复用并通过组合测试",
+      "status": "verified",
+      "officialSources": [
+        "https://github.com/openrewrite/rewrite/tree/b3008cc4a1f0c43f562da16e5933a2a56d9bc568",
+        "https://github.com/openrewrite/rewrite/blob/b3008cc4a1f0c43f562da16e5933a2a56d9bc568/rewrite-java/src/main/java/org/openrewrite/java/ChangeType.java",
+        "https://github.com/openrewrite/rewrite/blob/b3008cc4a1f0c43f562da16e5933a2a56d9bc568/rewrite-java/src/main/java/org/openrewrite/java/ChangeMethodName.java",
+        "https://github.com/openrewrite/rewrite/blob/b3008cc4a1f0c43f562da16e5933a2a56d9bc568/rewrite-xml/src/main/java/org/openrewrite/xml/ChangeTagAttribute.java",
+        "https://github.com/openrewrite/rewrite-logging-frameworks/tree/c357a7209d721078dc942a777b1d8cc95941f722"
+      ],
       "realFixtures": []
     }
   ],
@@ -145,11 +183,20 @@
       ],
       "dimension": "弃用 / 默认值 / 配置 / 运行时",
       "excelNoteStatus": "table_fact",
-      "evidenceStatus": "unverified",
-      "disposition": "mark",
-      "treatment": "同一主版本不等于绝对兼容；核查弃用删除、默认值、运行时基线、传递依赖和配置，只自动处理有固定上游证据的一一对应修改。",
-      "recipe": null,
-      "tests": []
+      "evidenceStatus": "verified",
+      "disposition": "auto+mark",
+      "treatment": "把精确且本地拥有的依赖升级到 1.5.34；直接复用官方 core/XML 类型、方法和属性配方，并对 Java/SLF4J/Jakarta、Joran、DB、rolling、receiver、配置安全、生命周期、JPMS/OSGi 及目标版本残留安全风险执行精确 MARK。",
+      "recipe": "com.huawei.clouds.openrewrite.logbackcore.MigrateLogbackCoreTo1_5_34",
+      "tests": [
+        "UpgradeLogbackCoreDependencyTest",
+        "MigrateLogback1534JavaTest",
+        "MigrateLogback1534ConfigurationTest",
+        "FindLogbackCore1534BuildRisksTest",
+        "FindLogbackCore1534SourceRisksTest",
+        "FindLogbackCore1534ConfigurationRisksTest",
+        "LogbackCoreOfficialRecipeReuseTest",
+        "LogbackCoreRecommendedRecipeTest"
+      ]
     },
     {
       "id": "C-002",
@@ -158,11 +205,20 @@
       ],
       "dimension": "弃用 / 默认值 / 配置 / 运行时",
       "excelNoteStatus": "table_fact",
-      "evidenceStatus": "unverified",
-      "disposition": "mark",
-      "treatment": "同一主版本不等于绝对兼容；核查弃用删除、默认值、运行时基线、传递依赖和配置，只自动处理有固定上游证据的一一对应修改。",
-      "recipe": null,
-      "tests": []
+      "evidenceStatus": "verified",
+      "disposition": "auto+mark",
+      "treatment": "把精确且本地拥有的依赖升级到 1.5.34；直接复用官方 core/XML 类型、方法和属性配方，并对 Java/SLF4J/Jakarta、Joran、DB、rolling、receiver、配置安全、生命周期、JPMS/OSGi 及目标版本残留安全风险执行精确 MARK。",
+      "recipe": "com.huawei.clouds.openrewrite.logbackcore.MigrateLogbackCoreTo1_5_34",
+      "tests": [
+        "UpgradeLogbackCoreDependencyTest",
+        "MigrateLogback1534JavaTest",
+        "MigrateLogback1534ConfigurationTest",
+        "FindLogbackCore1534BuildRisksTest",
+        "FindLogbackCore1534SourceRisksTest",
+        "FindLogbackCore1534ConfigurationRisksTest",
+        "LogbackCoreOfficialRecipeReuseTest",
+        "LogbackCoreRecommendedRecipeTest"
+      ]
     },
     {
       "id": "C-003",
@@ -171,11 +227,20 @@
       ],
       "dimension": "弃用 / 默认值 / 配置 / 运行时",
       "excelNoteStatus": "table_fact",
-      "evidenceStatus": "unverified",
-      "disposition": "mark",
-      "treatment": "同一主版本不等于绝对兼容；核查弃用删除、默认值、运行时基线、传递依赖和配置，只自动处理有固定上游证据的一一对应修改。",
-      "recipe": null,
-      "tests": []
+      "evidenceStatus": "verified",
+      "disposition": "auto+mark",
+      "treatment": "把精确且本地拥有的依赖升级到 1.5.34；直接复用官方 core/XML 类型、方法和属性配方，并对 Java/SLF4J/Jakarta、Joran、DB、rolling、receiver、配置安全、生命周期、JPMS/OSGi 及目标版本残留安全风险执行精确 MARK。",
+      "recipe": "com.huawei.clouds.openrewrite.logbackcore.MigrateLogbackCoreTo1_5_34",
+      "tests": [
+        "UpgradeLogbackCoreDependencyTest",
+        "MigrateLogback1534JavaTest",
+        "MigrateLogback1534ConfigurationTest",
+        "FindLogbackCore1534BuildRisksTest",
+        "FindLogbackCore1534SourceRisksTest",
+        "FindLogbackCore1534ConfigurationRisksTest",
+        "LogbackCoreOfficialRecipeReuseTest",
+        "LogbackCoreRecommendedRecipeTest"
+      ]
     },
     {
       "id": "C-004",
@@ -184,16 +249,25 @@
       ],
       "dimension": "弃用 / 默认值 / 配置 / 运行时",
       "excelNoteStatus": "table_fact",
-      "evidenceStatus": "unverified",
-      "disposition": "mark",
-      "treatment": "同一主版本不等于绝对兼容；核查弃用删除、默认值、运行时基线、传递依赖和配置，只自动处理有固定上游证据的一一对应修改。",
-      "recipe": null,
-      "tests": []
+      "evidenceStatus": "verified",
+      "disposition": "auto+mark",
+      "treatment": "把精确且本地拥有的依赖升级到 1.5.34；直接复用官方 core/XML 类型、方法和属性配方，并对 Java/SLF4J/Jakarta、Joran、DB、rolling、receiver、配置安全、生命周期、JPMS/OSGi 及目标版本残留安全风险执行精确 MARK。",
+      "recipe": "com.huawei.clouds.openrewrite.logbackcore.MigrateLogbackCoreTo1_5_34",
+      "tests": [
+        "UpgradeLogbackCoreDependencyTest",
+        "MigrateLogback1534JavaTest",
+        "MigrateLogback1534ConfigurationTest",
+        "FindLogbackCore1534BuildRisksTest",
+        "FindLogbackCore1534SourceRisksTest",
+        "FindLogbackCore1534ConfigurationRisksTest",
+        "LogbackCoreOfficialRecipeReuseTest",
+        "LogbackCoreRecommendedRecipeTest"
+      ]
     }
   ],
   "status": {
     "spec": "complete",
-    "evidence": "pending",
-    "automation": "catalog-only"
+    "evidence": "verified",
+    "automation": "implemented"
   }
 }
