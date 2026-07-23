@@ -1,123 +1,185 @@
-# log4j-1.2-api / org.apache.logging.log4j:log4j-1.2-api 升级规格
+# Log4j 1.2 API Bridge 2.25.5 升级规格
 
-> 规格状态：`COMPLETE`；证据状态：`PENDING`；自动化状态：`CATALOG_ONLY`。
-> 本 README 已完成工作簿事实、禁止降级边界、不兼容点分类和后续配方验收契约；
-> 它不声称尚未固定官方证据的具体 API 已得到确认。
-> catalog 本身不包含配方代码；现有候选实现也将在全量规格覆盖完成后逐模块核验和完善。
+> 规格状态：`COMPLETE`；证据状态：`VERIFIED`；自动化状态：`IMPLEMENTED`。
+> 实现模块：
+> [`rewrite-log4j-1-2-api-upgrade`](../../../rewrite-log4j-1-2-api-upgrade)。
+
+推荐的安全默认配方：
+
+```text
+com.huawei.clouds.openrewrite.log4j12api.MigrateLog4j12ApiTo2_25_5
+```
+
+它将六个明确源版本严格升级到 `2.25.5`，同时在真实 build、Java 与配置节点标记不能
+静态证明等价的迁移决策。它不会选择日志 backend，也不会自动添加 `log4j-core`。
 
 ## 模块身份
 
 | 字段 | 值 |
 | --- | --- |
-| Catalog 路径 | `catalog/java/maven-org-apache-logging-log4j-log4j-1-2-api` |
-| Maven artifactId | `migration-spec-java-maven-org-apache-logging-log4j-log4j-1-2-api` |
+| 规范坐标 | `org.apache.logging.log4j:log4j-1.2-api` |
 | groupId | `com.huawei.clouds.openrewrite` |
-| 规范表格标识 | `log4j-1.2-api`<br>`org.apache.logging.log4j:log4j-1.2-api` |
-| Catalog canonical identity | `org.apache.logging.log4j:log4j-1.2-api`（`UNVERIFIED`，只用于避免目录碰撞） |
-| 归一语言类 | `java` |
-| Excel 原始语言 | `java` |
 | 目标版本 | `2.25.5` |
-| Excel 迁移边 | 12 |
-| 涉及微服务数 | 最大可见值 `28`；不同版本行不累加 |
-| 分桶 | `B2_Minor单包` |
-| 难度 | `低` |
+| AUTO 白名单 | `2.13.2`, `2.17.1`, `2.17.2`, `2.18.0`, `2.19.0`, `2.20.0` |
+| Excel 物理行 | `2749`～`2754`, `4867`～`4872` |
+| 实现模块 | `rewrite-log4j-1-2-api-upgrade` |
 | 工作簿 SHA-256 | `17020a54165808d7a90801b56cf6c7dff428f3b6dfa931b089e84f9946104309` |
-| 候选实现模块 | `NONE`（尚无已识别的顶层实现模块） |
+
+工作簿用完整坐标和 artifact 简写各记录一次，因此 12 个物理行形成 6 条唯一升级边。
+它们均已进入用户高优先级精确白名单。表外低版本、动态值、范围、BOM/platform、
+version catalog、parent、共享属性、classifier 和非 JAR 变体不会被猜测式改写。
+
+目标身份固定到 Apache Log4j
+[`2e1d9c6284af1da1dec189f4b5b98ac0f32a7645`](https://github.com/apache/logging-log4j2/tree/2e1d9c6284af1da1dec189f4b5b98ac0f32a7645)：
+
+- JAR SHA-256：
+  `4dd812dc5a6343f542a9e0046b1ec78ecf10bdd5a8c15745101cdd8b9aa24974`
+- POM SHA-256：
+  `709b4faa962253f2a673412b40d244c8f2c23c00e2b93e40ed366f5b9557c461`
 
 ## Excel 事实快照
 
-本节逐字记录表格，不把自动分桶、难度或备注提升为官方兼容性结论。厂商后缀、
-截断显示、无法解析值和疑似跨发布线目标均原样保留。
+下表保留工作簿的 12 个物理行；AUTO 是用户最新高优先级指令和已验证实现得出的当前动作，
+不改写 Excel 原文。
 
-| Excel 行 | 序号 | 软件名称 | 原始语言 | 原始版本 | 目标版本 | 微服务数 | 分桶 | 难度 | 保守方向/动作 | 原始备注 |
-| ---: | ---: | --- | --- | --- | --- | ---: | --- | --- | --- | --- |
-| 2749 | 2748 | `org.apache.logging.log4j:log4j-1.2-api` | java | `2.13.2` | `2.25.5` | 28 | B2_Minor单包 | 低 | upgrade-candidate/mark | 同大版本内minor升级，通常向后兼容 |
-| 2750 | 2749 | `org.apache.logging.log4j:log4j-1.2-api` | java | `2.17.1` | `2.25.5` | 28 | B2_Minor单包 | 低 | upgrade-candidate/mark | 同大版本内minor升级，通常向后兼容 |
-| 2751 | 2750 | `org.apache.logging.log4j:log4j-1.2-api` | java | `2.17.2` | `2.25.5` | 28 | B2_Minor单包 | 低 | upgrade-candidate/mark | 同大版本内minor升级，通常向后兼容 |
-| 2752 | 2751 | `org.apache.logging.log4j:log4j-1.2-api` | java | `2.18.0` | `2.25.5` | 28 | B2_Minor单包 | 低 | upgrade-candidate/mark | 同大版本内minor升级，通常向后兼容 |
-| 2753 | 2752 | `org.apache.logging.log4j:log4j-1.2-api` | java | `2.19.0` | `2.25.5` | 28 | B2_Minor单包 | 低 | upgrade-candidate/mark | 同大版本内minor升级，通常向后兼容 |
-| 2754 | 2753 | `org.apache.logging.log4j:log4j-1.2-api` | java | `2.20.0` | `2.25.5` | 28 | B2_Minor单包 | 低 | upgrade-candidate/mark | 同大版本内minor升级，通常向后兼容 |
-| 4867 | 4866 | `log4j-1.2-api` | java | `2.13.2` | `2.25.5` | 0 | B2_Minor单包 | 低 | upgrade-candidate/mark | 同大版本内minor升级，通常向后兼容 |
-| 4868 | 4867 | `log4j-1.2-api` | java | `2.17.1` | `2.25.5` | 0 | B2_Minor单包 | 低 | upgrade-candidate/mark | 同大版本内minor升级，通常向后兼容 |
-| 4869 | 4868 | `log4j-1.2-api` | java | `2.17.2` | `2.25.5` | 0 | B2_Minor单包 | 低 | upgrade-candidate/mark | 同大版本内minor升级，通常向后兼容 |
-| 4870 | 4869 | `log4j-1.2-api` | java | `2.18.0` | `2.25.5` | 0 | B2_Minor单包 | 低 | upgrade-candidate/mark | 同大版本内minor升级，通常向后兼容 |
-| 4871 | 4870 | `log4j-1.2-api` | java | `2.19.0` | `2.25.5` | 0 | B2_Minor单包 | 低 | upgrade-candidate/mark | 同大版本内minor升级，通常向后兼容 |
-| 4872 | 4871 | `log4j-1.2-api` | java | `2.20.0` | `2.25.5` | 0 | B2_Minor单包 | 低 | upgrade-candidate/mark | 同大版本内minor升级，通常向后兼容 |
+| Excel 行 | 软件标识 | 源版本 | 目标版本 | 当前动作 |
+| ---: | --- | --- | --- | --- |
+| 2749 | `org.apache.logging.log4j:log4j-1.2-api` | `2.13.2` | `2.25.5` | AUTO + MARK |
+| 2750 | `org.apache.logging.log4j:log4j-1.2-api` | `2.17.1` | `2.25.5` | AUTO + MARK |
+| 2751 | `org.apache.logging.log4j:log4j-1.2-api` | `2.17.2` | `2.25.5` | AUTO + MARK |
+| 2752 | `org.apache.logging.log4j:log4j-1.2-api` | `2.18.0` | `2.25.5` | AUTO + MARK |
+| 2753 | `org.apache.logging.log4j:log4j-1.2-api` | `2.19.0` | `2.25.5` | AUTO + MARK |
+| 2754 | `org.apache.logging.log4j:log4j-1.2-api` | `2.20.0` | `2.25.5` | AUTO + MARK |
+| 4867 | `log4j-1.2-api` | `2.13.2` | `2.25.5` | AUTO + MARK |
+| 4868 | `log4j-1.2-api` | `2.17.1` | `2.25.5` | AUTO + MARK |
+| 4869 | `log4j-1.2-api` | `2.17.2` | `2.25.5` | AUTO + MARK |
+| 4870 | `log4j-1.2-api` | `2.18.0` | `2.25.5` | AUTO + MARK |
+| 4871 | `log4j-1.2-api` | `2.19.0` | `2.25.5` | AUTO + MARK |
+| 4872 | `log4j-1.2-api` | `2.20.0` | `2.25.5` | AUTO + MARK |
 
 ## 升级方向与禁止降级
 
-- 表格原始源版本记录（不是 AUTO 白名单）：`2.13.2`, `2.17.1`, `2.17.2`, `2.18.0`, `2.19.0`, `2.20.0`。
-- 升级候选边：`2.13.2`, `2.17.1`, `2.17.2`, `2.18.0`, `2.19.0`, `2.20.0`；在 E-001～E-003 完成前仍保持 `MARK`。
-- 相同版本 NOOP：`NONE`。
-- 潜在降级冲突：`NONE`。
-- 截断、聚合或无法可靠比较：`NONE`。
-- 任何高于目标的版本、更新发布线或无法可靠比较的厂商版本必须保持字节级不变，并在
-  真实依赖 owner 上标记 `目标版本冲突（禁止降级）`；本项目不存在回退路径。
-- 表外低版本、动态版本、范围、变量、BOM/platform、parent、catalog、workspace、
-  constraints 和锁文件不能被猜测式改写；应定位并迁移真正的版本 owner。
-- 若同一模块列出多个坐标或别名，配方必须分别证明身份；在官方 relocation 证据固定前，
-  不得因为 artifact 名相同而跨 group、生态或发行渠道改坐标。
+| 输入 | 自动行为 |
+| --- | --- |
+| 六个白名单版本且版本由当前文件唯一拥有 | 升级到 `2.25.5` |
+| `2.25.5` | NOOP |
+| 高于目标的固定版本 | 保持原值并精确标记 `目标版本冲突（禁止降级）` |
+| 表外固定低版本 | 保持原值并标记“需要独立批准的迁移边” |
+| 外部、共享、动态或无法证明的 owner | 保持原值并标记真实 owner |
+| classified、非 JAR 或 Gradle variant | 保持制品形状并 MARK |
 
+Maven 覆盖 root/profile 的直接依赖、`dependencyManagement` 和可证明唯一拥有的本地属性；
+Gradle 只覆盖根 Groovy/Kotlin `dependencies {}` 中的安全字面量或 map 声明。生成目录、
+缓存、安装产物和报告目录保持不变。
 
 ## 不兼容点规格
 
-| ID | 维度 | 适用迁移边 | Excel 提示 | 官方确认事实 | 处置契约 |
-| --- | --- | --- | --- | --- | --- |
-| C-001 | 弃用 / 默认值 / 配置 / 运行时 | Excel #2749 2.13.2 [upgrade-candidate/mark: 表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。]<br>Excel #2750 2.17.1 [upgrade-candidate/mark: 表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。]<br>Excel #2751 2.17.2 [upgrade-candidate/mark: 表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。]<br>Excel #2752 2.18.0 [upgrade-candidate/mark: 表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。]<br>Excel #2753 2.19.0 [upgrade-candidate/mark: 表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。]<br>Excel #2754 2.20.0 [upgrade-candidate/mark: 表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。]<br>Excel #4867 2.13.2 [upgrade-candidate/mark: 表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。]<br>Excel #4868 2.17.1 [upgrade-candidate/mark: 表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。]<br>Excel #4869 2.17.2 [upgrade-candidate/mark: 表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。]<br>Excel #4870 2.18.0 [upgrade-candidate/mark: 表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。]<br>Excel #4871 2.19.0 [upgrade-candidate/mark: 表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。]<br>Excel #4872 2.20.0 [upgrade-candidate/mark: 表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。] → `2.25.5` | 同大版本内minor升级，通常向后兼容 | `UNVERIFIED` | 同一主版本不等于绝对兼容；核查弃用删除、默认值、运行时基线、传递依赖和配置，只自动处理有固定上游证据的一一对应修改。 |
+安全默认入口依次执行：
 
-`UNVERIFIED` 表示 Excel 提示已进入规格，但尚未用不可变的官方 tag/commit、发布说明和
-制品元数据完成验证。此时允许 README 和精确 MARK 设计，不允许据此发明 API AUTO。
+1. 严格升级明确拥有的白名单依赖；
+2. 定位外部 owner、变体、重复 Log4j 1 实现、bridge 环和 Log4j 家族偏斜；
+3. 定位 programmatic configuration、Appender/Layout/Filter、repository/SPI、JMX、
+   MDC/NDC、序列化和 backend API；
+4. 定位 `log4j.properties` / `log4j.xml` 的 compatibility mode、插值、自定义 class、
+   reload、DTD/entity 和 pattern 风险。
 
-### `java` 生态最低核查项
+精确 MARK 是配方实际输出，不只是 README 提示。默认入口不执行可能引入新 backend 的
+源码修改。
 
-- 确认规范 Maven 坐标、relocation 关系，以及 parent/BOM/property/platform 的真实版本 owner。
-- 覆盖 Maven 与 Gradle；核查 JDK/字节码基线、包名和公开 API、反射、注解处理与 ServiceLoader。
-- 核查 JPMS/OSGi、shade/native-image、序列化/缓存/数据库数据，以及配置文件和框架联动。
+## 官方 OpenRewrite 能力复用审计
+
+审计固定到 OpenRewrite Core `8.87.5` commit
+[`b3008cc4`](https://github.com/openrewrite/rewrite/tree/b3008cc4a1f0c43f562da16e5933a2a56d9bc568)
+和 `rewrite-logging-frameworks:3.30.0` commit
+[`c357a720`](https://github.com/openrewrite/rewrite-logging-frameworks/tree/c357a7209d721078dc942a777b1d8cc95941f722)。
+
+在工程已经直接拥有并对齐 `log4j-core:2.25.5` 时，可显式启用：
+
+```text
+com.huawei.clouds.openrewrite.log4j12api.MigrateLog4j12ApiTo2_25_5WithOwnedCore
+```
+
+该 opt-in 直接组合官方 `ChangeMethodTargetToStatic`、
+`LoggerSetLevelToConfiguratorRecipe` 和 `ChangeType`，只处理使用面被证明局限于
+`Logger`、`Level`、`getLogger/getRootLogger` 与 `setLevel` 的 authored Java。
+
+不能把这组叶子放进无条件默认入口：目标 bridge POM 将 `log4j-core` 声明为 optional，
+而官方 `setLevel` 叶子会生成 Core 的 `Configurator`。默认执行会造成编译失败；自动添加
+Core 又会擅自选择 backend。
+
+以下官方 aggregate 已经过运行时树审计并明确排除：
+
+| 官方能力 | 排除原因 |
+| --- | --- |
+| `UpgradeLog4J2DependencyVersion` | 使用 `org.apache.logging.log4j:* → 2.x` 且覆盖 managed version，突破单 artifact、精确目标和 owner 边界 |
+| `Log4j1ToLog4j2` | 添加/删除多个依赖、改变 binding/backend、通包改写和参数化日志，超出 bridge patch 授权 |
+| Log4j→SLF4J/Logback 或反向 bridge aggregate | 改变 facade、路由方向和 provider，不是同一制品升级 |
+
+测试递归解析实际 recipe tree，证明默认入口不含 Core 源码叶子，opt-in 只含接受的五个
+官方叶子，两个入口均不含宽泛 dependency/package aggregate。
 
 ## 证据台账
 
-| Claim ID | 待证明事项 | 状态 | 固定官方证据 | 形成 AUTO 的条件 |
-| --- | --- | --- | --- | --- |
-| E-001 | 包/坐标身份、源版本和目标制品身份 | `UNVERIFIED` | 后续固定官网、registry/repository 元数据与 SHA | 身份无歧义且目标确为升级 |
-| E-002 | 每条迁移边的 API、配置和默认行为变化 | `UNVERIFIED` | 后续固定 release notes、迁移指南、tag/commit diff | 存在一一对应且语义等价的变换 |
-| E-003 | 真实工程中的用法和负例 | `UNVERIFIED` | 后续固定真实仓库 commit、路径、许可证与裁剪说明 | 正例、负例和上下文边界均可复现 |
+| Claim | 状态 | 固定证据 |
+| --- | --- | --- |
+| 坐标、六个源版本与目标制品身份 | VERIFIED | 七个不可变 Apache Log4j tag commit、目标 JAR/POM SHA-256 |
+| 配置、bridge、API 和默认行为变化 | VERIFIED | 固定目标迁移指南、2.24.0 release notes、目标源码与 POM |
+| OpenRewrite 可复用与拒绝边界 | VERIFIED | Core `b3008cc4`、logging-frameworks `c357a720`、实际 recipe tree 测试 |
+| 真实正例、风险用法和注释负例 | VERIFIED | sciview、Gobblin、LTTng 固定 commit fixture |
 
-真实仓库只能证明“用法存在”，不能替代官方兼容性证据。推断必须显式标为
-`INFERENCE`；只有固定上游证据支持的事实才能改为 `VERIFIED`。
+## 需要业务验收的不兼容点
+
+- `PropertyConfigurator` / `DOMConfigurator`：2.24.0 起只有
+  `log4j1.compatibility=true` 时才修改 Core 配置；优先转换配置，并验证 reload 与不可信输入。
+- Appender/Layout/Filter：bridge 只支持有限 Log4j 1 component；自定义实现可能需要改写为
+  Log4j 2 plugin，并验证 `Log4j2Plugins.dat`。
+- `log4j:log4j`、reload4j、`log4j-over-slf4j`：都会提供相同 `org.apache.log4j` 类，
+  最终 classpath 只能保留一个实现。
+- `log4j-api/core/bom` 与其他 bridge：必须按批准的精确版本对齐，并验证 provider、
+  classloader、shade 和容器共享库。
+- MDC/NDC、`LoggingEvent`、JMX、network/JMS/JDBC、renderer 和 repository SPI：
+  需要验证线程上下文、权限、失败路径、序列化和 wire format。
+- 配置插值、DTD/entity、pattern、rotation、async、filter、error handler 和 secrets：
+  需要配置 golden test、断网解析测试和安全审计。
+
+固定迁移指南：
+[`migrate-from-log4j1`](https://github.com/apache/logging-log4j2/blob/2e1d9c6284af1da1dec189f4b5b98ac0f32a7645/src/site/antora/modules/ROOT/pages/migrate-from-log4j1.adoc)；
+固定 2.24.0 行为证据：
+[`release notes`](https://github.com/apache/logging-log4j2/blob/2e1d9c6284af1da1dec189f4b5b98ac0f32a7645/src/changelog/2.24.0/.release-notes.adoc.ftl)。
 
 ## 后续 OpenRewrite 配方契约
 
 ### AUTO
 
-- 当前阶段 AUTO 白名单为空；只有 E-001～E-003 变为 `VERIFIED` 后，升级候选边才可逐项进入；
-- 只处理经验证的原子源版本、明确坐标和当前文件拥有的标准依赖声明；
-- 更高版本永不降级，表外版本、变体和外部 owner 永不猜测；
-- 只实现有官方源码证明、上下文无歧义、行为等价且可幂等运行的 AST/配置修改；
-- 保留 scope、classifier/type、optional、exclusions、workspace/profile 和相邻内容。
+- 只迁移六个精确白名单版本和当前文件明确拥有的标准 Maven/Gradle 声明；
+- 保留 scope、optional、exclusions、相邻配置和 artifact shape；
+- 仅在直接拥有 Core 已被证明时启用官方源码 opt-in；
+- 每个变换必须通过 before/after、类型归属、真实 fixture 和两周期幂等测试。
 
 ### MARK
 
-- 在具体依赖、属性、BOM/platform、调用、类型、配置键或资源节点标记未决事项；
-- marker 必须说明业务 owner 需要作出的决定、所需证据和验收方法；
-- 不用文件级泛化告警代替精确定位，也不把 README 文字伪装成已执行迁移。
+- 高版本原样保留并使用精确 `目标版本冲突（禁止降级）`；
+- 表外版本、外部 owner、BOM/platform/catalog、变体、家族偏斜和 bridge 环定位到真实节点；
+- programmatic configuration、backend API 与配置风险不能只停留在 README。
 
 ### MANUAL
 
-- 运行时流量、安全策略、数据和 wire format、集群滚动策略、原生 ABI、性能容量、
-  外部服务兼容性与回滚均由业务证据决定；
-- 无法通过静态上下文证明安全的语义变换保持原样。
+- backend/provider 选择、bridge 拓扑、classloader、shade、容器共享库和滚动部署由业务决定；
+- 日志文本、MDC/NDC、序列化、网络/JMS/JDBC、JMX、性能容量和安全行为需运行时验收；
+- 无法静态证明语义等价的操作保持原样。
 
 ## 测试与真实用例验收
 
-- 每个经验证的升级候选源版本才要求 AUTO 正例；目标/相同行为 NOOP；
-- 冲突、未知、截断和聚合版本保持不变并 MARK；所有更高版本和更高发布线验证禁止降级；
-- 覆盖对应生态的直接声明、共享 owner、BOM/platform/workspace、动态值、范围、锁文件和变体；
-- 覆盖同名业务符号、相似坐标、注释/字符串、生成目录、缓存和安装产物负例；
-- 每项 AUTO 有 before/after、类型或结构归因、两轮幂等和 aggregate 顺序测试；
-- 固定真实仓库 commit 与文件路径，记录裁剪内容；真实夹具不能取代官方差异证据；
-- 最终执行编译、单元/集成、行为、安全、性能、数据兼容、部署和回滚门禁。
+模块 `clean verify` 执行 63 项测试，覆盖六个版本、Maven/Groovy/Kotlin owner、任意精度
+禁止降级、生成目录、变体、配置、Java 类型归属、两周期幂等、默认与 opt-in 运行时树。
 
-## 当前阶段结论
+固定夹具包括：
 
-本模块的不兼容点文档规格已经建立；官方证据、真实仓库夹具和可执行配方属于下一阶段。
-在 E-001～E-003 完成前，除严格版本所有权和禁止降级守卫外，不批准猜测式 AUTO。
+- `scenerygraphics/sciview@246aa7a6ad71b148669a10b281fd82727d672457` 的真实 Kotlin DSL；
+- `apache/gobblin@fcfb06b41d041cb797622264cf5322296753fdea` 的
+  `PropertyConfigurator.configure(Properties)`；
+- `lttng/lttng-ust@e65b8914742a2b3aaf8d2fd3c24404b63062b1de` 的注释负例；
+- 官方 `rewrite-logging-frameworks@c357a720` 的 `loggerSetLevel` 测试形态。
+
+真实仓库只证明用法存在；AUTO 的语义边界仍由固定上游源码、制品和 OpenRewrite 运行时树
+共同约束。

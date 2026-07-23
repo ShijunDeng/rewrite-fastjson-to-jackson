@@ -14,11 +14,17 @@
     ],
     "canonicalIdentity": {
       "value": "org.apache.logging.log4j:log4j-1.2-api",
-      "status": "unverified",
-      "evidence": []
+      "status": "verified",
+      "evidence": [
+        "https://github.com/apache/logging-log4j2/tree/2e1d9c6284af1da1dec189f4b5b98ac0f32a7645",
+        "maven-central:jar-sha256:4dd812dc5a6343f542a9e0046b1ec78ecf10bdd5a8c15745101cdd8b9aa24974",
+        "maven-central:pom-sha256:709b4faa962253f2a673412b40d244c8f2c23c00e2b93e40ed366f5b9557c461"
+      ]
     },
     "targetVersion": "2.25.5",
-    "candidateImplementationModules": []
+    "candidateImplementationModules": [
+      "rewrite-log4j-1-2-api-upgrade"
+    ]
   },
   "workbook": {
     "sha256": "17020a54165808d7a90801b56cf6c7dff428f3b6dfa931b089e84f9946104309",
@@ -37,9 +43,9 @@
         "sourceAtomic": true,
         "direction": {
           "relation": "upgrade-candidate",
-          "action": "mark",
+          "action": "auto",
           "comparator": "conservative-numeric-prefix-v1",
-          "reason": "表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。"
+          "reason": "用户高优先级精确白名单已批准该原子版本；实现只迁移明确 owner，保留制品形状，并对表外或更高版本保持原文和精确 MARK。"
         }
       },
       {
@@ -56,9 +62,9 @@
         "sourceAtomic": true,
         "direction": {
           "relation": "upgrade-candidate",
-          "action": "mark",
+          "action": "auto",
           "comparator": "conservative-numeric-prefix-v1",
-          "reason": "表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。"
+          "reason": "用户高优先级精确白名单已批准该原子版本；实现只迁移明确 owner，保留制品形状，并对表外或更高版本保持原文和精确 MARK。"
         }
       },
       {
@@ -75,9 +81,9 @@
         "sourceAtomic": true,
         "direction": {
           "relation": "upgrade-candidate",
-          "action": "mark",
+          "action": "auto",
           "comparator": "conservative-numeric-prefix-v1",
-          "reason": "表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。"
+          "reason": "用户高优先级精确白名单已批准该原子版本；实现只迁移明确 owner，保留制品形状，并对表外或更高版本保持原文和精确 MARK。"
         }
       },
       {
@@ -94,9 +100,9 @@
         "sourceAtomic": true,
         "direction": {
           "relation": "upgrade-candidate",
-          "action": "mark",
+          "action": "auto",
           "comparator": "conservative-numeric-prefix-v1",
-          "reason": "表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。"
+          "reason": "用户高优先级精确白名单已批准该原子版本；实现只迁移明确 owner，保留制品形状，并对表外或更高版本保持原文和精确 MARK。"
         }
       },
       {
@@ -113,9 +119,9 @@
         "sourceAtomic": true,
         "direction": {
           "relation": "upgrade-candidate",
-          "action": "mark",
+          "action": "auto",
           "comparator": "conservative-numeric-prefix-v1",
-          "reason": "表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。"
+          "reason": "用户高优先级精确白名单已批准该原子版本；实现只迁移明确 owner，保留制品形状，并对表外或更高版本保持原文和精确 MARK。"
         }
       },
       {
@@ -132,9 +138,9 @@
         "sourceAtomic": true,
         "direction": {
           "relation": "upgrade-candidate",
-          "action": "mark",
+          "action": "auto",
           "comparator": "conservative-numeric-prefix-v1",
-          "reason": "表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。"
+          "reason": "用户高优先级精确白名单已批准该原子版本；实现只迁移明确 owner，保留制品形状，并对表外或更高版本保持原文和精确 MARK。"
         }
       },
       {
@@ -151,9 +157,9 @@
         "sourceAtomic": true,
         "direction": {
           "relation": "upgrade-candidate",
-          "action": "mark",
+          "action": "auto",
           "comparator": "conservative-numeric-prefix-v1",
-          "reason": "表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。"
+          "reason": "用户高优先级精确白名单已批准该原子版本；实现只迁移明确 owner，保留制品形状，并对表外或更高版本保持原文和精确 MARK。"
         }
       },
       {
@@ -170,9 +176,9 @@
         "sourceAtomic": true,
         "direction": {
           "relation": "upgrade-candidate",
-          "action": "mark",
+          "action": "auto",
           "comparator": "conservative-numeric-prefix-v1",
-          "reason": "表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。"
+          "reason": "用户高优先级精确白名单已批准该原子版本；实现只迁移明确 owner，保留制品形状，并对表外或更高版本保持原文和精确 MARK。"
         }
       },
       {
@@ -189,9 +195,9 @@
         "sourceAtomic": true,
         "direction": {
           "relation": "upgrade-candidate",
-          "action": "mark",
+          "action": "auto",
           "comparator": "conservative-numeric-prefix-v1",
-          "reason": "表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。"
+          "reason": "用户高优先级精确白名单已批准该原子版本；实现只迁移明确 owner，保留制品形状，并对表外或更高版本保持原文和精确 MARK。"
         }
       },
       {
@@ -208,9 +214,9 @@
         "sourceAtomic": true,
         "direction": {
           "relation": "upgrade-candidate",
-          "action": "mark",
+          "action": "auto",
           "comparator": "conservative-numeric-prefix-v1",
-          "reason": "表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。"
+          "reason": "用户高优先级精确白名单已批准该原子版本；实现只迁移明确 owner，保留制品形状，并对表外或更高版本保持原文和精确 MARK。"
         }
       },
       {
@@ -227,9 +233,9 @@
         "sourceAtomic": true,
         "direction": {
           "relation": "upgrade-candidate",
-          "action": "mark",
+          "action": "auto",
           "comparator": "conservative-numeric-prefix-v1",
-          "reason": "表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。"
+          "reason": "用户高优先级精确白名单已批准该原子版本；实现只迁移明确 owner，保留制品形状，并对表外或更高版本保持原文和精确 MARK。"
         }
       },
       {
@@ -246,19 +252,51 @@
         "sourceAtomic": true,
         "direction": {
           "relation": "upgrade-candidate",
-          "action": "mark",
+          "action": "auto",
           "comparator": "conservative-numeric-prefix-v1",
-          "reason": "表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。"
+          "reason": "用户高优先级精确白名单已批准该原子版本；实现只迁移明确 owner，保留制品形状，并对表外或更高版本保持原文和精确 MARK。"
         }
       }
     ]
   },
-  "taskDirectives": [],
+  "taskDirectives": [
+    {
+      "id": "U-001",
+      "status": "verified",
+      "sourceVersions": [
+        "2.13.2",
+        "2.17.1",
+        "2.17.2",
+        "2.18.0",
+        "2.19.0",
+        "2.20.0"
+      ],
+      "targetVersion": "2.25.5",
+      "relation": "user-supplied-upgrade",
+      "action": "auto",
+      "statement": "用户高优先级清单批准六个精确 Log4j 1.2 API bridge 源版本升级到 2.25.5；实现仅修改明确 owner，默认不选择或添加日志后端。"
+    },
+    {
+      "id": "U-002",
+      "status": "verified",
+      "sourceVersions": [
+        "2.13.2",
+        "2.17.1",
+        "2.17.2",
+        "2.18.0",
+        "2.19.0",
+        "2.20.0"
+      ],
+      "targetVersion": "2.25.5",
+      "relation": "official-recipe-reuse",
+      "action": "auto-with-explicit-prerequisite",
+      "statement": "官方 Logger/Level/setLevel 叶子仅进入 WithOwnedCore opt-in；调用前必须证明工程直接拥有并对齐 log4j-core:2.25.5，因为 bridge 对 Core 的依赖是 optional。"
+    }
+  ],
   "policy": {
     "allowDowngrade": false,
     "conflictMarker": "目标版本冲突（禁止降级）",
-    "autoSourceWhitelist": [],
-    "upgradeCandidatesPendingEvidence": [
+    "autoSourceWhitelist": [
       "2.13.2",
       "2.17.1",
       "2.17.2",
@@ -266,6 +304,7 @@
       "2.19.0",
       "2.20.0"
     ],
+    "upgradeCandidatesPendingEvidence": [],
     "noopVersions": [],
     "conflictVersions": [],
     "unresolvedVersions": []
@@ -274,22 +313,54 @@
     {
       "id": "E-001",
       "claim": "制品身份、源版本与目标制品身份",
-      "status": "unverified",
-      "officialSources": [],
+      "status": "verified",
+      "officialSources": [
+        "https://github.com/apache/logging-log4j2/tree/994f94d9336666f2fd1a9b73e8e3943ad3cd1350",
+        "https://github.com/apache/logging-log4j2/tree/11dafda0c43eb31cca67f3b0ed0ca9b81780db76",
+        "https://github.com/apache/logging-log4j2/tree/eedc3cdb6be6744071f8ae6dcfb37b26b1fc0940",
+        "https://github.com/apache/logging-log4j2/tree/a3613864c8b39fc12588eaaeda0627741b7cc3bb",
+        "https://github.com/apache/logging-log4j2/tree/5a5d3aefdc75045bb66f55a16c40a9a07a463738",
+        "https://github.com/apache/logging-log4j2/tree/44ab0131718fc8d1fcb45604b0f1a8187765910d",
+        "https://github.com/apache/logging-log4j2/tree/2e1d9c6284af1da1dec189f4b5b98ac0f32a7645",
+        "maven-central:jar-sha256:4dd812dc5a6343f542a9e0046b1ec78ecf10bdd5a8c15745101cdd8b9aa24974",
+        "maven-central:pom-sha256:709b4faa962253f2a673412b40d244c8f2c23c00e2b93e40ed366f5b9557c461"
+      ],
       "realFixtures": []
     },
     {
       "id": "E-002",
       "claim": "迁移边的 API、配置与默认行为变化",
-      "status": "unverified",
-      "officialSources": [],
+      "status": "verified",
+      "officialSources": [
+        "https://github.com/apache/logging-log4j2/blob/2e1d9c6284af1da1dec189f4b5b98ac0f32a7645/src/site/antora/modules/ROOT/pages/migrate-from-log4j1.adoc",
+        "https://github.com/apache/logging-log4j2/blob/2e1d9c6284af1da1dec189f4b5b98ac0f32a7645/src/site/antora/modules/ROOT/partials/manual/systemproperties/properties-log4j-12-api.adoc",
+        "https://github.com/apache/logging-log4j2/blob/2e1d9c6284af1da1dec189f4b5b98ac0f32a7645/src/changelog/2.24.0/.release-notes.adoc.ftl",
+        "https://github.com/apache/logging-log4j2/blob/2e1d9c6284af1da1dec189f4b5b98ac0f32a7645/log4j-1.2-api/pom.xml"
+      ],
       "realFixtures": []
     },
     {
       "id": "E-003",
       "claim": "真实工程用法、负例与行为验收",
-      "status": "unverified",
-      "officialSources": [],
+      "status": "verified",
+      "officialSources": [
+        "https://github.com/openrewrite/rewrite-logging-frameworks/blob/c357a7209d721078dc942a777b1d8cc95941f722/src/test/java/org/openrewrite/java/logging/log4j/Log4j1ToLog4j2Test.java"
+      ],
+      "realFixtures": [
+        "scenerygraphics/sciview@246aa7a6ad71b148669a10b281fd82727d672457",
+        "apache/gobblin@fcfb06b41d041cb797622264cf5322296753fdea",
+        "lttng/lttng-ust@e65b8914742a2b3aaf8d2fd3c24404b63062b1de"
+      ]
+    },
+    {
+      "id": "E-004",
+      "claim": "OpenRewrite 官方能力已检索、复用并用运行时 recipe tree 证明边界",
+      "status": "verified",
+      "officialSources": [
+        "https://github.com/openrewrite/rewrite/tree/b3008cc4a1f0c43f562da16e5933a2a56d9bc568",
+        "https://github.com/openrewrite/rewrite-logging-frameworks/tree/c357a7209d721078dc942a777b1d8cc95941f722",
+        "https://github.com/openrewrite/rewrite-apache/tree/b0424eb13da62085a34a7e84a3987ac78227b70b"
+      ],
       "realFixtures": []
     }
   ],
@@ -301,11 +372,17 @@
       ],
       "dimension": "弃用 / 默认值 / 配置 / 运行时",
       "excelNoteStatus": "table_fact",
-      "evidenceStatus": "unverified",
+      "evidenceStatus": "verified",
       "disposition": "mark",
       "treatment": "同一主版本不等于绝对兼容；核查弃用删除、默认值、运行时基线、传递依赖和配置，只自动处理有固定上游证据的一一对应修改。",
-      "recipe": null,
-      "tests": []
+      "recipe": "com.huawei.clouds.openrewrite.log4j12api.MigrateLog4j12ApiTo2_25_5",
+      "tests": [
+        "UpgradeLog4j12ApiDependencyTest",
+        "Log4j12ApiBuildAndConfigurationRiskTest",
+        "MigrateLog4j12ApiSourceTest",
+        "Log4j12ApiRecommendedRecipeTest",
+        "Log4j12ApiOfficialRecipeAuditTest"
+      ]
     },
     {
       "id": "C-002",
@@ -314,11 +391,17 @@
       ],
       "dimension": "弃用 / 默认值 / 配置 / 运行时",
       "excelNoteStatus": "table_fact",
-      "evidenceStatus": "unverified",
+      "evidenceStatus": "verified",
       "disposition": "mark",
       "treatment": "同一主版本不等于绝对兼容；核查弃用删除、默认值、运行时基线、传递依赖和配置，只自动处理有固定上游证据的一一对应修改。",
-      "recipe": null,
-      "tests": []
+      "recipe": "com.huawei.clouds.openrewrite.log4j12api.MigrateLog4j12ApiTo2_25_5",
+      "tests": [
+        "UpgradeLog4j12ApiDependencyTest",
+        "Log4j12ApiBuildAndConfigurationRiskTest",
+        "MigrateLog4j12ApiSourceTest",
+        "Log4j12ApiRecommendedRecipeTest",
+        "Log4j12ApiOfficialRecipeAuditTest"
+      ]
     },
     {
       "id": "C-003",
@@ -327,11 +410,17 @@
       ],
       "dimension": "弃用 / 默认值 / 配置 / 运行时",
       "excelNoteStatus": "table_fact",
-      "evidenceStatus": "unverified",
+      "evidenceStatus": "verified",
       "disposition": "mark",
       "treatment": "同一主版本不等于绝对兼容；核查弃用删除、默认值、运行时基线、传递依赖和配置，只自动处理有固定上游证据的一一对应修改。",
-      "recipe": null,
-      "tests": []
+      "recipe": "com.huawei.clouds.openrewrite.log4j12api.MigrateLog4j12ApiTo2_25_5",
+      "tests": [
+        "UpgradeLog4j12ApiDependencyTest",
+        "Log4j12ApiBuildAndConfigurationRiskTest",
+        "MigrateLog4j12ApiSourceTest",
+        "Log4j12ApiRecommendedRecipeTest",
+        "Log4j12ApiOfficialRecipeAuditTest"
+      ]
     },
     {
       "id": "C-004",
@@ -340,11 +429,17 @@
       ],
       "dimension": "弃用 / 默认值 / 配置 / 运行时",
       "excelNoteStatus": "table_fact",
-      "evidenceStatus": "unverified",
+      "evidenceStatus": "verified",
       "disposition": "mark",
       "treatment": "同一主版本不等于绝对兼容；核查弃用删除、默认值、运行时基线、传递依赖和配置，只自动处理有固定上游证据的一一对应修改。",
-      "recipe": null,
-      "tests": []
+      "recipe": "com.huawei.clouds.openrewrite.log4j12api.MigrateLog4j12ApiTo2_25_5",
+      "tests": [
+        "UpgradeLog4j12ApiDependencyTest",
+        "Log4j12ApiBuildAndConfigurationRiskTest",
+        "MigrateLog4j12ApiSourceTest",
+        "Log4j12ApiRecommendedRecipeTest",
+        "Log4j12ApiOfficialRecipeAuditTest"
+      ]
     },
     {
       "id": "C-005",
@@ -353,11 +448,17 @@
       ],
       "dimension": "弃用 / 默认值 / 配置 / 运行时",
       "excelNoteStatus": "table_fact",
-      "evidenceStatus": "unverified",
+      "evidenceStatus": "verified",
       "disposition": "mark",
       "treatment": "同一主版本不等于绝对兼容；核查弃用删除、默认值、运行时基线、传递依赖和配置，只自动处理有固定上游证据的一一对应修改。",
-      "recipe": null,
-      "tests": []
+      "recipe": "com.huawei.clouds.openrewrite.log4j12api.MigrateLog4j12ApiTo2_25_5",
+      "tests": [
+        "UpgradeLog4j12ApiDependencyTest",
+        "Log4j12ApiBuildAndConfigurationRiskTest",
+        "MigrateLog4j12ApiSourceTest",
+        "Log4j12ApiRecommendedRecipeTest",
+        "Log4j12ApiOfficialRecipeAuditTest"
+      ]
     },
     {
       "id": "C-006",
@@ -366,11 +467,17 @@
       ],
       "dimension": "弃用 / 默认值 / 配置 / 运行时",
       "excelNoteStatus": "table_fact",
-      "evidenceStatus": "unverified",
+      "evidenceStatus": "verified",
       "disposition": "mark",
       "treatment": "同一主版本不等于绝对兼容；核查弃用删除、默认值、运行时基线、传递依赖和配置，只自动处理有固定上游证据的一一对应修改。",
-      "recipe": null,
-      "tests": []
+      "recipe": "com.huawei.clouds.openrewrite.log4j12api.MigrateLog4j12ApiTo2_25_5",
+      "tests": [
+        "UpgradeLog4j12ApiDependencyTest",
+        "Log4j12ApiBuildAndConfigurationRiskTest",
+        "MigrateLog4j12ApiSourceTest",
+        "Log4j12ApiRecommendedRecipeTest",
+        "Log4j12ApiOfficialRecipeAuditTest"
+      ]
     },
     {
       "id": "C-007",
@@ -379,11 +486,17 @@
       ],
       "dimension": "弃用 / 默认值 / 配置 / 运行时",
       "excelNoteStatus": "table_fact",
-      "evidenceStatus": "unverified",
+      "evidenceStatus": "verified",
       "disposition": "mark",
       "treatment": "同一主版本不等于绝对兼容；核查弃用删除、默认值、运行时基线、传递依赖和配置，只自动处理有固定上游证据的一一对应修改。",
-      "recipe": null,
-      "tests": []
+      "recipe": "com.huawei.clouds.openrewrite.log4j12api.MigrateLog4j12ApiTo2_25_5",
+      "tests": [
+        "UpgradeLog4j12ApiDependencyTest",
+        "Log4j12ApiBuildAndConfigurationRiskTest",
+        "MigrateLog4j12ApiSourceTest",
+        "Log4j12ApiRecommendedRecipeTest",
+        "Log4j12ApiOfficialRecipeAuditTest"
+      ]
     },
     {
       "id": "C-008",
@@ -392,11 +505,17 @@
       ],
       "dimension": "弃用 / 默认值 / 配置 / 运行时",
       "excelNoteStatus": "table_fact",
-      "evidenceStatus": "unverified",
+      "evidenceStatus": "verified",
       "disposition": "mark",
       "treatment": "同一主版本不等于绝对兼容；核查弃用删除、默认值、运行时基线、传递依赖和配置，只自动处理有固定上游证据的一一对应修改。",
-      "recipe": null,
-      "tests": []
+      "recipe": "com.huawei.clouds.openrewrite.log4j12api.MigrateLog4j12ApiTo2_25_5",
+      "tests": [
+        "UpgradeLog4j12ApiDependencyTest",
+        "Log4j12ApiBuildAndConfigurationRiskTest",
+        "MigrateLog4j12ApiSourceTest",
+        "Log4j12ApiRecommendedRecipeTest",
+        "Log4j12ApiOfficialRecipeAuditTest"
+      ]
     },
     {
       "id": "C-009",
@@ -405,11 +524,17 @@
       ],
       "dimension": "弃用 / 默认值 / 配置 / 运行时",
       "excelNoteStatus": "table_fact",
-      "evidenceStatus": "unverified",
+      "evidenceStatus": "verified",
       "disposition": "mark",
       "treatment": "同一主版本不等于绝对兼容；核查弃用删除、默认值、运行时基线、传递依赖和配置，只自动处理有固定上游证据的一一对应修改。",
-      "recipe": null,
-      "tests": []
+      "recipe": "com.huawei.clouds.openrewrite.log4j12api.MigrateLog4j12ApiTo2_25_5",
+      "tests": [
+        "UpgradeLog4j12ApiDependencyTest",
+        "Log4j12ApiBuildAndConfigurationRiskTest",
+        "MigrateLog4j12ApiSourceTest",
+        "Log4j12ApiRecommendedRecipeTest",
+        "Log4j12ApiOfficialRecipeAuditTest"
+      ]
     },
     {
       "id": "C-010",
@@ -418,11 +543,17 @@
       ],
       "dimension": "弃用 / 默认值 / 配置 / 运行时",
       "excelNoteStatus": "table_fact",
-      "evidenceStatus": "unverified",
+      "evidenceStatus": "verified",
       "disposition": "mark",
       "treatment": "同一主版本不等于绝对兼容；核查弃用删除、默认值、运行时基线、传递依赖和配置，只自动处理有固定上游证据的一一对应修改。",
-      "recipe": null,
-      "tests": []
+      "recipe": "com.huawei.clouds.openrewrite.log4j12api.MigrateLog4j12ApiTo2_25_5",
+      "tests": [
+        "UpgradeLog4j12ApiDependencyTest",
+        "Log4j12ApiBuildAndConfigurationRiskTest",
+        "MigrateLog4j12ApiSourceTest",
+        "Log4j12ApiRecommendedRecipeTest",
+        "Log4j12ApiOfficialRecipeAuditTest"
+      ]
     },
     {
       "id": "C-011",
@@ -431,11 +562,17 @@
       ],
       "dimension": "弃用 / 默认值 / 配置 / 运行时",
       "excelNoteStatus": "table_fact",
-      "evidenceStatus": "unverified",
+      "evidenceStatus": "verified",
       "disposition": "mark",
       "treatment": "同一主版本不等于绝对兼容；核查弃用删除、默认值、运行时基线、传递依赖和配置，只自动处理有固定上游证据的一一对应修改。",
-      "recipe": null,
-      "tests": []
+      "recipe": "com.huawei.clouds.openrewrite.log4j12api.MigrateLog4j12ApiTo2_25_5",
+      "tests": [
+        "UpgradeLog4j12ApiDependencyTest",
+        "Log4j12ApiBuildAndConfigurationRiskTest",
+        "MigrateLog4j12ApiSourceTest",
+        "Log4j12ApiRecommendedRecipeTest",
+        "Log4j12ApiOfficialRecipeAuditTest"
+      ]
     },
     {
       "id": "C-012",
@@ -444,16 +581,22 @@
       ],
       "dimension": "弃用 / 默认值 / 配置 / 运行时",
       "excelNoteStatus": "table_fact",
-      "evidenceStatus": "unverified",
+      "evidenceStatus": "verified",
       "disposition": "mark",
       "treatment": "同一主版本不等于绝对兼容；核查弃用删除、默认值、运行时基线、传递依赖和配置，只自动处理有固定上游证据的一一对应修改。",
-      "recipe": null,
-      "tests": []
+      "recipe": "com.huawei.clouds.openrewrite.log4j12api.MigrateLog4j12ApiTo2_25_5",
+      "tests": [
+        "UpgradeLog4j12ApiDependencyTest",
+        "Log4j12ApiBuildAndConfigurationRiskTest",
+        "MigrateLog4j12ApiSourceTest",
+        "Log4j12ApiRecommendedRecipeTest",
+        "Log4j12ApiOfficialRecipeAuditTest"
+      ]
     }
   ],
   "status": {
     "spec": "complete",
-    "evidence": "pending",
-    "automation": "catalog-only"
+    "evidence": "verified",
+    "automation": "implemented"
   }
 }

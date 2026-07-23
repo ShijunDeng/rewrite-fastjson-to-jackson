@@ -1,0 +1,92 @@
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.log4j12api.UpgradeLog4j12ApiTo2_25_5
+displayName: Upgrade workbook-selected Log4j 1.2 API bridge dependencies to 2.25.5
+description: >-
+  Upgrade only exact org.apache.logging.log4j:log4j-1.2-api versions 2.13.2,
+  2.17.1, 2.17.2, 2.18.0, 2.19.0 and 2.20.0 in unambiguous owned standard
+  Maven or root Gradle declarations.
+recipeList:
+  - com.huawei.clouds.openrewrite.log4j12api.UpgradeSelectedLog4j12ApiDependency
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.log4j12api.MigrateSafeLog4j12SetLevel
+displayName: Migrate isolated Log4j 1 Logger.setLevel calls to Log4j 2
+description: >-
+  Reuse the exact official OpenRewrite Core target changes and the official
+  LoggerSetLevelToConfiguratorRecipe only in authored source files whose complete
+  attributed Log4j 1 surface is limited to Logger.getLogger/getRootLogger and
+  Logger.setLevel with Level. This opt-in recipe requires separately verified,
+  directly owned log4j-core because Configurator is not transitively provided by
+  log4j-1.2-api.
+preconditions:
+  - com.huawei.clouds.openrewrite.log4j12api.FindSafeLog4j12SetLevelSources
+recipeList:
+  - org.openrewrite.java.ChangeMethodTargetToStatic:
+      methodPattern: org.apache.log4j.Logger getLogger(..)
+      fullyQualifiedTargetTypeName: org.apache.logging.log4j.LogManager
+  - org.openrewrite.java.ChangeMethodTargetToStatic:
+      methodPattern: org.apache.log4j.Logger getRootLogger()
+      fullyQualifiedTargetTypeName: org.apache.logging.log4j.LogManager
+  - org.openrewrite.java.logging.log4j.LoggerSetLevelToConfiguratorRecipe
+  - org.openrewrite.java.ChangeType:
+      oldFullyQualifiedTypeName: org.apache.log4j.Logger
+      newFullyQualifiedTypeName: org.apache.logging.log4j.Logger
+      ignoreDefinition: true
+  - org.openrewrite.java.ChangeType:
+      oldFullyQualifiedTypeName: org.apache.log4j.Level
+      newFullyQualifiedTypeName: org.apache.logging.log4j.Level
+      ignoreDefinition: true
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.log4j12api.FindLog4j12ApiBuildRisks
+displayName: Find Log4j 1.2 API bridge build risks
+description: >-
+  Mark unresolved owners, outside or higher versions, variants, incompatible
+  duplicate Log4j 1 implementations and Log4j family alignment decisions.
+recipeList:
+  - com.huawei.clouds.openrewrite.log4j12api.FindLog4j12ApiBuildRisks
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.log4j12api.FindLog4j12ApiSourceRisks
+displayName: Find Log4j 1.2 API bridge source risks
+description: >-
+  Mark programmatic configuration, backend-specific Logger, custom component,
+  JMX, repository, serialization and unsupported extension API decisions.
+recipeList:
+  - com.huawei.clouds.openrewrite.log4j12api.FindLog4j12ApiSourceRisks
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.log4j12api.FindLog4j12ApiConfigurationRisks
+displayName: Find Log4j 1.2 API bridge configuration risks
+description: >-
+  Mark Log4j 1 properties/XML compatibility, interpolation, appender/layout,
+  reload, custom component and log4j1.compatibility decisions.
+recipeList:
+  - com.huawei.clouds.openrewrite.log4j12api.FindLog4j12ApiConfigurationRisks
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.log4j12api.MigrateLog4j12ApiTo2_25_5
+displayName: Migrate Log4j 1.2 API bridge to 2.25.5
+description: >-
+  Run the strict dependency upgrade and exact build, source and configuration
+  risk markers without selecting or adding a Log4j backend.
+recipeList:
+  - com.huawei.clouds.openrewrite.log4j12api.UpgradeLog4j12ApiTo2_25_5
+  - com.huawei.clouds.openrewrite.log4j12api.FindLog4j12ApiBuildRisks
+  - com.huawei.clouds.openrewrite.log4j12api.FindLog4j12ApiSourceRisks
+  - com.huawei.clouds.openrewrite.log4j12api.FindLog4j12ApiConfigurationRisks
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.log4j12api.MigrateLog4j12ApiTo2_25_5WithOwnedCore
+displayName: Migrate Log4j 1.2 API bridge and isolated setLevel calls with owned Log4j Core
+description: >-
+  Opt in to the accepted official source leaves in addition to the strict bridge
+  upgrade and risk markers only after the project has directly owned and aligned
+  log4j-core 2.25.5.
+recipeList:
+  - com.huawei.clouds.openrewrite.log4j12api.UpgradeLog4j12ApiTo2_25_5
+  - com.huawei.clouds.openrewrite.log4j12api.MigrateSafeLog4j12SetLevel
+  - com.huawei.clouds.openrewrite.log4j12api.FindLog4j12ApiBuildRisks
+  - com.huawei.clouds.openrewrite.log4j12api.FindLog4j12ApiSourceRisks
+  - com.huawei.clouds.openrewrite.log4j12api.FindLog4j12ApiConfigurationRisks

@@ -1273,7 +1273,7 @@ migration-spec-java-maven-org-apache-kerby-kerby-pkix,org.apache.kerby:kerby-pki
 migration-spec-java-maven-org-apache-kerby-kerby-util,org.apache.kerby:kerby-util,java,java,2.1.0,1,4208,complete,pending,catalog-only,
 migration-spec-java-maven-org-apache-kerby-kerby-xdr,org.apache.kerby:kerby-xdr,java,java,2.1.1,1,4207,complete,pending,catalog-only,
 migration-spec-java-maven-org-apache-kerby-token-provider,org.apache.kerby:token-provider,java,java,2.1.1,1,4206,complete,pending,catalog-only,
-migration-spec-java-maven-org-apache-logging-log4j-log4j-1-2-api,log4j-1.2-api | org.apache.logging.log4j:log4j-1.2-api,java,java,2.25.5,12,2749 | 2750 | 2751 | 2752 | 2753 | 2754 | 4867 | 4868 | 4869 | 4870 | 4871 | 4872,complete,pending,catalog-only,
+migration-spec-java-maven-org-apache-logging-log4j-log4j-1-2-api,log4j-1.2-api | org.apache.logging.log4j:log4j-1.2-api,java,java,2.25.5,12,2749 | 2750 | 2751 | 2752 | 2753 | 2754 | 4867 | 4868 | 4869 | 4870 | 4871 | 4872,complete,verified,implemented,rewrite-log4j-1-2-api-upgrade
 migration-spec-java-maven-org-apache-logging-log4j-log4j-api,org.apache.logging.log4j:log4j-api,java,java,2.25.5,8,950 | 951 | 952 | 953 | 954 | 955 | 956 | 957,complete,pending,catalog-only,
 migration-spec-java-maven-org-apache-logging-log4j-log4j-core,log4j-core | org.apache.logging.log4j:log4j-core,java,java,2.25.5,20,931 | 932 | 933 | 934 | 935 | 936 | 937 | 938 | 939 | 2184 | 2185 | 2186 | 2187 | 2188 | 2189 | 2190 | 2191 | 2192 | 2303 | 4810,complete,pending,catalog-only,rewrite-log4j-core-upgrade
 migration-spec-java-maven-org-apache-logging-log4j-log4j-jakarta-web,org.apache.logging.log4j:log4j-jakarta-web,java,java,2.25.4,1,4378,complete,pending,catalog-only,
