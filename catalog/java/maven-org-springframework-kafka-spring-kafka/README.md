@@ -1,9 +1,8 @@
 # org.springframework.kafka:spring-kafka / spring-kafka 升级规格
 
-> 规格状态：`COMPLETE`；证据状态：`PENDING`；自动化状态：`CATALOG_ONLY`。
-> 本 README 已完成工作簿事实、禁止降级边界、不兼容点分类和后续配方验收契约；
-> 它不声称尚未固定官方证据的具体 API 已得到确认。
-> catalog 本身不包含配方代码；现有候选实现也将在全量规格覆盖完成后逐模块核验和完善。
+> 规格状态：`COMPLETE`；证据状态：`VERIFIED`；自动化状态：`IMPLEMENTED`。
+> 可执行实现位于 [`rewrite-spring-kafka-upgrade`](../../../rewrite-spring-kafka-upgrade)，
+> 覆盖精确版本升级、官方 Java API 迁移、风险定位和禁止降级守卫。
 
 ## 模块身份
 
@@ -13,7 +12,7 @@
 | Maven artifactId | `migration-spec-java-maven-org-springframework-kafka-spring-kafka` |
 | groupId | `com.huawei.clouds.openrewrite` |
 | 规范表格标识 | `org.springframework.kafka:spring-kafka`<br>`spring-kafka` |
-| Catalog canonical identity | `org.springframework.kafka:spring-kafka`（`UNVERIFIED`，只用于避免目录碰撞） |
+| Catalog canonical identity | `org.springframework.kafka:spring-kafka`（`VERIFIED`） |
 | 归一语言类 | `java` |
 | Excel 原始语言 | `java` |
 | 目标版本 | `3.3.15` |
@@ -22,94 +21,99 @@
 | 分桶 | `B4_Major单包` |
 | 难度 | `中` |
 | 工作簿 SHA-256 | `17020a54165808d7a90801b56cf6c7dff428f3b6dfa931b089e84f9946104309` |
-| 候选实现模块 | `NONE`（尚无已识别的顶层实现模块） |
+| 实现模块 | `rewrite-spring-kafka-upgrade` |
 
 ## Excel 事实快照
 
-本节逐字记录表格，不把自动分桶、难度或备注提升为官方兼容性结论。厂商后缀、
-截断显示、无法解析值和疑似跨发布线目标均原样保留。
-
 | Excel 行 | 序号 | 软件名称 | 原始语言 | 原始版本 | 目标版本 | 微服务数 | 分桶 | 难度 | 保守方向/动作 | 原始备注 |
 | ---: | ---: | --- | --- | --- | --- | ---: | --- | --- | --- | --- |
-| 1458 | 1457 | `org.springframework.kafka:spring-kafka` | java | `2.8.11` | `3.3.15` | 13 | B4_Major单包 | 中 | upgrade-candidate/mark | 跨1个大版本，需查changelog确认breaking API |
-| 1459 | 1458 | `org.springframework.kafka:spring-kafka` | java | `2.9.5` | `3.3.15` | 13 | B4_Major单包 | 中 | upgrade-candidate/mark | 跨1个大版本，需查changelog确认breaking API |
-| 2240 | 2239 | `spring-kafka` | java | `2.8.11` | `3.3.15` | 0 | B4_Major单包 | 中 | upgrade-candidate/mark | 跨1个大版本，需查changelog确认breaking API |
-| 2241 | 2240 | `spring-kafka` | java | `2.9.5` | `3.3.15` | 0 | B4_Major单包 | 中 | upgrade-candidate/mark | 跨1个大版本，需查changelog确认breaking API |
+| 1458 | 1457 | `org.springframework.kafka:spring-kafka` | java | `2.8.11` | `3.3.15` | 13 | B4_Major单包 | 中 | upgrade-candidate/auto | 跨1个大版本，需查changelog确认breaking API |
+| 1459 | 1458 | `org.springframework.kafka:spring-kafka` | java | `2.9.5` | `3.3.15` | 13 | B4_Major单包 | 中 | upgrade-candidate/auto | 跨1个大版本，需查changelog确认breaking API |
+| 2240 | 2239 | `spring-kafka` | java | `2.8.11` | `3.3.15` | 0 | B4_Major单包 | 中 | upgrade-candidate/auto | 跨1个大版本，需查changelog确认breaking API |
+| 2241 | 2240 | `spring-kafka` | java | `2.9.5` | `3.3.15` | 0 | B4_Major单包 | 中 | upgrade-candidate/auto | 跨1个大版本，需查changelog确认breaking API |
 
 ## 升级方向与禁止降级
 
-- 表格原始源版本记录（不是 AUTO 白名单）：`2.8.11`, `2.9.5`。
-- 升级候选边：`2.8.11`, `2.9.5`；在 E-001～E-003 完成前仍保持 `MARK`。
-- 相同版本 NOOP：`NONE`。
-- 潜在降级冲突：`NONE`。
-- 截断、聚合或无法可靠比较：`NONE`。
-- 任何高于目标的版本、更新发布线或无法可靠比较的厂商版本必须保持字节级不变，并在
-  真实依赖 owner 上标记 `目标版本冲突（禁止降级）`；本项目不存在回退路径。
-- 表外低版本、动态版本、范围、变量、BOM/platform、parent、catalog、workspace、
-  constraints 和锁文件不能被猜测式改写；应定位并迁移真正的版本 owner。
-- 若同一模块列出多个坐标或别名，配方必须分别证明身份；在官方 relocation 证据固定前，
-  不得因为 artifact 名相同而跨 group、生态或发行渠道改坐标。
-
+- AUTO 白名单仅包含 `2.8.11`、`2.9.5`，目标固定为 `3.3.15`。
+- 已是目标版本时 NOOP；其他较低版本不猜测升级，标记为白名单外输入。
+- `3.3.16+`、4.x 和未来主版本保持原文，并在真实版本 owner 上标记
+  `目标版本冲突（禁止降级）`。
+- Maven parent/BOM、Gradle platform/version catalog、动态表达式、classifier/variant
+  和歧义共享属性保持不变并精确 MARK；不存在任何回退路径。
 
 ## 不兼容点规格
 
-| ID | 维度 | 适用迁移边 | Excel 提示 | 官方确认事实 | 处置契约 |
-| --- | --- | --- | --- | --- | --- |
-| C-001 | 公开 API / 配置 / 默认行为 / 运行时 | Excel #1458 2.8.11 [upgrade-candidate/mark: 表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。]<br>Excel #1459 2.9.5 [upgrade-candidate/mark: 表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。]<br>Excel #2240 2.8.11 [upgrade-candidate/mark: 表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。]<br>Excel #2241 2.9.5 [upgrade-candidate/mark: 表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。] → `3.3.15` | 跨1个大版本，需查changelog确认breaking API | `UNVERIFIED` | 建立跨主版本兼容矩阵；覆盖删除或重命名 API、配置键和默认值、运行时基线、模块系统、数据格式与回滚，AUTO 仅限已证明等价的确定性修改。 |
+| ID | 维度 | 已验证不兼容点 | OpenRewrite 处置 |
+| --- | --- | --- | --- |
+| C-001 | Java / 依赖族 | Java 17；Spring 6.2、Kafka clients 3.8、Retry 2.0、Micrometer/Jackson/test 需要一致 | 严格依赖 AUTO；compiler、BOM/platform 和依赖族错位精确 MARK |
+| C-002 | error handler | 旧 `ErrorHandler` / `BatchErrorHandler` 层次和方法被替代 | 直接复用官方 2.8 error-handler 配方；随后标记 seek、ack、recoverer、BackOff 与 batch/record 语义 |
+| C-003 | Future / Header / 测试 API | send API 使用 `CompletableFuture`；四个 Header 常量移除；测试超时改为 `Duration` | 直接组合官方 Future、KafkaOperations2、Header 与 KafkaTestUtils recipes |
+| C-004 | JSON SerDes | type header、trusted packages、默认类型和 mapper 配置影响反序列化信任边界 | 类型归因到具体调用/配置节点后 MARK，不擅自生成信任列表 |
+| C-005 | listener / container | ack、batch/record、asyncAcks、pause/seek、rebalance 与停止时序影响交付语义 | 精确 MARK，要求重复/乱序/异常/rebalance 故障注入 |
+| C-006 | transaction / EOS | 3.x 仅支持 EOS V2；chained transaction、fencing、rollback 与 transaction id 需要重审 | 精确 MARK，不自动决定跨资源提交顺序 |
+| C-007 | retry / DLT / observation | retry topic、DLT、复制因子、启动顺序、指标与 trace 默认行为跨主版本变化 | 源码和 Properties/YAML/XML 结构化 MARK |
+| C-008 | SPI / 原生 client | 自定义 factory、converter、interceptor 和 Kafka client 配置存在二进制及生命周期边界 | 可赋值类型与具体配置节点 MARK，要求在目标依赖族重新编译验证 |
 
-`UNVERIFIED` 表示 Excel 提示已进入规格，但尚未用不可变的官方 tag/commit、发布说明和
-制品元数据完成验证。此时允许 README 和精确 MARK 设计，不允许据此发明 API AUTO。
+`VERIFIED` 只覆盖固定源码、文档和制品支持的事实。broker 滚动升级、offset/EOS、
+信任域、业务重试、DLT、指标 cardinality 和生产回滚仍属于业务验收。
 
 ### `java` 生态最低核查项
 
-- 确认规范 Maven 坐标、relocation 关系，以及 parent/BOM/property/platform 的真实版本 owner。
-- 覆盖 Maven 与 Gradle；核查 JDK/字节码基线、包名和公开 API、反射、注解处理与 ServiceLoader。
-- 核查 JPMS/OSGi、shade/native-image、序列化/缓存/数据库数据，以及配置文件和框架联动。
+- 使用 Java 17 和统一的 Spring/Kafka/Retry/Micrometer/Jackson 依赖族重新编译。
+- 覆盖 producer/consumer、record/batch、rebalance、JSON 失败、retry/DLT、事务与 fencing。
+- 在真实 broker 或生产等价集成环境验证，不以 recipe 单元测试代替协议和交付语义测试。
 
 ## 证据台账
 
-| Claim ID | 待证明事项 | 状态 | 固定官方证据 | 形成 AUTO 的条件 |
-| --- | --- | --- | --- | --- |
-| E-001 | 包/坐标身份、源版本和目标制品身份 | `UNVERIFIED` | 后续固定官网、registry/repository 元数据与 SHA | 身份无歧义且目标确为升级 |
-| E-002 | 每条迁移边的 API、配置和默认行为变化 | `UNVERIFIED` | 后续固定 release notes、迁移指南、tag/commit diff | 存在一一对应且语义等价的变换 |
-| E-003 | 真实工程中的用法和负例 | `UNVERIFIED` | 后续固定真实仓库 commit、路径、许可证与裁剪说明 | 正例、负例和上下文边界均可复现 |
+| Claim ID | 状态 | 固定证据 |
+| --- | --- | --- |
+| E-001 制品身份 | `VERIFIED` | [Spring Kafka 3.3.15 commit](https://github.com/spring-projects/spring-kafka/tree/5572a82b1a6c931d9a1656cadf8ba3df59102492)；Maven Central JAR SHA-256 `61ebbc52...3c948`、POM SHA-256 `381afe54...405f8` |
+| E-002 API/配置/行为 | `VERIFIED` | 固定提交下的 [change history](https://github.com/spring-projects/spring-kafka/blob/5572a82b1a6c931d9a1656cadf8ba3df59102492/spring-kafka-docs/src/main/antora/modules/ROOT/pages/appendix/change-history.adoc)、error handling、EOS 与 transaction 文档 |
+| E-003 真实用法 | `VERIFIED` | AlexeiZenin/sb-gp-testing `5b1edf2`、kingkh1995/kk-ddd `7d8e1b8`、eugenp/tutorials `5e4114a`、dsyer/dist-tx `88bc07b` 固定 fixture |
+| E-004 官方能力复用 | `VERIFIED` | rewrite-spring `6.35.0` 固定提交 [`d28afcb`](https://github.com/openrewrite/rewrite-spring/tree/d28afcb6661ad413539056de0936c5489ff9d8ee)，JAR SHA-256 `27df4442...e98b` |
 
-真实仓库只能证明“用法存在”，不能替代官方兼容性证据。推断必须显式标为
-`INFERENCE`；只有固定上游证据支持的事实才能改为 `VERIFIED`。
+## 官方能力复用审计
+
+- 已直接复用官方 `KafkaOperationsSendReturnType`、`KafkaTestUtilsDuration`、
+  `RemoveUsingCompletableFuture`、`UpgradeSpringKafka_2_8_ErrorHandlers`。
+- 已按官方参数复用 core `ChangeType` 和四次 `ReplaceConstantWithAnotherConstant`。
+- 已审计官方
+  [`UpgradeSpringKafka_3_0`](https://github.com/openrewrite/rewrite-spring/blob/d28afcb6661ad413539056de0936c5489ff9d8ee/src/main/resources/META-INF/rewrite/spring-kafka-30.yml)；
+  其中宽泛 `UpgradeDependencyVersion` 会改变本任务的精确目标和白名单，因此只复用确定性
+  Java 子配方，不组合官方宽泛依赖升级。
+- 组合测试读取运行时 recipe tree，要求所有选定官方配方实际存在，并断言宽泛依赖配方未进入；
+  另有 before/after 测试证明官方配方确实产生预期 AST 变换。
 
 ## 后续 OpenRewrite 配方契约
 
 ### AUTO
 
-- 当前阶段 AUTO 白名单为空；只有 E-001～E-003 变为 `VERIFIED` 后，升级候选边才可逐项进入；
-- 只处理经验证的原子源版本、明确坐标和当前文件拥有的标准依赖声明；
-- 更高版本永不降级，表外版本、变体和外部 owner 永不猜测；
-- 只实现有官方源码证明、上下文无歧义、行为等价且可幂等运行的 AST/配置修改；
-- 保留 scope、classifier/type、optional、exclusions、workspace/profile 和相邻内容。
+- 只把精确 `2.8.11`、`2.9.5` 的明确 owner 改为 `3.3.15`。
+- 只执行官方已验证的一对一 Java API 迁移，保留相邻结构并支持两周期幂等。
+- 所有 visitor 忽略生成目录、构建输出、缓存和安装产物。
 
 ### MARK
 
-- 在具体依赖、属性、BOM/platform、调用、类型、配置键或资源节点标记未决事项；
-- marker 必须说明业务 owner 需要作出的决定、所需证据和验收方法；
-- 不用文件级泛化告警代替精确定位，也不把 README 文字伪装成已执行迁移。
+- 在具体依赖、属性、调用、类型和配置节点标记 Java/依赖族、JSON、listener、
+  transaction/EOS、retry/DLT、observation 与 SPI 风险。
+- 高版本 marker 必须包含精确短语 `目标版本冲突（禁止降级）`。
 
 ### MANUAL
 
-- 运行时流量、安全策略、数据和 wire format、集群滚动策略、原生 ABI、性能容量、
-  外部服务兼容性与回滚均由业务证据决定；
-- 无法通过静态上下文证明安全的语义变换保持原样。
+- broker/client 滚动策略、offset 和交付语义、事务提交顺序、JSON 信任域、
+  DLT 业务策略、指标标签和生产回滚由业务证据决定。
+- 无法静态证明等价的配置与行为保持原样。
 
 ## 测试与真实用例验收
 
-- 每个经验证的升级候选源版本才要求 AUTO 正例；目标/相同行为 NOOP；
-- 冲突、未知、截断和聚合版本保持不变并 MARK；所有更高版本和更高发布线验证禁止降级；
-- 覆盖对应生态的直接声明、共享 owner、BOM/platform/workspace、动态值、范围、锁文件和变体；
-- 覆盖同名业务符号、相似坐标、注释/字符串、生成目录、缓存和安装产物负例；
-- 每项 AUTO 有 before/after、类型或结构归因、两轮幂等和 aggregate 顺序测试；
-- 固定真实仓库 commit 与文件路径，记录裁剪内容；真实夹具不能取代官方差异证据；
-- 最终执行编译、单元/集成、行为、安全、性能、数据兼容、部署和回滚门禁。
+- 93 个测试覆盖 Maven、Gradle Groovy/Kotlin、property/profile/owner/variant 和生成目录。
+- 覆盖两个白名单源版本、目标 NOOP、所有高版本禁降级与超大数字段比较。
+- 覆盖官方 recipe tree、各官方组件 before/after、推荐组合顺序和两周期幂等。
+- 覆盖 Java、Properties、YAML、Spring XML 风险以及五组固定真实仓库 fixture。
+- 业务最低验收包括 Java 17 编译、真实 broker 集成、JSON 错误路径、rebalance、
+  retry/DLT、transaction/fencing、metrics/trace 和回滚。
 
 ## 当前阶段结论
 
-本模块的不兼容点文档规格已经建立；官方证据、真实仓库夹具和可执行配方属于下一阶段。
-在 E-001～E-003 完成前，除严格版本所有权和禁止降级守卫外，不批准猜测式 AUTO。
+该模块的规格、证据和可执行实现均已完成。自动化限定在两个精确依赖版本和官方确定性
+Java API 迁移；业务语义不确定的位置由配方精确定位，任何高版本都不会被降级。

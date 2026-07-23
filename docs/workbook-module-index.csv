@@ -1656,7 +1656,7 @@ migration-spec-java-maven-org-springframework-hateoas-spring-hateoas,org.springf
 migration-spec-java-maven-org-springframework-integration-spring-integration-mqtt,org.springframework.integration:spring-integration-mqtt,java,java,6.2.11,1,2123,complete,pending,catalog-only,
 migration-spec-java-maven-org-springframework-integration-spring-integration-redis,org.springframework.integration:spring-integration-redis,java,java,6.4.6,1,4593,complete,pending,catalog-only,
 migration-spec-java-maven-org-springframework-integration-spring-integration-sftp,org.springframework.integration:spring-integration-sftp,java,java,6.5.0,1,2122,complete,pending,catalog-only,
-migration-spec-java-maven-org-springframework-kafka-spring-kafka,org.springframework.kafka:spring-kafka | spring-kafka,java,java,3.3.15,4,1458 | 1459 | 2240 | 2241,complete,pending,catalog-only,
+migration-spec-java-maven-org-springframework-kafka-spring-kafka,org.springframework.kafka:spring-kafka | spring-kafka,java,java,3.3.15,4,1458 | 1459 | 2240 | 2241,complete,verified,implemented,rewrite-spring-kafka-upgrade
 migration-spec-java-maven-org-springframework-plugin-spring-plugin-core,org.springframework.plugin:spring-plugin-core,java,java,4.0.0,1,2121,complete,pending,catalog-only,
 migration-spec-java-maven-org-springframework-retry-spring-retry,org.springframework.retry:spring-retry,java,java,2.0.13,7,1110 | 1111 | 1112 | 1113 | 2543 | 2544 | 2545,complete,pending,catalog-only,
 migration-spec-java-maven-org-springframework-security-spring-security-cas,org.springframework.security:spring-security-cas,java,java,7.0.5,1,715,complete,pending,catalog-only,

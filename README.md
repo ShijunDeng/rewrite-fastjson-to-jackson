@@ -80,6 +80,7 @@ README、机器可读 manifest 和禁降级契约，不进入默认 Maven reacto
 | [`rewrite-tomcat-catalina-upgrade`](rewrite-tomcat-catalina-upgrade) | `com.huawei.clouds.openrewrite.tomcatcatalina.MigrateTomcatCatalinaTo10_1_56` | 精确升级工作簿列出的 Tomcat Catalina 9.0/10.1 版本，自动迁移确定性的 Servlet/EL/Jakarta API 与配置，并标记 Java 11、内部 API、协议、集群和目标版本安全风险；所有更高版本禁止降级 |
 | [`rewrite-spring-boot-starter-actuator-upgrade`](rewrite-spring-boot-starter-actuator-upgrade) | `com.huawei.clouds.openrewrite.springbootactuator.MigrateSpringBootActuatorTo3_5_15` | 精确升级 Spring Boot Actuator 到 3.5.15，自动迁移 Jakarta 和确定性 Actuator 配置，并定位 Java 17、endpoint access/exposure、health、security、Jackson 与 Micrometer 风险 |
 | [`rewrite-netty-handler-upgrade`](rewrite-netty-handler-upgrade) | `com.huawei.clouds.openrewrite.nettyhandler.MigrateNettyHandlerTo4_1_136` | 精确升级工作簿和用户清单中的 Netty Handler 4.1 版本，直接复用官方参数迁移配方，自动迁移有源码证明的 deprecated API，并定位 TLS、SNI、ALPN、native、pipeline、timeout 与禁降级风险 |
+| [`rewrite-spring-kafka-upgrade`](rewrite-spring-kafka-upgrade) | `com.huawei.clouds.openrewrite.springkafka.MigrateSpringKafkaTo3_3_15` | 将 Spring Kafka 2.8.11/2.9.5 精确升级到 3.3.15，直接复用官方 Future、error handler、Header 与测试工具迁移，并定位 Java 17、JSON、listener、事务/EOS、retry/DLT 和可观测性风险 |
 
 后续迁移应新增独立模块，例如：
 

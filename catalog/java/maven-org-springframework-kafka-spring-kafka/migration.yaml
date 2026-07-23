@@ -14,11 +14,17 @@
     ],
     "canonicalIdentity": {
       "value": "org.springframework.kafka:spring-kafka",
-      "status": "unverified",
-      "evidence": []
+      "status": "verified",
+      "evidence": [
+        "https://github.com/spring-projects/spring-kafka/tree/5572a82b1a6c931d9a1656cadf8ba3df59102492",
+        "maven-central:jar-sha256:61ebbc527b88d7b4b9e9c88657f9937e7710d607f6279e1e9724d0ff72b3c948",
+        "maven-central:pom-sha256:381afe544b5a7b2b623959473119c621b2574d6d1716553b3b01326de95405f8"
+      ]
     },
     "targetVersion": "3.3.15",
-    "candidateImplementationModules": []
+    "candidateImplementationModules": [
+      "rewrite-spring-kafka-upgrade"
+    ]
   },
   "workbook": {
     "sha256": "17020a54165808d7a90801b56cf6c7dff428f3b6dfa931b089e84f9946104309",
@@ -37,7 +43,7 @@
         "sourceAtomic": true,
         "direction": {
           "relation": "upgrade-candidate",
-          "action": "mark",
+          "action": "auto",
           "comparator": "conservative-numeric-prefix-v1",
           "reason": "表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。"
         }
@@ -56,7 +62,7 @@
         "sourceAtomic": true,
         "direction": {
           "relation": "upgrade-candidate",
-          "action": "mark",
+          "action": "auto",
           "comparator": "conservative-numeric-prefix-v1",
           "reason": "表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。"
         }
@@ -75,7 +81,7 @@
         "sourceAtomic": true,
         "direction": {
           "relation": "upgrade-candidate",
-          "action": "mark",
+          "action": "auto",
           "comparator": "conservative-numeric-prefix-v1",
           "reason": "表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。"
         }
@@ -94,7 +100,7 @@
         "sourceAtomic": true,
         "direction": {
           "relation": "upgrade-candidate",
-          "action": "mark",
+          "action": "auto",
           "comparator": "conservative-numeric-prefix-v1",
           "reason": "表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。"
         }
@@ -105,11 +111,11 @@
   "policy": {
     "allowDowngrade": false,
     "conflictMarker": "目标版本冲突（禁止降级）",
-    "autoSourceWhitelist": [],
-    "upgradeCandidatesPendingEvidence": [
+    "autoSourceWhitelist": [
       "2.8.11",
       "2.9.5"
     ],
+    "upgradeCandidatesPendingEvidence": [],
     "noopVersions": [],
     "conflictVersions": [],
     "unresolvedVersions": []
@@ -118,22 +124,54 @@
     {
       "id": "E-001",
       "claim": "制品身份、源版本与目标制品身份",
-      "status": "unverified",
-      "officialSources": [],
-      "realFixtures": []
+      "status": "verified",
+      "officialSources": [
+        "https://github.com/spring-projects/spring-kafka/tree/5572a82b1a6c931d9a1656cadf8ba3df59102492",
+        "maven-central:jar-sha256:61ebbc527b88d7b4b9e9c88657f9937e7710d607f6279e1e9724d0ff72b3c948",
+        "maven-central:pom-sha256:381afe544b5a7b2b623959473119c621b2574d6d1716553b3b01326de95405f8"
+      ],
+      "realFixtures": [
+        "spring-projects/spring-kafka@5572a82b1a6c931d9a1656cadf8ba3df59102492"
+      ]
     },
     {
       "id": "E-002",
       "claim": "迁移边的 API、配置与默认行为变化",
-      "status": "unverified",
-      "officialSources": [],
-      "realFixtures": []
+      "status": "verified",
+      "officialSources": [
+        "https://github.com/spring-projects/spring-kafka/blob/5572a82b1a6c931d9a1656cadf8ba3df59102492/spring-kafka-docs/src/main/antora/modules/ROOT/pages/appendix/change-history.adoc",
+        "https://github.com/spring-projects/spring-kafka/blob/5572a82b1a6c931d9a1656cadf8ba3df59102492/spring-kafka-docs/src/main/antora/modules/ROOT/pages/kafka/annotation-error-handling.adoc",
+        "https://github.com/spring-projects/spring-kafka/blob/5572a82b1a6c931d9a1656cadf8ba3df59102492/spring-kafka-docs/src/main/antora/modules/ROOT/pages/kafka/exactly-once.adoc",
+        "https://github.com/spring-projects/spring-kafka/blob/5572a82b1a6c931d9a1656cadf8ba3df59102492/spring-kafka-docs/src/main/antora/modules/ROOT/pages/kafka/transactions.adoc"
+      ],
+      "realFixtures": [
+        "spring-projects/spring-kafka@5572a82b1a6c931d9a1656cadf8ba3df59102492"
+      ]
     },
     {
       "id": "E-003",
       "claim": "真实工程用法、负例与行为验收",
-      "status": "unverified",
-      "officialSources": [],
+      "status": "verified",
+      "officialSources": [
+        "https://github.com/openrewrite/rewrite-spring/tree/d28afcb6661ad413539056de0936c5489ff9d8ee/src/test/java/org/openrewrite/java/spring/kafka"
+      ],
+      "realFixtures": [
+        "AlexeiZenin/sb-gp-testing@5b1edf2dbaa45ce16058d11d04e10c5c284019ad",
+        "kingkh1995/kk-ddd@7d8e1b8e9355daf3a8259d02abb048428337f176",
+        "eugenp/tutorials@5e4114a9482d68b6766ca738c087f0f9a87a7bd2",
+        "dsyer/dist-tx@88bc07b9c0f2a100d67fec2d283d883d908013fa"
+      ]
+    },
+    {
+      "id": "E-004",
+      "claim": "OpenRewrite 官方能力已检索、复用并通过组合测试",
+      "status": "verified",
+      "officialSources": [
+        "https://github.com/openrewrite/rewrite-spring/tree/d28afcb6661ad413539056de0936c5489ff9d8ee",
+        "https://github.com/openrewrite/rewrite-spring/blob/d28afcb6661ad413539056de0936c5489ff9d8ee/src/main/resources/META-INF/rewrite/spring-kafka-30.yml",
+        "https://github.com/openrewrite/rewrite-spring/tree/d28afcb6661ad413539056de0936c5489ff9d8ee/src/main/java/org/openrewrite/java/spring/kafka",
+        "maven-central:jar-sha256:27df444210c8bfee7e9d0f04d6d6f7986d2bee36bcd472d8307912613e93e98b"
+      ],
       "realFixtures": []
     }
   ],
@@ -145,11 +183,11 @@
       ],
       "dimension": "公开 API / 配置 / 默认行为 / 运行时",
       "excelNoteStatus": "table_fact",
-      "evidenceStatus": "unverified",
-      "disposition": "mark",
-      "treatment": "建立跨主版本兼容矩阵；覆盖删除或重命名 API、配置键和默认值、运行时基线、模块系统、数据格式与回滚，AUTO 仅限已证明等价的确定性修改。",
-      "recipe": null,
-      "tests": []
+      "evidenceStatus": "verified",
+      "disposition": "auto+mark",
+      "treatment": "精确依赖升级并直接复用官方 Future、error handler、Header 和 KafkaTestUtils 配方；Java 17、依赖族、JSON、listener、事务/EOS、retry/DLT、observation 与扩展 SPI 精确 MARK。",
+      "recipe": "com.huawei.clouds.openrewrite.springkafka.MigrateSpringKafkaTo3_3_15",
+      "tests": ["UpgradeSpringKafkaDependencyTest", "SpringKafkaOfficialMigrationTest", "SpringKafkaBuildRisksTest", "SpringKafkaSourceRisksTest", "SpringKafkaConfigurationRisksTest", "SpringKafkaRecommendedRecipeTest", "RealRepositoryFixturesTest"]
     },
     {
       "id": "C-002",
@@ -158,11 +196,11 @@
       ],
       "dimension": "公开 API / 配置 / 默认行为 / 运行时",
       "excelNoteStatus": "table_fact",
-      "evidenceStatus": "unverified",
-      "disposition": "mark",
-      "treatment": "建立跨主版本兼容矩阵；覆盖删除或重命名 API、配置键和默认值、运行时基线、模块系统、数据格式与回滚，AUTO 仅限已证明等价的确定性修改。",
-      "recipe": null,
-      "tests": []
+      "evidenceStatus": "verified",
+      "disposition": "auto+mark",
+      "treatment": "精确依赖升级并直接复用官方 Future、error handler、Header 和 KafkaTestUtils 配方；Java 17、依赖族、JSON、listener、事务/EOS、retry/DLT、observation 与扩展 SPI 精确 MARK。",
+      "recipe": "com.huawei.clouds.openrewrite.springkafka.MigrateSpringKafkaTo3_3_15",
+      "tests": ["UpgradeSpringKafkaDependencyTest", "SpringKafkaOfficialMigrationTest", "SpringKafkaBuildRisksTest", "SpringKafkaSourceRisksTest", "SpringKafkaConfigurationRisksTest", "SpringKafkaRecommendedRecipeTest", "RealRepositoryFixturesTest"]
     },
     {
       "id": "C-003",
@@ -171,11 +209,11 @@
       ],
       "dimension": "公开 API / 配置 / 默认行为 / 运行时",
       "excelNoteStatus": "table_fact",
-      "evidenceStatus": "unverified",
-      "disposition": "mark",
-      "treatment": "建立跨主版本兼容矩阵；覆盖删除或重命名 API、配置键和默认值、运行时基线、模块系统、数据格式与回滚，AUTO 仅限已证明等价的确定性修改。",
-      "recipe": null,
-      "tests": []
+      "evidenceStatus": "verified",
+      "disposition": "auto+mark",
+      "treatment": "精确依赖升级并直接复用官方 Future、error handler、Header 和 KafkaTestUtils 配方；Java 17、依赖族、JSON、listener、事务/EOS、retry/DLT、observation 与扩展 SPI 精确 MARK。",
+      "recipe": "com.huawei.clouds.openrewrite.springkafka.MigrateSpringKafkaTo3_3_15",
+      "tests": ["UpgradeSpringKafkaDependencyTest", "SpringKafkaOfficialMigrationTest", "SpringKafkaBuildRisksTest", "SpringKafkaSourceRisksTest", "SpringKafkaConfigurationRisksTest", "SpringKafkaRecommendedRecipeTest", "RealRepositoryFixturesTest"]
     },
     {
       "id": "C-004",
@@ -184,16 +222,16 @@
       ],
       "dimension": "公开 API / 配置 / 默认行为 / 运行时",
       "excelNoteStatus": "table_fact",
-      "evidenceStatus": "unverified",
-      "disposition": "mark",
-      "treatment": "建立跨主版本兼容矩阵；覆盖删除或重命名 API、配置键和默认值、运行时基线、模块系统、数据格式与回滚，AUTO 仅限已证明等价的确定性修改。",
-      "recipe": null,
-      "tests": []
+      "evidenceStatus": "verified",
+      "disposition": "auto+mark",
+      "treatment": "精确依赖升级并直接复用官方 Future、error handler、Header 和 KafkaTestUtils 配方；Java 17、依赖族、JSON、listener、事务/EOS、retry/DLT、observation 与扩展 SPI 精确 MARK。",
+      "recipe": "com.huawei.clouds.openrewrite.springkafka.MigrateSpringKafkaTo3_3_15",
+      "tests": ["UpgradeSpringKafkaDependencyTest", "SpringKafkaOfficialMigrationTest", "SpringKafkaBuildRisksTest", "SpringKafkaSourceRisksTest", "SpringKafkaConfigurationRisksTest", "SpringKafkaRecommendedRecipeTest", "RealRepositoryFixturesTest"]
     }
   ],
   "status": {
     "spec": "complete",
-    "evidence": "pending",
-    "automation": "catalog-only"
+    "evidence": "verified",
+    "automation": "implemented"
   }
 }

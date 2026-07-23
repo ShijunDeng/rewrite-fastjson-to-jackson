@@ -1,0 +1,114 @@
+---
+type: specs.openrewrite.org/v1beta/category
+name: com.huawei.clouds.openrewrite.springkafka
+packageName: com.huawei.clouds.openrewrite.springkafka
+description: Strictly upgrade Spring Kafka 2.8.11/2.9.5 to 3.3.15, reuse official OpenRewrite 3.0 source migrations, and locate behavior-sensitive boundaries.
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.springkafka.UpgradeSpringKafkaTo3_3_15
+displayName: Upgrade workbook-selected Spring Kafka dependencies to 3.3.15
+description: >-
+  Upgrade only exact org.springframework.kafka:spring-kafka versions 2.8.11 and
+  2.9.5 in unambiguously owned standard Maven or root Gradle declarations.
+tags:
+  - spring
+  - kafka
+  - java
+  - dependency-upgrade
+recipeList:
+  - com.huawei.clouds.openrewrite.springkafka.UpgradeSelectedSpringKafkaDependency
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.springkafka.MigrateDeterministicSpringKafka3Java
+displayName: Migrate deterministic Spring Kafka 3 Java APIs
+description: >-
+  Compose the official OpenRewrite Spring Kafka recipes for CompletableFuture,
+  KafkaTestUtils Duration, KafkaOperations2, removed header constants and
+  deprecated error handlers. Dependency upgrading remains under the strict
+  local whitelist recipe.
+tags:
+  - spring
+  - kafka
+  - source-migration
+  - official-openrewrite
+recipeList:
+  - org.openrewrite.java.spring.kafka.KafkaOperationsSendReturnType
+  - org.openrewrite.java.spring.kafka.KafkaTestUtilsDuration
+  - org.openrewrite.java.ChangeType:
+      oldFullyQualifiedTypeName: org.springframework.kafka.core.KafkaOperations2
+      newFullyQualifiedTypeName: org.springframework.kafka.core.KafkaOperations
+  - org.openrewrite.java.spring.kafka.RemoveUsingCompletableFuture
+  - org.openrewrite.java.ReplaceConstantWithAnotherConstant:
+      existingFullyQualifiedConstantName: org.springframework.kafka.support.KafkaHeaders.MESSAGE_KEY
+      fullyQualifiedConstantName: org.springframework.kafka.support.KafkaHeaders.KEY
+  - org.openrewrite.java.ReplaceConstantWithAnotherConstant:
+      existingFullyQualifiedConstantName: org.springframework.kafka.support.KafkaHeaders.PARTITION_ID
+      fullyQualifiedConstantName: org.springframework.kafka.support.KafkaHeaders.PARTITION
+  - org.openrewrite.java.ReplaceConstantWithAnotherConstant:
+      existingFullyQualifiedConstantName: org.springframework.kafka.support.KafkaHeaders.RECEIVED_MESSAGE_KEY
+      fullyQualifiedConstantName: org.springframework.kafka.support.KafkaHeaders.RECEIVED_KEY
+  - org.openrewrite.java.ReplaceConstantWithAnotherConstant:
+      existingFullyQualifiedConstantName: org.springframework.kafka.support.KafkaHeaders.RECEIVED_PARTITION_ID
+      fullyQualifiedConstantName: org.springframework.kafka.support.KafkaHeaders.RECEIVED_PARTITION
+  - org.openrewrite.java.spring.kafka.UpgradeSpringKafka_2_8_ErrorHandlers
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.springkafka.FindSpringKafka3_3_15BuildRisks
+displayName: Find Spring Kafka 3.3.15 build risks
+description: >-
+  Mark no-downgrade conflicts, unresolved owners, variants, Java 17, Spring
+  6.2.18, Kafka 3.8.1, Spring Retry, Micrometer, Jackson and test alignment.
+tags:
+  - spring
+  - kafka
+  - build
+  - search
+recipeList:
+  - com.huawei.clouds.openrewrite.springkafka.FindSpringKafka3315BuildRisks
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.springkafka.FindSpringKafka3_3_15SourceRisks
+displayName: Find Spring Kafka 3.3.15 source risks
+description: >-
+  Mark error handler, future, JSON, container, transaction/EOS, retry/DLT,
+  observation, listener, extension SPI and Kafka client decisions.
+tags:
+  - spring
+  - kafka
+  - java
+  - search
+recipeList:
+  - com.huawei.clouds.openrewrite.springkafka.FindSpringKafka3315SourceRisks
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.springkafka.FindSpringKafka3_3_15ConfigurationRisks
+displayName: Find Spring Kafka 3.3.15 configuration risks
+description: >-
+  Mark exact JSON, container, transaction/EOS, retry/DLT, observation and
+  native client properties/YAML paths plus Spring XML Kafka beans.
+tags:
+  - spring
+  - kafka
+  - configuration
+  - search
+recipeList:
+  - com.huawei.clouds.openrewrite.springkafka.FindSpringKafka3315ConfigurationRisks
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.springkafka.MigrateSpringKafkaTo3_3_15
+displayName: Migrate Spring Kafka 2.8.11/2.9.5 applications to 3.3.15
+description: >-
+  Strictly upgrade selected declarations, run official deterministic Spring
+  Kafka 3.0 source migrations, and mark every remaining 3.3.15 build, source
+  and configuration decision. Higher versions are never downgraded.
+tags:
+  - spring
+  - kafka
+  - java
+  - migration
+recipeList:
+  - com.huawei.clouds.openrewrite.springkafka.UpgradeSpringKafkaTo3_3_15
+  - com.huawei.clouds.openrewrite.springkafka.MigrateDeterministicSpringKafka3Java
+  - com.huawei.clouds.openrewrite.springkafka.FindSpringKafka3_3_15BuildRisks
+  - com.huawei.clouds.openrewrite.springkafka.FindSpringKafka3_3_15SourceRisks
+  - com.huawei.clouds.openrewrite.springkafka.FindSpringKafka3_3_15ConfigurationRisks
