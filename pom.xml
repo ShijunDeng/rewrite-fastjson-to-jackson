@@ -133,6 +133,7 @@
     <module>rewrite-postgresql-upgrade</module>
     <module>rewrite-fast-glob-upgrade</module>
     <module>rewrite-snakeyaml-upgrade</module>
+    <module>rewrite-angular-elements-upgrade</module>
   </modules>
 
   <dependencyManagement>

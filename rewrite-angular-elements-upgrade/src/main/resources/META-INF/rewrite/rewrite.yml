@@ -1,0 +1,16 @@
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.angularelements.UpgradeAngularElementsTo20_3_25
+displayName: Upgrade workbook-selected @angular/elements dependencies to 20.3.25
+description: Upgrade only exact, caret, or tilde direct declarations anchored to the eight workbook-selected sources.
+recipeList:
+  - com.huawei.clouds.openrewrite.angularelements.UpgradeSelectedAngularElementsDependency
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.angularelements.MigrateAngularElementsTo20_3_25
+displayName: Migrate Angular Elements applications to 20.3.25
+description: Reuse the strict upgrade and mark exact package, toolchain, custom-element registration, input/output, lifecycle, SSR, zone, security, and typing decisions.
+recipeList:
+  - com.huawei.clouds.openrewrite.angularelements.UpgradeAngularElementsTo20_3_25
+  - com.huawei.clouds.openrewrite.angularelements.FindAngularElements20ManifestRisks
+  - com.huawei.clouds.openrewrite.angularelements.FindAngularElements20SourceRisks
