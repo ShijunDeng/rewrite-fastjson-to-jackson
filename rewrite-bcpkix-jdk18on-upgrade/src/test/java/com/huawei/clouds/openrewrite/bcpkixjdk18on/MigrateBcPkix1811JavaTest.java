@@ -95,6 +95,44 @@ class MigrateBcPkix1811JavaTest implements RewriteTest {
     }
 
     @Test
+    void migratesTheRealBcJava174DeltaCertTestShape() {
+        // bcgit/bc-java r1rv74 (434cab9b), pkix/src/test/java/.../DeltaCertTest.java#L721-L733
+        rewriteRun(java(
+                """
+                import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+                import org.bouncycastle.asn1.pkcs.Attribute;
+                import org.bouncycastle.pkcs.DeltaCertificateRequestAttribute;
+                import org.bouncycastle.pkcs.PKCS10CertificationRequest;
+
+                class DeltaCertTest {
+                    Object parse(PKCS10CertificationRequest pkcs10CertReq) {
+                        Attribute[] attributes = pkcs10CertReq.getAttributes(
+                                new ASN1ObjectIdentifier("2.16.840.1.114027.80.6.2"));
+                        DeltaCertificateRequestAttribute deltaReq =
+                                new DeltaCertificateRequestAttribute(attributes[0]);
+                        return deltaReq.getSubjectPKInfo();
+                    }
+                }
+                """,
+                """
+                import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+                import org.bouncycastle.asn1.pkcs.Attribute;
+                import org.bouncycastle.pkcs.DeltaCertificateRequestAttributeValue;
+                import org.bouncycastle.pkcs.PKCS10CertificationRequest;
+
+                class DeltaCertTest {
+                    Object parse(PKCS10CertificationRequest pkcs10CertReq) {
+                        Attribute[] attributes = pkcs10CertReq.getAttributes(
+                                new ASN1ObjectIdentifier("2.16.840.1.114027.80.6.2"));
+                        DeltaCertificateRequestAttributeValue deltaReq =
+                                new DeltaCertificateRequestAttributeValue(attributes[0]);
+                        return deltaReq.getSubjectPKInfo();
+                    }
+                }
+                """));
+    }
+
+    @Test
     void unwrapsOnlyInlinePkmacGeneratorWithAttributedTypes() {
         rewriteRun(java(
                 """
@@ -120,6 +158,23 @@ class MigrateBcPkix1811JavaTest implements RewriteTest {
                             SubjectPublicKeyInfo key, PKMACBuilder mac, char[] password) throws CRMFException {
                         return new ProofOfPossessionSigningKeyBuilder(key)
                                 .setPublicKeyMac(mac, password);
+                    }
+                }
+                """));
+    }
+
+    @Test
+    void preservesTheRealBcJava174SharedPkmacGeneratorShapeForReview() {
+        // bcgit/bc-java r1rv74 (434cab9b), CertificateRequestMessageBuilder.java#L285-L299
+        rewriteRun(java("""
+                package org.bouncycastle.cert.crmf;
+
+                class CertificateRequestMessageBuilder {
+                    void addProof(ProofOfPossessionSigningKeyBuilder builder,
+                                  PKMACBuilder pkmacBuilder,
+                                  char[] password) throws CRMFException {
+                        PKMACValueGenerator pkmacGenerator = new PKMACValueGenerator(pkmacBuilder);
+                        builder.setPublicKeyMac(pkmacGenerator, password);
                     }
                 }
                 """));

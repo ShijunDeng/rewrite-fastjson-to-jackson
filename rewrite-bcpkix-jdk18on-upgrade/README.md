@@ -270,16 +270,44 @@ mvn -U org.openrewrite.maven:rewrite-maven-plugin:6.44.0:dryRun \
 [`b3008cc`](https://github.com/openrewrite/rewrite/tree/b3008cc4a1f0c43f562da16e5933a2a56d9bc568)
 和 `rewrite-migrate-java:3.40.0` 的固定提交
 [`6584812`](https://github.com/openrewrite/rewrite-migrate-java/tree/658481254a6ee678f5f162e51d8d49ee01c75877)。
+测试会从发布 JAR manifest 同时校验版本与完整 commit，而不是只相信 POM 字符串。
+`rewrite-migrate-java` 使用 Moderne Source Available License，本模块仅把固定的 3.40.0
+artifact 放在 test scope 做 catalog 审计；它不进入发布物的运行时依赖或推荐配方树。
+
+固定版本 catalog 扫描得到的 Bouncy Castle 专用 recipe **恰好只有两个**：
+`BounceCastleFromJdk15OntoJdk18On` 和
+`BouncyCastleFromJdk15OnToJdk15to18`。前者有 14 个、后者有 7 个
+`ChangeDependency` 叶子，全部使用 `latest.release`，均是 lineage/artifact 迁移，
+不是 `bcpkix-jdk18on` 1.74/1.75 的定点升级。
 
 | 官方能力 | 审计结论 | 本模块处理 |
 | --- | --- | --- |
 | [`org.openrewrite.java.ChangeType`](https://github.com/openrewrite/rewrite/blob/b3008cc4a1f0c43f562da16e5933a2a56d9bc568/rewrite-java/src/main/java/org/openrewrite/java/ChangeType.java) | 能完整表达 `DeltaCertificateRequestAttribute` 到 `DeltaCertificateRequestAttributeValue` 的类型、import、构造器和使用点迁移 | **直接组合复用**；只增加 authored-source precondition，不再在自定义 Java 类中实例化官方 recipe |
-| [`BounceCastleFromJdk15OntoJdk18On`](https://github.com/openrewrite/rewrite-migrate-java/blob/658481254a6ee678f5f162e51d8d49ee01c75877/src/main/resources/META-INF/rewrite/bouncycastle-jdk18on.yml) | 处理 `-jdk15on` / `-jdk15to18` 坐标迁移并使用 `latest.release`；本任务输入已经是 `bcpkix-jdk18on`，且目标必须固定为 1.81.1 | 已检索但不组合，避免扩大坐标和版本范围 |
-| 官方 `ChangeDependency` / `UpgradeDependencyVersion` | 能修改依赖，但不能同时表达仅 1.74/1.75、root/profile owner 隔离、独占属性、variant 边界和所有高版本精确 MARK | 依赖升级保留严格 visitor |
+| [`BounceCastleFromJdk15OntoJdk18On`](https://github.com/openrewrite/rewrite-migrate-java/blob/658481254a6ee678f5f162e51d8d49ee01c75877/src/main/resources/META-INF/rewrite/bouncycastle-jdk18on.yml) | 运行时展开为 14 个 `ChangeDependency`：把七种 `-jdk15on` 和七种 `-jdk15to18` artifact 改为 `-jdk18on`，全部目标 `latest.release` | **审计但拒绝组合**；当前输入已经是 `bcpkix-jdk18on`，且目标必须固定为 1.81.1 |
+| [`BouncyCastleFromJdk15OnToJdk15to18`](https://github.com/openrewrite/rewrite-migrate-java/blob/658481254a6ee678f5f162e51d8d49ee01c75877/src/main/resources/META-INF/rewrite/bouncycastle-jdk15to18.yml) | 运行时展开为 7 个 `ChangeDependency`：面向 Java 8 以下项目把 `-jdk15on` 改为 `-jdk15to18`，全部目标 `latest.release` | **审计但拒绝组合**；Java lineage、artifact 和目标均不属于本任务 |
+| 官方 `ChangeDependency` / `UpgradeDependencyVersion` | 能修改依赖，但不能同时表达仅 1.74/1.75、root/profile owner 隔离、独占属性、variant 边界和所有高版本精确 MARK | **拒绝通用 selector**；依赖升级保留严格 visitor，推荐树断言两个通用类型都不存在 |
 | Bouncy Castle PKMAC wrapper 迁移 | 官方 catalog 没有 `setPublicKeyMac(new PKMACValueGenerator(builder), password)` 的确定性迁移 | 仅保留小型 typed visitor，并要求 inline wrapper 与精确方法归属 |
 
-组合测试读取运行时 recipe tree，断言官方 `ChangeType` 位于 PKMAC gap recipe 之前；
-before/after、完全限定类型、生成目录和两周期幂等测试证明官方能力被实际激活。
+实际激活树被测试锁定为：
+
+```text
+MigrateBcPkixJdk18onTo1_81_1
+├─ UpgradeBcPkixJdk18onTo1_81_1
+│  └─ UpgradeSelectedBcPkixDependency
+├─ MigrateDeterministicBcPkix1_81_1Java
+│  ├─ ChangeType(DeltaCertificateRequestAttribute
+│  │             -> DeltaCertificateRequestAttributeValue,
+│  │             ignoreDefinition=true)
+│  └─ MigrateBcPkix1811Java                  # 仅官方缺失的 inline PKMAC gap
+├─ FindBcPkix1_81_1BuildRisks
+└─ FindBcPkix1_81_1SourceAndConfigurationRisks
+```
+
+`OfficialBcPkixRecipeAuditTest` 会展开 declarative/delegating wrapper，逐项校验官方
+两个 aggregate 的 21 个坐标叶子与全部 `latest.release` option，校验本地
+`ChangeType` 的三个 option，并证明推荐树不存在两个官方 aggregate、
+`ChangeDependency` 或 `UpgradeDependencyVersion`。before/after、完全限定类型、生成
+目录和两周期幂等测试则证明接受的官方能力被实际执行。
 
 ## 测试与真实仓库夹具
 
@@ -291,6 +319,14 @@ NO-DOWNGRADE、generated path、aggregate 和 cycle/idempotence。
 
 真实活跃仓库形态固定到不可变 commit：
 
+- Bouncy Castle 官方 1.74
+  [`DeltaCertTest`](https://github.com/bcgit/bc-java/blob/434cab9b79adfcc7d0313fbaec765a5bbfb27128/pkix/src/test/java/org/bouncycastle/cert/test/DeltaCertTest.java#L721-L733)
+  的 request attribute 解析是官方 `ChangeType` 的真实 positive fixture，测试校验
+  import、局部变量、构造器和后续 getter 使用点一起迁移；
+- 同一固定版本的
+  [`CertificateRequestMessageBuilder`](https://github.com/bcgit/bc-java/blob/434cab9b79adfcc7d0313fbaec765a5bbfb27128/pkix/src/main/java/org/bouncycastle/cert/crmf/CertificateRequestMessageBuilder.java#L285-L299)
+  先保存再传递 `PKMACValueGenerator`，是 AUTO 必须保留的真实 negative fixture；
+  测试证明配方不会把非 inline wrapper 猜测式删除；
 - Netty [`OcspServerExample`](https://github.com/netty/netty/blob/e64a6b505d54cf1478b9c804f6508333626070a5/example/src/main/java/io/netty/example/ocsp/OcspServerExample.java#L178-L190)
   的 `PEMParser` 多证书读取；
 - Apache PDFBox [`OcspHelper`](https://github.com/apache/pdfbox/blob/29282601d914ae1834918f388d69ec5f7483cc60/examples/src/main/java/org/apache/pdfbox/examples/signature/cert/OcspHelper.java#L401-L409)
@@ -310,8 +346,9 @@ NO-DOWNGRADE、generated path、aggregate 和 cycle/idempotence。
 mvn -f rewrite-bcpkix-jdk18on-upgrade/pom.xml clean verify
 ```
 
-当前验证基线为 145 个测试：23 个严格依赖升级、59 个构建 MARK、7 个 Java AUTO、
-38 个源码 MARK、12 个配置 MARK、6 个推荐组合；失败、错误和跳过均为 0。
+当前验证基线为 153 个测试：23 个严格依赖升级、59 个构建 MARK、9 个 Java AUTO、
+38 个源码 MARK、12 个配置 MARK、6 个推荐组合、6 个官方 catalog/运行时树审计；
+失败、错误和跳过均为 0。
 
 ## 供应链与官方证据
 
