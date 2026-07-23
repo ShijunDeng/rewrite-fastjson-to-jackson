@@ -1,0 +1,34 @@
+---
+type: specs.openrewrite.org/v1beta/category
+name: com.huawei.clouds.openrewrite.springcloudcontext
+packageName: com.huawei.clouds.openrewrite.springcloudcontext
+description: Upgrade Spring Cloud Context to 4.3.2 with deterministic configuration migration and precise compatibility findings.
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.springcloudcontext.UpgradeSpringCloudContextTo4_3_2
+displayName: Upgrade Spring Cloud Context to 4.3.2
+description: Upgrade only workbook-selected org.springframework.cloud:spring-cloud-context versions 2.1.5.RELEASE, 3.1.1, 3.1.6, and 3.1.7 to 4.3.2 in owned Maven and Gradle declarations.
+tags:
+  - spring-cloud-context
+  - spring-cloud
+  - dependency-upgrade
+recipeList:
+  - com.huawei.clouds.openrewrite.springcloudcontext.UpgradeSelectedSpringCloudContextDependency
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.springcloudcontext.MigrateSpringCloudContextTo4_3_2
+displayName: Migrate Spring Cloud Context applications to 4.3.2
+description: Reuse the strict dependency upgrade, migrate legacy document profile activation, and mark platform, bootstrap, Config Data, refresh, endpoint, encryption, AOT, native, CRaC, and direct API decisions.
+tags:
+  - spring-cloud-context
+  - spring-cloud
+  - spring-boot-3
+  - java-17
+  - migration
+recipeList:
+  - com.huawei.clouds.openrewrite.springcloudcontext.UpgradeSpringCloudContextTo4_3_2
+  - com.huawei.clouds.openrewrite.springcloudcontext.MigrateLegacyProfileActivation
+  - com.huawei.clouds.openrewrite.springcloudcontext.FindSpringCloudContextJavaRisks
+  - com.huawei.clouds.openrewrite.springcloudcontext.FindSpringCloudContextBuildRisks
+  - com.huawei.clouds.openrewrite.springcloudcontext.FindSpringCloudContextPropertiesRisks
+  - com.huawei.clouds.openrewrite.springcloudcontext.FindSpringCloudContextYamlRisks

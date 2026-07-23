@@ -129,6 +129,7 @@
     <module>rewrite-feign-okhttp-upgrade</module>
     <module>rewrite-sql-formatter-upgrade</module>
     <module>rewrite-mermaid-upgrade</module>
+    <module>rewrite-spring-cloud-context-upgrade</module>
   </modules>
 
   <dependencyManagement>
