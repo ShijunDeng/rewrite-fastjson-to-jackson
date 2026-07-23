@@ -1,6 +1,8 @@
 package com.huawei.clouds.openrewrite.bcpkixjdk18on;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.openrewrite.config.Environment;
 import org.openrewrite.java.JavaParser;
 import org.openrewrite.test.RecipeSpec;
@@ -9,6 +11,7 @@ import org.openrewrite.test.RewriteTest;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.openrewrite.java.Assertions.java;
 import static org.openrewrite.maven.Assertions.pomXml;
+import static org.openrewrite.xml.Assertions.xml;
 
 class BcPkixRecommendedRecipeTest implements RewriteTest {
     @Override
@@ -70,11 +73,15 @@ class BcPkixRecommendedRecipeTest implements RewriteTest {
                         FindBcPkix1811SourceRisks.DELTA_DRAFT), after.printAll()))));
     }
 
-    @Test
-    void aggregateNeverDowngradesHigherBcpkix() {
-        rewriteRun(pomXml(pom("1.84"), source -> source.after(actual -> actual)
-                .afterRecipe(after -> assertTrue(after.printAll().contains(
-                        FindBcPkix1811BuildRisks.DOWNGRADE_FORBIDDEN), after.printAll()))));
+    @ParameterizedTest(name = "aggregate never downgrades {0}")
+    @ValueSource(strings = {"1.81.2", "1.84", "2.0.0"})
+    void aggregateNeverDowngradesHigherBcpkix(String version) {
+        rewriteRun(xml(pom(version), source -> source.path(version + "/pom.xml").after(actual -> actual)
+                .afterRecipe(after -> {
+                    String printed = after.printAll();
+                    assertTrue(printed.contains(FindBcPkix1811BuildRisks.DOWNGRADE_FORBIDDEN), printed);
+                    assertTrue(printed.contains("<version>" + version + "</version>"), printed);
+                })));
     }
 
     @Test

@@ -56,8 +56,17 @@ public final class FindBcPkix1811SourceRisks extends Recipe {
             "ASN.1/OID/X.500 validation tightened across 1.74-1.81.1 (zero-length/oversized OIDs, empty extensions, " +
             "unescaped '=' RDNs, and malformed tags); test reject/accept decisions plus BER/DL/DER canonical bytes";
     static final String PROVIDER =
-            "This PKIX/operator call depends on provider algorithms and Bouncy Castle family compatibility; pin the " +
-            "provider, test unavailable/duplicate providers, and compare signature/key encodings and cross-version verification";
+            "This PKIX/operator/JCA/JCE call depends on provider algorithms and Bouncy Castle family compatibility; " +
+            "pin the provider, test unavailable/duplicate providers, and compare algorithm parameters, signature/key " +
+            "encodings, ciphertext/MAC output, and cross-version verification";
+    static final String PROVIDER_REGISTRATION =
+            "This Security provider registration/removal changes process-wide JCA/JCE selection and may collide with " +
+            "legacy Android, BC, BCPQC, BCFIPS, or BCJSSE providers; verify initialization order, position, duplicate " +
+            "names, class loaders, rollback, and every implicitly resolved cryptographic service";
+    static final String TLS =
+            "This Bouncy Castle TLS/DTLS/JSSE boundary requires bctls, bcutil, bcprov, and bcpkix family compatibility; " +
+            "verify provider order, protocol/cipher/signature negotiation, ALPN/SNI, certificate validation, DTLS-SRTP, " +
+            "session resumption, key updates, malformed peers, and the packaged runtime";
     static final String SERIALIZATION =
             "Java serialization of Bouncy Castle PKIX/CMS/provider objects is not a stable cross-version contract; " +
             "replace it with versioned DER/PEM/PKCS/CMS encodings or prove migration and rollback explicitly";
@@ -114,8 +123,31 @@ public final class FindBcPkix1811SourceRisks extends Recipe {
     private static final Set<String> ENCODING_METHODS =
             Set.of("getEncoded", "toASN1Structure", "toCMSSignedData");
     private static final Set<String> JCA_FACTORIES = Set.of(
-            "java.security.Signature", "java.security.cert.CertPathValidator",
-            "java.security.cert.CertificateFactory", "java.security.cert.CertStore");
+            "java.security.AlgorithmParameters",
+            "java.security.KeyFactory",
+            "java.security.KeyPairGenerator",
+            "java.security.KeyStore",
+            "java.security.MessageDigest",
+            "java.security.SecureRandom",
+            "java.security.Signature",
+            "java.security.cert.CertPathBuilder",
+            "java.security.cert.CertPathValidator",
+            "java.security.cert.CertificateFactory",
+            "java.security.cert.CertStore",
+            "javax.crypto.Cipher",
+            "javax.crypto.KeyAgreement",
+            "javax.crypto.KeyGenerator",
+            "javax.crypto.Mac",
+            "javax.crypto.SecretKeyFactory",
+            "javax.net.ssl.KeyManagerFactory",
+            "javax.net.ssl.SSLContext",
+            "javax.net.ssl.TrustManagerFactory");
+    private static final Set<String> BC_PROVIDER_TYPES = Set.of(
+            "org.bouncycastle.jce.provider.BouncyCastleProvider",
+            "org.bouncycastle.pqc.jcajce.provider.BouncyCastlePQCProvider",
+            "org.bouncycastle.jcajce.provider.BouncyCastleFipsProvider",
+            "org.bouncycastle.jsse.provider.BouncyCastleJsseProvider");
+    private static final Set<String> BC_PROVIDER_NAMES = Set.of("BC", "BCPQC", "BCFIPS", "BCJSSE");
 
     @Override
     public String getDisplayName() {
@@ -124,8 +156,8 @@ public final class FindBcPkix1811SourceRisks extends Recipe {
 
     @Override
     public String getDescription() {
-        return "Mark removed delta/CRMF APIs and CMS, PKCS, PEM, OCSP, TSP, PKIX/LDAP, ASN.1, operator/provider, " +
-               "encoding, and serialization boundaries that require application evidence.";
+        return "Mark removed delta/CRMF APIs and CMS, PKCS, PEM, OCSP, TSP, PKIX/LDAP, TLS/DTLS/JSSE, ASN.1, " +
+               "JCA/JCE provider, encoding, and serialization boundaries that require application evidence.";
     }
 
     @Override
@@ -202,9 +234,13 @@ public final class FindBcPkix1811SourceRisks extends Recipe {
                 if ("org.bouncycastle.openssl.PEMParser".equals(owner) && "readObject".equals(name)) {
                     return mark(visited, PEM);
                 }
+                if (isTls(owner)) return mark(visited, TLS);
                 if (isCompositeOperator(owner, name, visited)) return mark(visited, COMPOSITE);
                 if (isProviderOperator(owner, name)) return mark(visited, PROVIDER);
                 if (isLdapFactory(owner, name, visited)) return mark(visited, LDAP);
+                if (isProviderRegistration(owner, name, visited)) {
+                    return mark(visited, PROVIDER_REGISTRATION);
+                }
                 if ("org.bouncycastle.asn1.ASN1Primitive".equals(owner) && "fromByteArray".equals(name) ||
                     owner.startsWith("org.bouncycastle.asn1.") && ENCODING_METHODS.contains(name)) {
                     return mark(visited, ASN1);
@@ -229,6 +265,7 @@ public final class FindBcPkix1811SourceRisks extends Recipe {
         if (OLD_DELTA.equals(type) || type.startsWith(OLD_DELTA + "$") ||
             NEW_DELTA.equals(type) || type.startsWith(NEW_DELTA + "$")) return DELTA_DRAFT;
         if (PKMAC_GENERATOR.equals(type) || type.startsWith(PKMAC_GENERATOR + "$")) return PKMAC;
+        if (isTls(type)) return TLS;
         if (type.startsWith("org.bouncycastle.jce.X509LDAP") ||
             type.startsWith("org.bouncycastle.x509.util.LDAP")) return LDAP;
         return null;
@@ -249,6 +286,18 @@ public final class FindBcPkix1811SourceRisks extends Recipe {
                Set.of("build", "setProvider", "get", "verify").contains(name);
     }
 
+    private static boolean isProviderRegistration(
+            String owner, String name, J.MethodInvocation invocation) {
+        if (!"java.security.Security".equals(owner) || invocation.getArguments().isEmpty()) return false;
+        Expression first = invocation.getArguments().get(0);
+        if (Set.of("addProvider", "insertProviderAt").contains(name)) {
+            return BC_PROVIDER_TYPES.contains(fqn(first.getType()));
+        }
+        return Set.of("getProvider", "removeProvider").contains(name) &&
+               first instanceof J.Literal literal && literal.getValue() instanceof String value &&
+               BC_PROVIDER_NAMES.contains(value);
+    }
+
     private static boolean isLdapFactory(String owner, String name, J.MethodInvocation invocation) {
         return "java.security.cert.CertStore".equals(owner) && "getInstance".equals(name) &&
                firstString(invocation).map("LDAP"::equalsIgnoreCase).orElse(false);
@@ -256,8 +305,9 @@ public final class FindBcPkix1811SourceRisks extends Recipe {
 
     private static boolean hasBcProvider(J.MethodInvocation invocation) {
         return invocation.getArguments().stream().skip(1).anyMatch(argument ->
-                argument instanceof J.Literal literal && "BC".equals(literal.getValue()) ||
-                "org.bouncycastle.jce.provider.BouncyCastleProvider".equals(fqn(argument.getType())));
+                argument instanceof J.Literal literal && literal.getValue() instanceof String value &&
+                BC_PROVIDER_NAMES.contains(value) ||
+                BC_PROVIDER_TYPES.contains(fqn(argument.getType())));
     }
 
     private static java.util.Optional<String> firstString(J.MethodInvocation invocation) {
@@ -275,6 +325,12 @@ public final class FindBcPkix1811SourceRisks extends Recipe {
 
     private static boolean isBouncyCastle(JavaType type) {
         return fqn(type).startsWith("org.bouncycastle.");
+    }
+
+    private static boolean isTls(String type) {
+        return type.startsWith("org.bouncycastle.tls.") ||
+               type.startsWith("org.bouncycastle.jsse.") ||
+               type.startsWith("org.bouncycastle.crypto.tls.");
     }
 
     private static String fqn(JavaType type) {

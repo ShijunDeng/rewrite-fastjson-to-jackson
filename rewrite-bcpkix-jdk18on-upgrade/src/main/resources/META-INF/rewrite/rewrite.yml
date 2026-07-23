@@ -24,7 +24,13 @@ tags:
   - bouncycastle
   - bcpkix
   - source-migration
+preconditions:
+  - com.huawei.clouds.openrewrite.bcpkixjdk18on.FindAuthoredSourceFiles
 recipeList:
+  - org.openrewrite.java.ChangeType:
+      oldFullyQualifiedTypeName: org.bouncycastle.pkcs.DeltaCertificateRequestAttribute
+      newFullyQualifiedTypeName: org.bouncycastle.pkcs.DeltaCertificateRequestAttributeValue
+      ignoreDefinition: true
   - com.huawei.clouds.openrewrite.bcpkixjdk18on.MigrateBcPkix1811Java
 ---
 type: specs.openrewrite.org/v1beta/recipe
@@ -42,7 +48,7 @@ recipeList:
 type: specs.openrewrite.org/v1beta/recipe
 name: com.huawei.clouds.openrewrite.bcpkixjdk18on.FindBcPkix1_81_1SourceAndConfigurationRisks
 displayName: Find Bouncy Castle PKIX 1.81.1 source and configuration risks
-description: Mark removed PKIX APIs and CMS, PKCS, PEM, OCSP, TSP, ASN.1, operator, provider, LDAP, serialization, packaging, and JPMS behavior boundaries.
+description: Mark removed PKIX APIs and CMS, PKCS, PEM, OCSP, TSP, TLS/DTLS/JSSE, ASN.1, JCA/JCE provider, LDAP, serialization, packaging, and JPMS behavior boundaries.
 tags:
   - bouncycastle
   - bcpkix
@@ -55,7 +61,7 @@ recipeList:
 type: specs.openrewrite.org/v1beta/recipe
 name: com.huawei.clouds.openrewrite.bcpkixjdk18on.MigrateBcPkixJdk18onTo1_81_1
 displayName: Migrate Bouncy Castle PKIX applications to 1.81.1
-description: Strictly upgrade selected dependencies, apply proven-equivalent Java changes, and mark every remaining build, PKIX/CMS/PKCS/PEM/OCSP/TSP, encoding, provider, and configuration decision.
+description: Strictly upgrade selected dependencies, apply proven-equivalent Java changes, and mark every remaining build, PKIX/CMS/PKCS/PEM/OCSP/TSP/TLS, encoding, JCA/JCE provider, and configuration decision.
 tags:
   - bouncycastle
   - bcpkix

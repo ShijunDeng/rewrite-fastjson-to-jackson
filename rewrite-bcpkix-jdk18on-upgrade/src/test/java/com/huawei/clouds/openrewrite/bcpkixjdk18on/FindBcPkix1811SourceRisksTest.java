@@ -1,10 +1,15 @@
 package com.huawei.clouds.openrewrite.bcpkixjdk18on;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.openrewrite.java.JavaParser;
 import org.openrewrite.test.RecipeSpec;
 import org.openrewrite.test.RewriteTest;
 import org.openrewrite.test.SourceSpecs;
+
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -214,6 +219,123 @@ class FindBcPkix1811SourceRisksTest implements RewriteTest {
                             }
                         }
                         """, FindBcPkix1811SourceRisks.PROVIDER));
+    }
+
+    @Test
+    void marksRealMosipProviderRegistrationAndIgnoresUnrelatedProviders() {
+        // Extracted from:
+        // https://github.com/mosip/mosip-mock-services/blob/f88d19e9d41a681954086668a882a17bbc30d688/MockMDS/src/main/java/org/biometric/provider/CryptoUtility.java#L86-L90
+        rewriteRun(
+                markedJava("""
+                        import java.security.Security;
+                        import org.bouncycastle.jce.provider.BouncyCastleProvider;
+                        class CryptoUtility {
+                            private static BouncyCastleProvider init() {
+                                BouncyCastleProvider provider = new BouncyCastleProvider();
+                                Security.addProvider(provider);
+                                return provider;
+                            }
+                        }
+                        """, FindBcPkix1811SourceRisks.PROVIDER_REGISTRATION),
+                java("""
+                        import java.security.Security;
+                        import javax.crypto.Cipher;
+                        class UnrelatedProvider {
+                            Object init() throws Exception {
+                                Security.removeProvider("SUN");
+                                return Cipher.getInstance("AES/GCM/NoPadding", "SunJCE");
+                            }
+                        }
+                        """, source -> source.afterRecipe(after -> assertNoMarker(after.printAll()))));
+    }
+
+    @ParameterizedTest(name = "explicit BC JCA/JCE factory {0}")
+    @MethodSource("jcaJceFactories")
+    void marksExplicitBcProviderJcaJceFactories(String label, String invocation) {
+        rewriteRun(markedJava("""
+                class JcaJceBoundary {
+                    Object open() throws Exception {
+                        return %s;
+                    }
+                }
+                """.formatted(invocation), FindBcPkix1811SourceRisks.PROVIDER));
+    }
+
+    static Stream<Arguments> jcaJceFactories() {
+        return Stream.of(
+                Arguments.of("Cipher/string",
+                        "javax.crypto.Cipher.getInstance(\"AES/GCM/NoPadding\", \"BC\")"),
+                Arguments.of("Cipher/provider",
+                        "javax.crypto.Cipher.getInstance(\"AES/GCM/NoPadding\", " +
+                        "new org.bouncycastle.jce.provider.BouncyCastleProvider())"),
+                Arguments.of("KeyAgreement",
+                        "javax.crypto.KeyAgreement.getInstance(\"ECDH\", \"BC\")"),
+                Arguments.of("KeyGenerator",
+                        "javax.crypto.KeyGenerator.getInstance(\"AES\", \"BC\")"),
+                Arguments.of("Mac",
+                        "javax.crypto.Mac.getInstance(\"HmacSHA256\", \"BC\")"),
+                Arguments.of("SecretKeyFactory",
+                        "javax.crypto.SecretKeyFactory.getInstance(\"PBKDF2WithHmacSHA256\", \"BC\")"),
+                Arguments.of("AlgorithmParameters",
+                        "java.security.AlgorithmParameters.getInstance(\"OAEP\", \"BC\")"),
+                Arguments.of("KeyFactory",
+                        "java.security.KeyFactory.getInstance(\"RSA\", \"BC\")"),
+                Arguments.of("KeyPairGenerator",
+                        "java.security.KeyPairGenerator.getInstance(\"RSA\", \"BC\")"),
+                Arguments.of("KeyStore",
+                        "java.security.KeyStore.getInstance(\"PKCS12\", \"BC\")"),
+                Arguments.of("MessageDigest",
+                        "java.security.MessageDigest.getInstance(\"SHA-256\", \"BC\")"),
+                Arguments.of("SecureRandom",
+                        "java.security.SecureRandom.getInstance(\"DEFAULT\", \"BC\")"),
+                Arguments.of("Signature",
+                        "java.security.Signature.getInstance(\"SHA256withRSA\", \"BC\")"),
+                Arguments.of("CertPathBuilder",
+                        "java.security.cert.CertPathBuilder.getInstance(\"PKIX\", \"BC\")"),
+                Arguments.of("CertPathValidator",
+                        "java.security.cert.CertPathValidator.getInstance(\"PKIX\", \"BC\")"),
+                Arguments.of("CertificateFactory",
+                        "java.security.cert.CertificateFactory.getInstance(\"X.509\", \"BC\")"),
+                Arguments.of("CertStore",
+                        "java.security.cert.CertStore.getInstance(\"Collection\", " +
+                        "new java.security.cert.CollectionCertStoreParameters(), \"BC\")"),
+                Arguments.of("KeyManagerFactory",
+                        "javax.net.ssl.KeyManagerFactory.getInstance(\"PKIX\", \"BCJSSE\")"),
+                Arguments.of("SSLContext",
+                        "javax.net.ssl.SSLContext.getInstance(\"TLS\", \"BCJSSE\")"),
+                Arguments.of("TrustManagerFactory",
+                        "javax.net.ssl.TrustManagerFactory.getInstance(\"PKIX\", \"BCJSSE\")"));
+    }
+
+    @Test
+    void marksRealJitsiTlsTypesAndAttributedProtocolCalls() {
+        // Extracted from:
+        // https://github.com/jitsi/libjitsi/blob/6c95bf2236610e0d2c47109a73501b2078963f9f/src/main/java/org/jitsi/impl/neomedia/transform/dtls/CertificateInfo.java#L18-L39
+        rewriteRun(spec -> spec.parser(JavaParser.fromJavaVersion()
+                        .classpath("bcpkix-jdk18on", "bcutil-jdk18on", "bcprov-jdk18on")
+                        .dependsOn(
+                                "package org.bouncycastle.tls; public final class Certificate { }",
+                                "package org.bouncycastle.tls; public interface TlsClient { }",
+                                "package org.bouncycastle.tls; public final class TlsClientProtocol {" +
+                                " public void connect(TlsClient client) { } }")),
+                markedJava("""
+                        import org.bouncycastle.tls.*;
+                        class CertificateInfo {
+                            private final Certificate certificate;
+                            CertificateInfo(Certificate certificate) {
+                                this.certificate = certificate;
+                            }
+                        }
+                        """, FindBcPkix1811SourceRisks.TLS),
+                markedJava("""
+                        import org.bouncycastle.tls.TlsClient;
+                        import org.bouncycastle.tls.TlsClientProtocol;
+                        class TlsBoundary {
+                            void connect(TlsClientProtocol protocol, TlsClient client) {
+                                protocol.connect(client);
+                            }
+                        }
+                        """, FindBcPkix1811SourceRisks.TLS));
     }
 
     @Test

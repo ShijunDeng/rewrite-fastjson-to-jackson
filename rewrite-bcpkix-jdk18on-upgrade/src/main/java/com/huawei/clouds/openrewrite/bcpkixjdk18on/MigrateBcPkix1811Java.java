@@ -4,7 +4,6 @@ import org.openrewrite.ExecutionContext;
 import org.openrewrite.Recipe;
 import org.openrewrite.Tree;
 import org.openrewrite.TreeVisitor;
-import org.openrewrite.java.ChangeType;
 import org.openrewrite.java.JavaIsoVisitor;
 import org.openrewrite.java.MethodMatcher;
 import org.openrewrite.java.tree.Expression;
@@ -17,10 +16,6 @@ import java.util.List;
 
 /** Apply only source changes whose equivalence is demonstrated by the official 1.74 to 1.81.1 source diff. */
 public final class MigrateBcPkix1811Java extends Recipe {
-    private static final String OLD_DELTA =
-            "org.bouncycastle.pkcs.DeltaCertificateRequestAttribute";
-    private static final String NEW_DELTA =
-            "org.bouncycastle.pkcs.DeltaCertificateRequestAttributeValue";
     private static final String PKMAC_GENERATOR =
             "org.bouncycastle.cert.crmf.PKMACValueGenerator";
     private static final String PKMAC_BUILDER =
@@ -36,9 +31,9 @@ public final class MigrateBcPkix1811Java extends Recipe {
 
     @Override
     public String getDescription() {
-        return "Rename DeltaCertificateRequestAttribute to DeltaCertificateRequestAttributeValue and unwrap an " +
-               "inline PKMACValueGenerator passed to setPublicKeyMac. The latter is byte-for-byte equivalent to " +
-               "the official 1.81.1 implementation; variables and all draft-dependent delta-certificate APIs remain review-only.";
+        return "Unwrap an inline PKMACValueGenerator passed to setPublicKeyMac when attributed types prove the " +
+               "replacement. The delta-certificate type rename is handled directly by OpenRewrite's official " +
+               "ChangeType recipe; variables and all draft-dependent APIs remain review-only.";
     }
 
     @Override
@@ -75,10 +70,7 @@ public final class MigrateBcPkix1811Java extends Recipe {
                         return unwrapped;
                     }
                 }.visit(tree, ctx);
-                if (migrated == null) migrated = tree;
-                Tree renamed = new ChangeType(OLD_DELTA, NEW_DELTA, true)
-                        .getVisitor().visit(migrated, ctx);
-                return renamed == null ? migrated : renamed;
+                return migrated == null ? tree : migrated;
             }
         };
     }

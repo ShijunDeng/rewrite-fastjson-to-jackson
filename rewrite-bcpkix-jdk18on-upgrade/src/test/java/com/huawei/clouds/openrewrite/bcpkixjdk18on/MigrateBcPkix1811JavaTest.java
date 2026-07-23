@@ -1,19 +1,37 @@
 package com.huawei.clouds.openrewrite.bcpkixjdk18on;
 
 import org.junit.jupiter.api.Test;
+import org.openrewrite.Recipe;
+import org.openrewrite.config.Environment;
 import org.openrewrite.java.JavaParser;
 import org.openrewrite.test.RecipeSpec;
 import org.openrewrite.test.RewriteTest;
 import org.openrewrite.test.TypeValidation;
 
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.openrewrite.java.Assertions.java;
 
 class MigrateBcPkix1811JavaTest implements RewriteTest {
+    private static final String RECIPE =
+            "com.huawei.clouds.openrewrite.bcpkixjdk18on.MigrateDeterministicBcPkix1_81_1Java";
+
     @Override
     public void defaults(RecipeSpec spec) {
-        spec.recipe(new MigrateBcPkix1811Java())
+        spec.recipe(recipe())
                 .parser(JavaParser.fromJavaVersion().classpath(
                         "bcpkix-jdk18on", "bcutil-jdk18on", "bcprov-jdk18on"));
+    }
+
+    @Test
+    void directlyComposesOfficialChangeTypeBeforeTheCustomPkmacGapRecipe() {
+        assertEquals(List.of(
+                        "org.openrewrite.java.ChangeType",
+                        "com.huawei.clouds.openrewrite.bcpkixjdk18on.MigrateBcPkix1811Java"),
+                recipe().getRecipeList().stream().map(Recipe::getName)
+                        .filter(name -> !name.contains("PreconditionBellwether"))
+                        .toList());
     }
 
     @Test
@@ -177,5 +195,14 @@ class MigrateBcPkix1811JavaTest implements RewriteTest {
                     }
                 }
                 """));
+    }
+
+    private static Recipe recipe() {
+        return Environment.builder()
+                .scanRuntimeClasspath(
+                        "com.huawei.clouds.openrewrite.bcpkixjdk18on",
+                        "org.openrewrite.java")
+                .build()
+                .activateRecipes(RECIPE);
     }
 }

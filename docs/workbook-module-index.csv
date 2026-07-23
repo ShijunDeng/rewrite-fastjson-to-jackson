@@ -1378,7 +1378,7 @@ migration-spec-java-maven-org-aspectj-aspectjtools,org.aspectj:aspectjtools,java
 migration-spec-java-maven-org-aspectj-aspectjweaver,org.aspectj:aspectjweaver,java,java,1.9.25.1,8,2534 | 2535 | 2536 | 2537 | 2538 | 2539 | 2540 | 2541,complete,pending,catalog-only,
 migration-spec-java-maven-org-assertj-assertj-core,org.assertj:assertj-core,java,java,3.27.7,6,2778 | 2779 | 2780 | 2781 | 2782 | 2783,complete,pending,catalog-only,
 migration-spec-java-maven-org-asynchttpclient-async-http-client,org.asynchttpclient:async-http-client,java,java,2.12.4,1,4011,complete,pending,catalog-only,
-migration-spec-java-maven-org-bouncycastle-bcpkix-jdk18on,bcpkix-jdk18on | org.bouncycastle:bcpkix-jdk18on,java,java,1.81.1,4,1353 | 1354 | 2217 | 2218,complete,pending,catalog-only,rewrite-bcpkix-jdk18on-upgrade
+migration-spec-java-maven-org-bouncycastle-bcpkix-jdk18on,bcpkix-jdk18on | org.bouncycastle:bcpkix-jdk18on,java,java,1.81.1,4,1353 | 1354 | 2217 | 2218,complete,verified,implemented,rewrite-bcpkix-jdk18on-upgrade
 migration-spec-java-maven-org-bouncycastle-bcprov-jdk18on,bcprov-jdk18on | org.bouncycastle:bcprov-jdk18on,java,java,1.84,12,1591 | 1592 | 1593 | 1594 | 1595 | 1596 | 2209 | 2210 | 2211 | 2212 | 2213 | 2214,complete,pending,catalog-only,rewrite-bcprov-jdk18on-upgrade
 migration-spec-java-maven-org-bouncycastle-bcutil-jdk18on,org.bouncycastle:bcutil-jdk18on,java,java,1.84,1,4444,complete,pending,catalog-only,
 migration-spec-java-maven-org-bytedeco-javacpp,org.bytedeco:javacpp,java,java,1.5.11,1,3609,complete,pending,catalog-only,

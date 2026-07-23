@@ -1,9 +1,8 @@
 # bcpkix-jdk18on / org.bouncycastle:bcpkix-jdk18on 升级规格
 
-> 规格状态：`COMPLETE`；证据状态：`PENDING`；自动化状态：`CATALOG_ONLY`。
-> 本 README 已完成工作簿事实、禁止降级边界、不兼容点分类和后续配方验收契约；
-> 它不声称尚未固定官方证据的具体 API 已得到确认。
-> catalog 本身不包含配方代码；现有候选实现也将在全量规格覆盖完成后逐模块核验和完善。
+> 规格状态：`COMPLETE`；证据状态：`VERIFIED`；自动化状态：`IMPLEMENTED`。
+> 可执行实现位于 [`rewrite-bcpkix-jdk18on-upgrade`](../../../rewrite-bcpkix-jdk18on-upgrade)，
+> 覆盖精确依赖升级、确定性 API 迁移、风险定位和禁止降级守卫。
 
 ## 模块身份
 
@@ -13,7 +12,7 @@
 | Maven artifactId | `migration-spec-java-maven-org-bouncycastle-bcpkix-jdk18on` |
 | groupId | `com.huawei.clouds.openrewrite` |
 | 规范表格标识 | `bcpkix-jdk18on`<br>`org.bouncycastle:bcpkix-jdk18on` |
-| Catalog canonical identity | `org.bouncycastle:bcpkix-jdk18on`（`UNVERIFIED`，只用于避免目录碰撞） |
+| Catalog canonical identity | `org.bouncycastle:bcpkix-jdk18on`（`VERIFIED`） |
 | 归一语言类 | `java` |
 | Excel 原始语言 | `java` |
 | 目标版本 | `1.81.1` |
@@ -22,94 +21,97 @@
 | 分桶 | `B3_Minor联动` |
 | 难度 | `中` |
 | 工作簿 SHA-256 | `17020a54165808d7a90801b56cf6c7dff428f3b6dfa931b089e84f9946104309` |
-| 候选实现模块 | `rewrite-bcpkix-jdk18on-upgrade` |
+| 实现模块 | `rewrite-bcpkix-jdk18on-upgrade` |
 
 ## Excel 事实快照
 
-本节逐字记录表格，不把自动分桶、难度或备注提升为官方兼容性结论。厂商后缀、
-截断显示、无法解析值和疑似跨发布线目标均原样保留。
-
 | Excel 行 | 序号 | 软件名称 | 原始语言 | 原始版本 | 目标版本 | 微服务数 | 分桶 | 难度 | 保守方向/动作 | 原始备注 |
 | ---: | ---: | --- | --- | --- | --- | ---: | --- | --- | --- | --- |
-| 1353 | 1352 | `org.bouncycastle:bcpkix-jdk18on` | java | `1.74` | `1.81.1` | 17 | B3_Minor联动 | 中 | upgrade-candidate/mark | bouncycastle联动组需同步版本，minor升级需保持一致 |
-| 1354 | 1353 | `org.bouncycastle:bcpkix-jdk18on` | java | `1.75` | `1.81.1` | 17 | B3_Minor联动 | 中 | upgrade-candidate/mark | bouncycastle联动组需同步版本，minor升级需保持一致 |
-| 2217 | 2216 | `bcpkix-jdk18on` | java | `1.74` | `1.81.1` | 0 | B3_Minor联动 | 中 | upgrade-candidate/mark | bouncycastle联动组需同步版本，minor升级需保持一致 |
-| 2218 | 2217 | `bcpkix-jdk18on` | java | `1.75` | `1.81.1` | 0 | B3_Minor联动 | 中 | upgrade-candidate/mark | bouncycastle联动组需同步版本，minor升级需保持一致 |
+| 1353 | 1352 | `org.bouncycastle:bcpkix-jdk18on` | java | `1.74` | `1.81.1` | 17 | B3_Minor联动 | 中 | upgrade-candidate/auto | bouncycastle联动组需同步版本，minor升级需保持一致 |
+| 1354 | 1353 | `org.bouncycastle:bcpkix-jdk18on` | java | `1.75` | `1.81.1` | 17 | B3_Minor联动 | 中 | upgrade-candidate/auto | bouncycastle联动组需同步版本，minor升级需保持一致 |
+| 2217 | 2216 | `bcpkix-jdk18on` | java | `1.74` | `1.81.1` | 0 | B3_Minor联动 | 中 | upgrade-candidate/auto | bouncycastle联动组需同步版本，minor升级需保持一致 |
+| 2218 | 2217 | `bcpkix-jdk18on` | java | `1.75` | `1.81.1` | 0 | B3_Minor联动 | 中 | upgrade-candidate/auto | bouncycastle联动组需同步版本，minor升级需保持一致 |
 
 ## 升级方向与禁止降级
 
-- 表格原始源版本记录（不是 AUTO 白名单）：`1.74`, `1.75`。
-- 升级候选边：`1.74`, `1.75`；在 E-001～E-003 完成前仍保持 `MARK`。
-- 相同版本 NOOP：`NONE`。
-- 潜在降级冲突：`NONE`。
-- 截断、聚合或无法可靠比较：`NONE`。
-- 任何高于目标的版本、更新发布线或无法可靠比较的厂商版本必须保持字节级不变，并在
-  真实依赖 owner 上标记 `目标版本冲突（禁止降级）`；本项目不存在回退路径。
-- 表外低版本、动态版本、范围、变量、BOM/platform、parent、catalog、workspace、
-  constraints 和锁文件不能被猜测式改写；应定位并迁移真正的版本 owner。
-- 若同一模块列出多个坐标或别名，配方必须分别证明身份；在官方 relocation 证据固定前，
-  不得因为 artifact 名相同而跨 group、生态或发行渠道改坐标。
-
+- AUTO 白名单严格为 `1.74`、`1.75`，目标固定为 `1.81.1`。
+- 目标版本 NOOP；表外低版本、动态/范围、外部 BOM/parent/catalog 和歧义 property owner
+  保持不变并 MARK。
+- `1.81.2+`、1.82/1.84、2.x 和未来发布线保持原文，并标记
+  `目标版本冲突（禁止降级）`；不存在任何回退路径。
+- classifier、非 JAR、Android、FIPS、`jdk15on`、`jdk15to18` 等不同 lineage 不被猜测式改写。
 
 ## 不兼容点规格
 
-| ID | 维度 | 适用迁移边 | Excel 提示 | 官方确认事实 | 处置契约 |
-| --- | --- | --- | --- | --- | --- |
-| C-001 | 依赖族对齐 / BOM / 平台 | Excel #1353 1.74 [upgrade-candidate/mark: 表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。]<br>Excel #1354 1.75 [upgrade-candidate/mark: 表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。]<br>Excel #2217 1.74 [upgrade-candidate/mark: 表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。]<br>Excel #2218 1.75 [upgrade-candidate/mark: 表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。] → `1.81.1` | bouncycastle联动组需同步版本，minor升级需保持一致 | `UNVERIFIED` | 建立联动成员图并迁移 BOM、platform、parent 或共享 property 的真实 owner；禁止只改一个叶子依赖造成二进制或运行时漂移。 |
+| ID | 维度 | 已验证不兼容点 | OpenRewrite 处置 |
+| --- | --- | --- | --- |
+| C-001 | 依赖族 / 制品 lineage | bcpkix 依赖 bcprov/bcutil/bctls 等家族；Android/FIPS/jdk15 lineage 不能混装 | 严格 owner 白名单 AUTO；家族错位、BOM/catalog、variant、signed JAR、JPMS/OSGi 精确 MARK |
+| C-002 | delta certificate | `DeltaCertificateRequestAttribute` 迁移为 `DeltaCertificateRequestAttributeValue` | 直接复用官方 core `ChangeType`，覆盖 import、构造器和使用点 |
+| C-003 | CRMF PKMAC | inline `PKMACValueGenerator(builder)` 在目标 API 可等价解包为 builder | 小型 typed visitor 只处理精确方法和 inline wrapper；变量/共享 wrapper 保持并 MARK |
+| C-004 | PKIX/CMS/PKCS/PEM/OCSP/TSP | ASN.1、算法、验证、证书路径、CRL、CMS、PEM、OCSP/TSP 跨版本行为和拒绝边界变化 | 在具体类型、调用和配置节点 MARK，要求 golden corpus 与互操作测试 |
+| C-005 | JCA/JCE Provider | provider 注册顺序、算法选择和 family 兼容性具有进程级影响 | 标记 BC/BCPQC/BCFIPS/BCJSSE 注册与显式 provider 调用，不修改策略 |
+| C-006 | TLS/DTLS/JSSE | bctls/bcutil/bcprov/bcpkix 版本、协议/cipher/signature、ALPN/SNI 和证书路径必须联动 | Bouncy Castle TLS/JSSE 类型精确 MARK，要求最终镜像互操作和恶意 peer 测试 |
+| C-007 | LDAP / 编码 / 序列化 | DN/filter、DER/BER、Java serialization 和跨版本持久化没有通用安全自动替换 | 精确 MARK；要求标准编码、旧数据读取、滚动升级和回滚证据 |
 
-`UNVERIFIED` 表示 Excel 提示已进入规格，但尚未用不可变的官方 tag/commit、发布说明和
-制品元数据完成验证。此时允许 README 和精确 MARK 设计，不允许据此发明 API AUTO。
+`VERIFIED` 只覆盖固定 tag、制品和源码支持的事实。密码学策略、证书/密钥、生产 Provider
+顺序、协议互通、历史数据和回滚仍属于业务验收。
 
 ### `java` 生态最低核查项
 
-- 确认规范 Maven 坐标、relocation 关系，以及 parent/BOM/property/platform 的真实版本 owner。
-- 覆盖 Maven 与 Gradle；核查 JDK/字节码基线、包名和公开 API、反射、注解处理与 ServiceLoader。
-- 核查 JPMS/OSGi、shade/native-image、序列化/缓存/数据库数据，以及配置文件和框架联动。
+- 核对最终 dependency tree、Provider/service、签名 JAR、JPMS/OSGi 与 shaded 制品。
+- 使用证书、CRL、CMS、PKCS、PEM、OCSP、TSP、ASN.1、TLS/DTLS 和 LDAP golden corpus。
+- 验证 1.74/1.75 与 1.81.1 的双向读取、签名/MAC、解密、证书路径和回滚。
 
 ## 证据台账
 
-| Claim ID | 待证明事项 | 状态 | 固定官方证据 | 形成 AUTO 的条件 |
-| --- | --- | --- | --- | --- |
-| E-001 | 包/坐标身份、源版本和目标制品身份 | `UNVERIFIED` | 后续固定官网、registry/repository 元数据与 SHA | 身份无歧义且目标确为升级 |
-| E-002 | 每条迁移边的 API、配置和默认行为变化 | `UNVERIFIED` | 后续固定 release notes、迁移指南、tag/commit diff | 存在一一对应且语义等价的变换 |
-| E-003 | 真实工程中的用法和负例 | `UNVERIFIED` | 后续固定真实仓库 commit、路径、许可证与裁剪说明 | 正例、负例和上下文边界均可复现 |
+| Claim ID | 状态 | 固定证据 |
+| --- | --- | --- |
+| E-001 制品身份 | `VERIFIED` | [BC 1.81.1 tag/commit](https://github.com/bcgit/bc-java/tree/dd0e7f83eef6b5d157139c9da21852d44bfcef71)；Maven Central JAR SHA-256 `c4376862...9782`、POM SHA-256 `b5dbe9ea...c14` |
+| E-002 API/行为变化 | `VERIFIED` | 1.74 `434cab9b`、1.75 `739a5316`、1.81.1 `dd0e7f83` 固定源码与 release notes |
+| E-003 真实用法 | `VERIFIED` | Netty `e64a6b5`、PDFBox `2928260`、KeyStore Explorer `740ff3c`、MOSIP `f88d19e`、Jitsi `6c95bf2` 固定 fixture |
+| E-004 官方能力复用 | `VERIFIED` | OpenRewrite Core `8.87.5` [`b3008cc`](https://github.com/openrewrite/rewrite/tree/b3008cc4a1f0c43f562da16e5933a2a56d9bc568)；rewrite-migrate-java `3.40.0` [`6584812`](https://github.com/openrewrite/rewrite-migrate-java/tree/658481254a6ee678f5f162e51d8d49ee01c75877) |
 
-真实仓库只能证明“用法存在”，不能替代官方兼容性证据。推断必须显式标为
-`INFERENCE`；只有固定上游证据支持的事实才能改为 `VERIFIED`。
+## 官方能力复用审计
+
+- 已在 YAML 中直接组合官方
+  [`org.openrewrite.java.ChangeType`](https://github.com/openrewrite/rewrite/blob/b3008cc4a1f0c43f562da16e5933a2a56d9bc568/rewrite-java/src/main/java/org/openrewrite/java/ChangeType.java)
+  处理 delta-certificate 类型迁移；自定义 Java 类不再实例化或复制该能力。
+- 已审计官方
+  [`BounceCastleFromJdk15OntoJdk18On`](https://github.com/openrewrite/rewrite-migrate-java/blob/658481254a6ee678f5f162e51d8d49ee01c75877/src/main/resources/META-INF/rewrite/bouncycastle-jdk18on.yml)：
+  它处理旧 lineage 到 `jdk18on` 且使用 `latest.release`，不适用于已经是 `bcpkix-jdk18on`
+  的 1.74/1.75→1.81.1 精确升级，故不组合。
+- 官方依赖 recipes 无法表达本任务的严格 owner、两个源版本、variant 和全量禁降级 marker，
+  因此保留严格依赖 visitor；官方没有 PKMAC wrapper 配方，才保留该小型 typed gap recipe。
+- 运行时 recipe-tree 测试断言官方 `ChangeType` 在 gap recipe 前，并用 before/after、
+  完全限定类型、生成目录和两周期幂等证明实际激活。
 
 ## 后续 OpenRewrite 配方契约
 
 ### AUTO
 
-- 当前阶段 AUTO 白名单为空；只有 E-001～E-003 变为 `VERIFIED` 后，升级候选边才可逐项进入；
-- 只处理经验证的原子源版本、明确坐标和当前文件拥有的标准依赖声明；
-- 更高版本永不降级，表外版本、变体和外部 owner 永不猜测；
-- 只实现有官方源码证明、上下文无歧义、行为等价且可幂等运行的 AST/配置修改；
-- 保留 scope、classifier/type、optional、exclusions、workspace/profile 和相邻内容。
+- 只升级精确 1.74/1.75 的明确 Maven/Gradle owner。
+- 只执行官方类型迁移和有固定源码证明的 inline PKMAC 等价变换。
+- 所有 visitor 忽略生成目录、构建输出、缓存和安装产物。
 
 ### MARK
 
-- 在具体依赖、属性、BOM/platform、调用、类型、配置键或资源节点标记未决事项；
-- marker 必须说明业务 owner 需要作出的决定、所需证据和验收方法；
-- 不用文件级泛化告警代替精确定位，也不把 README 文字伪装成已执行迁移。
+- 在具体依赖、属性、类型、调用和配置节点标记家族、Provider、TLS、PKIX/CMS、
+  ASN.1、LDAP、序列化、打包与运行时风险。
+- 高版本 marker 必须包含精确短语 `目标版本冲突（禁止降级）`。
 
 ### MANUAL
 
-- 运行时流量、安全策略、数据和 wire format、集群滚动策略、原生 ABI、性能容量、
-  外部服务兼容性与回滚均由业务证据决定；
-- 无法通过静态上下文证明安全的语义变换保持原样。
+- 算法/Provider 策略、证书/密钥、协议互通、历史数据、LDAP 服务、生产部署和回滚由业务证据决定。
+- 无法静态证明等价的密码学行为保持原样。
 
 ## 测试与真实用例验收
 
-- 每个经验证的升级候选源版本才要求 AUTO 正例；目标/相同行为 NOOP；
-- 冲突、未知、截断和聚合版本保持不变并 MARK；所有更高版本和更高发布线验证禁止降级；
-- 覆盖对应生态的直接声明、共享 owner、BOM/platform/workspace、动态值、范围、锁文件和变体；
-- 覆盖同名业务符号、相似坐标、注释/字符串、生成目录、缓存和安装产物负例；
-- 每项 AUTO 有 before/after、类型或结构归因、两轮幂等和 aggregate 顺序测试；
-- 固定真实仓库 commit 与文件路径，记录裁剪内容；真实夹具不能取代官方差异证据；
-- 最终执行编译、单元/集成、行为、安全、性能、数据兼容、部署和回滚门禁。
+- 145 个测试覆盖严格依赖升级、构建/源码/配置 MARK、Java AUTO 和推荐组合。
+- 覆盖 Maven/Gradle、property/profile/BOM/catalog/variant、目标 NOOP、表外输入和高版本禁降级。
+- 覆盖官方 recipe tree、类型归因、before/after、真实 fixture、生成目录和两周期幂等。
+- 最终验收必须在实际 Provider、JDK、TLS/DTLS peer、LDAP、signed/shaded 制品和历史数据上执行。
 
 ## 当前阶段结论
 
-本模块的不兼容点文档规格已经建立；官方证据、真实仓库夹具和可执行配方属于下一阶段。
-在 E-001～E-003 完成前，除严格版本所有权和禁止降级守卫外，不批准猜测式 AUTO。
+该模块的规格、证据和可执行实现均已完成。AUTO 只覆盖两个精确依赖版本和已证明等价的
+源码变换；其余密码学和运行时风险由配方精确定位，任何高版本都不会被降级。

@@ -62,6 +62,27 @@ class FindBcPkix1811BuildRisksTest implements RewriteTest {
     }
 
     @Test
+    void marksHigherOwnedPropertyGroovyAndKotlinWithoutChangingTheirVersions() {
+        rewriteRun(
+                xml(project("<properties><bc.version>1.84</bc.version></properties><dependencies>" +
+                        target("${bc.version}", "") + "</dependencies>"), source -> source.path("property/pom.xml")
+                        .after(actual -> actual).afterRecipe(after -> {
+                            assertContains(after.printAll(), FindBcPkix1811BuildRisks.DOWNGRADE_FORBIDDEN);
+                            assertContains(after.printAll(), "<bc.version>1.84</bc.version>");
+                        })),
+                buildGradle("dependencies { implementation 'org.bouncycastle:bcpkix-jdk18on:2.0.0' }",
+                        source -> source.path("groovy/build.gradle").after(actual -> actual).afterRecipe(after -> {
+                            assertContains(after.printAll(), FindBcPkix1811BuildRisks.DOWNGRADE_FORBIDDEN);
+                            assertContains(after.printAll(), "bcpkix-jdk18on:2.0.0");
+                        })),
+                buildGradleKts("dependencies { implementation(\"org.bouncycastle:bcpkix-jdk18on:1.82\") }",
+                        source -> source.path("kotlin/build.gradle.kts").after(actual -> actual).afterRecipe(after -> {
+                            assertContains(after.printAll(), FindBcPkix1811BuildRisks.DOWNGRADE_FORBIDDEN);
+                            assertContains(after.printAll(), "bcpkix-jdk18on:1.82");
+                        })));
+    }
+
+    @Test
     void exclusiveLiteralPropertyResolvesWithoutMarker() {
         cleanXml(project("<properties><bc.version>1.81.1</bc.version></properties><dependencies>" +
                          target("${bc.version}", "") + "</dependencies>"));

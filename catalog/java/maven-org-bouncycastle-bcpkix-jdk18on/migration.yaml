@@ -14,8 +14,12 @@
     ],
     "canonicalIdentity": {
       "value": "org.bouncycastle:bcpkix-jdk18on",
-      "status": "unverified",
-      "evidence": []
+      "status": "verified",
+      "evidence": [
+        "https://github.com/bcgit/bc-java/tree/dd0e7f83eef6b5d157139c9da21852d44bfcef71",
+        "maven-central:jar-sha256:c437686255f7e202aba1bd1a07c76a2e620877da3dc407f71aa4869790ef9782",
+        "maven-central:pom-sha256:b5dbe9ea523fe151fac9bd52def2e158e5d3dea5b80c0a46594364327b474c14"
+      ]
     },
     "targetVersion": "1.81.1",
     "candidateImplementationModules": [
@@ -39,7 +43,7 @@
         "sourceAtomic": true,
         "direction": {
           "relation": "upgrade-candidate",
-          "action": "mark",
+          "action": "auto",
           "comparator": "conservative-numeric-prefix-v1",
           "reason": "表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。"
         }
@@ -58,7 +62,7 @@
         "sourceAtomic": true,
         "direction": {
           "relation": "upgrade-candidate",
-          "action": "mark",
+          "action": "auto",
           "comparator": "conservative-numeric-prefix-v1",
           "reason": "表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。"
         }
@@ -77,7 +81,7 @@
         "sourceAtomic": true,
         "direction": {
           "relation": "upgrade-candidate",
-          "action": "mark",
+          "action": "auto",
           "comparator": "conservative-numeric-prefix-v1",
           "reason": "表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。"
         }
@@ -96,7 +100,7 @@
         "sourceAtomic": true,
         "direction": {
           "relation": "upgrade-candidate",
-          "action": "mark",
+          "action": "auto",
           "comparator": "conservative-numeric-prefix-v1",
           "reason": "表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。"
         }
@@ -107,11 +111,11 @@
   "policy": {
     "allowDowngrade": false,
     "conflictMarker": "目标版本冲突（禁止降级）",
-    "autoSourceWhitelist": [],
-    "upgradeCandidatesPendingEvidence": [
+    "autoSourceWhitelist": [
       "1.74",
       "1.75"
     ],
+    "upgradeCandidatesPendingEvidence": [],
     "noopVersions": [],
     "conflictVersions": [],
     "unresolvedVersions": []
@@ -120,22 +124,57 @@
     {
       "id": "E-001",
       "claim": "制品身份、源版本与目标制品身份",
-      "status": "unverified",
-      "officialSources": [],
-      "realFixtures": []
+      "status": "verified",
+      "officialSources": [
+        "https://github.com/bcgit/bc-java/tree/dd0e7f83eef6b5d157139c9da21852d44bfcef71",
+        "maven-central:jar-sha256:c437686255f7e202aba1bd1a07c76a2e620877da3dc407f71aa4869790ef9782",
+        "maven-central:pom-sha256:b5dbe9ea523fe151fac9bd52def2e158e5d3dea5b80c0a46594364327b474c14"
+      ],
+      "realFixtures": [
+        "bcgit/bc-java@dd0e7f83eef6b5d157139c9da21852d44bfcef71"
+      ]
     },
     {
       "id": "E-002",
       "claim": "迁移边的 API、配置与默认行为变化",
-      "status": "unverified",
-      "officialSources": [],
-      "realFixtures": []
+      "status": "verified",
+      "officialSources": [
+        "https://github.com/bcgit/bc-java/blob/dd0e7f83eef6b5d157139c9da21852d44bfcef71/docs/releasenotes.html",
+        "https://github.com/bcgit/bc-java/blob/434cab9b79adfcc7d0313fbaec765a5bbfb27128/pkix/src/main/java/org/bouncycastle/pkcs/DeltaCertificateRequestAttribute.java",
+        "https://github.com/bcgit/bc-java/blob/dd0e7f83eef6b5d157139c9da21852d44bfcef71/pkix/src/main/java/org/bouncycastle/pkcs/DeltaCertificateRequestAttributeValue.java",
+        "https://github.com/bcgit/bc-java/blob/dd0e7f83eef6b5d157139c9da21852d44bfcef71/pkix/src/main/java/org/bouncycastle/cert/crmf/ProofOfPossessionSigningKeyBuilder.java"
+      ],
+      "realFixtures": [
+        "bcgit/bc-java@434cab9b79adfcc7d0313fbaec765a5bbfb27128",
+        "bcgit/bc-java@739a5316dea4c2d05a14933ad77082e671745a7b",
+        "bcgit/bc-java@dd0e7f83eef6b5d157139c9da21852d44bfcef71"
+      ]
     },
     {
       "id": "E-003",
       "claim": "真实工程用法、负例与行为验收",
-      "status": "unverified",
-      "officialSources": [],
+      "status": "verified",
+      "officialSources": [
+        "https://github.com/openrewrite/rewrite/blob/b3008cc4a1f0c43f562da16e5933a2a56d9bc568/rewrite-test/src/main/java/org/openrewrite/test/RewriteTest.java"
+      ],
+      "realFixtures": [
+        "netty/netty@e64a6b505d54cf1478b9c804f6508333626070a5",
+        "apache/pdfbox@29282601d914ae1834918f388d69ec5f7483cc60",
+        "kaikramer/keystore-explorer@740ff3c04eb4916dac3309754cfc58809f3d539b",
+        "mosip/mosip-mock-services@f88d19e9d41a681954086668a882a17bbc30d688",
+        "jitsi/libjitsi@6c95bf2236610e0d2c47109a73501b2078963f9f"
+      ]
+    },
+    {
+      "id": "E-004",
+      "claim": "OpenRewrite 官方能力已检索、复用并通过组合测试",
+      "status": "verified",
+      "officialSources": [
+        "https://github.com/openrewrite/rewrite/tree/b3008cc4a1f0c43f562da16e5933a2a56d9bc568",
+        "https://github.com/openrewrite/rewrite/blob/b3008cc4a1f0c43f562da16e5933a2a56d9bc568/rewrite-java/src/main/java/org/openrewrite/java/ChangeType.java",
+        "https://github.com/openrewrite/rewrite-migrate-java/tree/658481254a6ee678f5f162e51d8d49ee01c75877",
+        "https://github.com/openrewrite/rewrite-migrate-java/blob/658481254a6ee678f5f162e51d8d49ee01c75877/src/main/resources/META-INF/rewrite/bouncycastle-jdk18on.yml"
+      ],
       "realFixtures": []
     }
   ],
@@ -147,11 +186,11 @@
       ],
       "dimension": "依赖族对齐 / BOM / 平台",
       "excelNoteStatus": "table_fact",
-      "evidenceStatus": "unverified",
-      "disposition": "mark",
-      "treatment": "建立联动成员图并迁移 BOM、platform、parent 或共享 property 的真实 owner；禁止只改一个叶子依赖造成二进制或运行时漂移。",
-      "recipe": null,
-      "tests": []
+      "evidenceStatus": "verified",
+      "disposition": "auto+mark",
+      "treatment": "严格升级明确 owner；直接复用官方 ChangeType 处理 delta-certificate 类型，并补 PKMAC 等价迁移；对 BC 家族、Provider、TLS、PKIX/CMS/PKCS/PEM/OCSP/TSP、编码、LDAP、序列化与打包精确 MARK。",
+      "recipe": "com.huawei.clouds.openrewrite.bcpkixjdk18on.MigrateBcPkixJdk18onTo1_81_1",
+      "tests": ["UpgradeBcPkixDependencyTest", "MigrateBcPkix1811JavaTest", "FindBcPkix1811BuildRisksTest", "FindBcPkix1811SourceRisksTest", "FindBcPkix1811ConfigurationRisksTest", "BcPkixRecommendedRecipeTest"]
     },
     {
       "id": "C-002",
@@ -160,11 +199,11 @@
       ],
       "dimension": "依赖族对齐 / BOM / 平台",
       "excelNoteStatus": "table_fact",
-      "evidenceStatus": "unverified",
-      "disposition": "mark",
-      "treatment": "建立联动成员图并迁移 BOM、platform、parent 或共享 property 的真实 owner；禁止只改一个叶子依赖造成二进制或运行时漂移。",
-      "recipe": null,
-      "tests": []
+      "evidenceStatus": "verified",
+      "disposition": "auto+mark",
+      "treatment": "严格升级明确 owner；直接复用官方 ChangeType 处理 delta-certificate 类型，并补 PKMAC 等价迁移；对 BC 家族、Provider、TLS、PKIX/CMS/PKCS/PEM/OCSP/TSP、编码、LDAP、序列化与打包精确 MARK。",
+      "recipe": "com.huawei.clouds.openrewrite.bcpkixjdk18on.MigrateBcPkixJdk18onTo1_81_1",
+      "tests": ["UpgradeBcPkixDependencyTest", "MigrateBcPkix1811JavaTest", "FindBcPkix1811BuildRisksTest", "FindBcPkix1811SourceRisksTest", "FindBcPkix1811ConfigurationRisksTest", "BcPkixRecommendedRecipeTest"]
     },
     {
       "id": "C-003",
@@ -173,11 +212,11 @@
       ],
       "dimension": "依赖族对齐 / BOM / 平台",
       "excelNoteStatus": "table_fact",
-      "evidenceStatus": "unverified",
-      "disposition": "mark",
-      "treatment": "建立联动成员图并迁移 BOM、platform、parent 或共享 property 的真实 owner；禁止只改一个叶子依赖造成二进制或运行时漂移。",
-      "recipe": null,
-      "tests": []
+      "evidenceStatus": "verified",
+      "disposition": "auto+mark",
+      "treatment": "严格升级明确 owner；直接复用官方 ChangeType 处理 delta-certificate 类型，并补 PKMAC 等价迁移；对 BC 家族、Provider、TLS、PKIX/CMS/PKCS/PEM/OCSP/TSP、编码、LDAP、序列化与打包精确 MARK。",
+      "recipe": "com.huawei.clouds.openrewrite.bcpkixjdk18on.MigrateBcPkixJdk18onTo1_81_1",
+      "tests": ["UpgradeBcPkixDependencyTest", "MigrateBcPkix1811JavaTest", "FindBcPkix1811BuildRisksTest", "FindBcPkix1811SourceRisksTest", "FindBcPkix1811ConfigurationRisksTest", "BcPkixRecommendedRecipeTest"]
     },
     {
       "id": "C-004",
@@ -186,16 +225,16 @@
       ],
       "dimension": "依赖族对齐 / BOM / 平台",
       "excelNoteStatus": "table_fact",
-      "evidenceStatus": "unverified",
-      "disposition": "mark",
-      "treatment": "建立联动成员图并迁移 BOM、platform、parent 或共享 property 的真实 owner；禁止只改一个叶子依赖造成二进制或运行时漂移。",
-      "recipe": null,
-      "tests": []
+      "evidenceStatus": "verified",
+      "disposition": "auto+mark",
+      "treatment": "严格升级明确 owner；直接复用官方 ChangeType 处理 delta-certificate 类型，并补 PKMAC 等价迁移；对 BC 家族、Provider、TLS、PKIX/CMS/PKCS/PEM/OCSP/TSP、编码、LDAP、序列化与打包精确 MARK。",
+      "recipe": "com.huawei.clouds.openrewrite.bcpkixjdk18on.MigrateBcPkixJdk18onTo1_81_1",
+      "tests": ["UpgradeBcPkixDependencyTest", "MigrateBcPkix1811JavaTest", "FindBcPkix1811BuildRisksTest", "FindBcPkix1811SourceRisksTest", "FindBcPkix1811ConfigurationRisksTest", "BcPkixRecommendedRecipeTest"]
     }
   ],
   "status": {
     "spec": "complete",
-    "evidence": "pending",
-    "automation": "catalog-only"
+    "evidence": "verified",
+    "automation": "implemented"
   }
 }

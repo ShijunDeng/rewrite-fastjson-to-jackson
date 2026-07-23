@@ -88,6 +88,18 @@ class UpgradeBcPkixDependencyTest implements RewriteTest {
                 "</dependencies>"), source -> source.path("pom.xml")));
     }
 
+    @ParameterizedTest(name = "higher version {0} is byte-stable in every build DSL")
+    @ValueSource(strings = {"1.81.2", "1.82", "1.84", "2.0.0", "2.0.0-beta1",
+            "999999999999999999999.0"})
+    void preservesHigherVersionsAcrossMavenAndGradle(String version) {
+        rewriteRun(
+                xml(pom(version), source -> source.path(version + "/pom.xml")),
+                buildGradle("dependencies { implementation 'org.bouncycastle:bcpkix-jdk18on:" +
+                        version + "' }", source -> source.path(version + "/build.gradle")),
+                buildGradleKts("dependencies { implementation(\"org.bouncycastle:bcpkix-jdk18on:" +
+                        version + "\") }", source -> source.path(version + "/build.gradle.kts")));
+    }
+
     @Test
     void upgradesBcpkixButNeverChangesIndependentBcprov184Target() {
         String before = project("<dependencies>" + target("1.75", "") +
