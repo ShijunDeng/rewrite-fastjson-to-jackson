@@ -1,9 +1,18 @@
-# org.springframework.retry:spring-retry 升级规格
+# Spring Retry 升级规格
 
-> 规格状态：`COMPLETE`；证据状态：`PENDING`；自动化状态：`CATALOG_ONLY`。
-> 本 README 已完成工作簿事实、禁止降级边界、不兼容点分类和后续配方验收契约；
-> 它不声称尚未固定官方证据的具体 API 已得到确认。
-> catalog 本身不包含配方代码；现有候选实现也将在全量规格覆盖完成后逐模块核验和完善。
+> 规格状态：`COMPLETE`；证据状态：`VERIFIED`；自动化状态：`IMPLEMENTED`。
+> 实现模块为
+> [`rewrite-spring-retry-upgrade`](../../../rewrite-spring-retry-upgrade)。
+
+本规格保留 Excel 中 `org.springframework.retry:spring-retry` 的全部七条事实，但遵守
+用户最新高优先级清单：本次只批准精确 `1.3.4 → 2.0.13` 自动迁移。其余六个
+Excel 源版本保持 `MARK`，等待后续指示；不会把一个源版本的证据外推成宽泛版本升级。
+
+推荐配方：
+
+```text
+com.huawei.clouds.openrewrite.springretry.MigrateSpringRetryTo2_0_13
+```
 
 ## 模块身份
 
@@ -12,108 +21,201 @@
 | Catalog 路径 | `catalog/java/maven-org-springframework-retry-spring-retry` |
 | Maven artifactId | `migration-spec-java-maven-org-springframework-retry-spring-retry` |
 | groupId | `com.huawei.clouds.openrewrite` |
-| 规范表格标识 | `org.springframework.retry:spring-retry` |
-| Catalog canonical identity | `org.springframework.retry:spring-retry`（`UNVERIFIED`，只用于避免目录碰撞） |
-| 归一语言类 | `java` |
-| Excel 原始语言 | `java` |
+| 规范坐标 | `org.springframework.retry:spring-retry` |
 | 目标版本 | `2.0.13` |
 | Excel 迁移边 | 7 |
-| 涉及微服务数 | 最大可见值 `48`；不同版本行不累加 |
-| 分桶 | `B1_Patch直升`, `B4_Major单包` |
-| 难度 | `中`, `低` |
+| 当前 AUTO 白名单 | 仅 `1.3.4` |
+| 实现模块 | `rewrite-spring-retry-upgrade` |
 | 工作簿 SHA-256 | `17020a54165808d7a90801b56cf6c7dff428f3b6dfa931b089e84f9946104309` |
-| 候选实现模块 | `NONE`（尚无已识别的顶层实现模块） |
+
+身份已用固定的
+[`v2.0.13` commit](https://github.com/spring-projects/spring-retry/tree/f1012127f6084800ef5d3b8f8f2bc3b51c53997a)
+和 Maven Central 发布物交叉验证：
+
+- JAR SHA-256：
+  `213785750007f90b067ba43036cbffdad2890f6bb98917e199f6b049cf810040`
+- POM SHA-256：
+  `2972b0b80e075558c7b9ff597c6d37b8f96338e0c4d0d62419cc27d1dc6acc49`
+
+目标 JAR manifest 声明 `Build-Jdk-Spec: 17`，目标 POM 固定
+`spring-context:6.2.19` 和可选 `micrometer-core:1.15.12`。
 
 ## Excel 事实快照
 
-本节逐字记录表格，不把自动分桶、难度或备注提升为官方兼容性结论。厂商后缀、
-截断显示、无法解析值和疑似跨发布线目标均原样保留。
+下表逐行保留工作簿事实；“当前动作”来自最新高优先级指令，不改写 Excel 原文。
 
-| Excel 行 | 序号 | 软件名称 | 原始语言 | 原始版本 | 目标版本 | 微服务数 | 分桶 | 难度 | 保守方向/动作 | 原始备注 |
-| ---: | ---: | --- | --- | --- | --- | ---: | --- | --- | --- | --- |
-| 1110 | 1109 | `org.springframework.retry:spring-retry` | java | `1.2.4.RELEASE` | `2.0.13` | 48 | B4_Major单包 | 中 | upgrade-candidate/mark | 跨1个大版本，需查changelog确认breaking API |
-| 1111 | 1110 | `org.springframework.retry:spring-retry` | java | `1.3.2` | `2.0.13` | 48 | B4_Major单包 | 中 | upgrade-candidate/mark | 跨1个大版本，需查changelog确认breaking API |
-| 1112 | 1111 | `org.springframework.retry:spring-retry` | java | `1.3.3` | `2.0.13` | 48 | B4_Major单包 | 中 | upgrade-candidate/mark | 跨1个大版本，需查changelog确认breaking API |
-| 1113 | 1112 | `org.springframework.retry:spring-retry` | java | `1.3.4` | `2.0.13` | 48 | B4_Major单包 | 中 | upgrade-candidate/mark | 跨1个大版本，需查changelog确认breaking API |
-| 2543 | 2542 | `org.springframework.retry:spring-retry` | java | `2.0.0` | `2.0.13` | 48 | B1_Patch直升 | 低 | upgrade-candidate/mark | 仅patch变更，无breaking change |
-| 2544 | 2543 | `org.springframework.retry:spring-retry` | java | `2.0.1` | `2.0.13` | 48 | B1_Patch直升 | 低 | upgrade-candidate/mark | 仅patch变更，无breaking change |
-| 2545 | 2544 | `org.springframework.retry:spring-retry` | java | `2.0.2` | `2.0.13` | 48 | B1_Patch直升 | 低 | upgrade-candidate/mark | 仅patch变更，无breaking change |
+| Excel 行 | 序号 | 原始版本 | 目标版本 | 微服务数 | 分桶 | 难度 | Excel 原始备注 | 当前动作 |
+| ---: | ---: | --- | --- | ---: | --- | --- | --- | --- |
+| 1110 | 1109 | `1.2.4.RELEASE` | `2.0.13` | 48 | B4_Major单包 | 中 | 跨1个大版本，需查changelog确认breaking API | MARK：不在当前白名单 |
+| 1111 | 1110 | `1.3.2` | `2.0.13` | 48 | B4_Major单包 | 中 | 跨1个大版本，需查changelog确认breaking API | MARK：不在当前白名单 |
+| 1112 | 1111 | `1.3.3` | `2.0.13` | 48 | B4_Major单包 | 中 | 跨1个大版本，需查changelog确认breaking API | MARK：不在当前白名单 |
+| 1113 | 1112 | `1.3.4` | `2.0.13` | 48 | B4_Major单包 | 中 | 跨1个大版本，需查changelog确认breaking API | AUTO + MARK |
+| 2543 | 2542 | `2.0.0` | `2.0.13` | 48 | B1_Patch直升 | 低 | 仅patch变更，无breaking change | MARK：不在当前白名单 |
+| 2544 | 2543 | `2.0.1` | `2.0.13` | 48 | B1_Patch直升 | 低 | 仅patch变更，无breaking change | MARK：不在当前白名单 |
+| 2545 | 2544 | `2.0.2` | `2.0.13` | 48 | B1_Patch直升 | 低 | 仅patch变更，无breaking change | MARK：不在当前白名单 |
+
+Excel 的“仅 patch、无 breaking change”是表格事实，不会被提升为官方兼容保证。
 
 ## 升级方向与禁止降级
 
-- 表格原始源版本记录（不是 AUTO 白名单）：`1.2.4.RELEASE`, `1.3.2`, `1.3.3`, `1.3.4`, `2.0.0`, `2.0.1`, `2.0.2`。
-- 升级候选边：`1.2.4.RELEASE`, `1.3.2`, `1.3.3`, `1.3.4`, `2.0.0`, `2.0.1`, `2.0.2`；在 E-001～E-003 完成前仍保持 `MARK`。
-- 相同版本 NOOP：`NONE`。
-- 潜在降级冲突：`NONE`。
-- 截断、聚合或无法可靠比较：`NONE`。
-- 任何高于目标的版本、更新发布线或无法可靠比较的厂商版本必须保持字节级不变，并在
-  真实依赖 owner 上标记 `目标版本冲突（禁止降级）`；本项目不存在回退路径。
-- 表外低版本、动态版本、范围、变量、BOM/platform、parent、catalog、workspace、
-  constraints 和锁文件不能被猜测式改写；应定位并迁移真正的版本 owner。
-- 若同一模块列出多个坐标或别名，配方必须分别证明身份；在官方 relocation 证据固定前，
-  不得因为 artifact 名相同而跨 group、生态或发行渠道改坐标。
+| 输入 | 行为 |
+| --- | --- |
+| 精确 `1.3.4` 且声明由当前文件唯一拥有 | AUTO 到 `2.0.13` |
+| `2.0.13` | NOOP |
+| 高于目标的版本 | 保持原文本并标记 `目标版本冲突（禁止降级）` |
+| 其余固定低版本，包括另外六个 Excel 版本 | 保持原文本并 MARK，不扩大白名单 |
+| 父 POM、BOM、platform、catalog、动态值、范围、共享/遮蔽属性 | 保持声明并定位真实 owner |
+| classifier、非 JAR type、Gradle variant、自定义 DSL | 保持制品形状并 MARK |
 
+配方覆盖 Maven 直接依赖、dependency management、唯一且只服务目标依赖的本地属性，
+以及根 Gradle Groovy/Kotlin 的安全直接声明。它不抢夺父项目、BOM、version catalog、
+constraints、嵌套项目或生成目录的版本所有权。
+
+## 推荐配方实际执行的能力
+
+推荐组合不是只更新版本号，按以下顺序运行：
+
+1. 精确 build precondition 命中 `1.3.4` 后，执行官方
+   `org.openrewrite.java.migrate.UpgradeJavaVersion(17)`。
+2. 把当前文件唯一拥有的精确 `1.3.4` 依赖改为 `2.0.13`。
+3. 执行六个官方 `ChangeAnnotationAttributeName`：
+   - `@Retryable value/include → retryFor`
+   - `@Retryable exclude → noRetryFor`
+   - `@CircuitBreaker value/include → retryFor`
+   - `@CircuitBreaker exclude → noRetryFor`
+4. 执行官方 `ChangeMethodName`：
+   `RetryTemplateBuilder.withinMillis(long) → withTimeout(long)`。
+5. 对不能静态证明语义等价的构建、源码和行为边界产生 OpenRewrite search marker。
+
+测试会解析运行时 recipe tree，确认上述官方 recipe 真实进入组合，而不是只出现在
+README；同时禁止宽泛 `UpgradeDependencyVersion`、完整 `UpgradeToJava17` 和猜测式
+`ChangeType` 混入。
 
 ## 不兼容点规格
 
-| ID | 维度 | 适用迁移边 | Excel 提示 | 官方确认事实 | 处置契约 |
-| --- | --- | --- | --- | --- | --- |
-| C-001 | 补丁行为 / 安全 / 回归 | Excel #2543 2.0.0 [upgrade-candidate/mark: 表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。]<br>Excel #2544 2.0.1 [upgrade-candidate/mark: 表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。]<br>Excel #2545 2.0.2 [upgrade-candidate/mark: 表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。] → `2.0.13` | 仅patch变更，无breaking change | `UNVERIFIED` | 固定官方补丁说明和制品身份后才允许版本 AUTO；仍需验证安全修复、默认行为、序列化与协议回归。 |
-| C-002 | 公开 API / 配置 / 默认行为 / 运行时 | Excel #1110 1.2.4.RELEASE [upgrade-candidate/mark: 表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。]<br>Excel #1111 1.3.2 [upgrade-candidate/mark: 表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。]<br>Excel #1112 1.3.3 [upgrade-candidate/mark: 表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。]<br>Excel #1113 1.3.4 [upgrade-candidate/mark: 表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。] → `2.0.13` | 跨1个大版本，需查changelog确认breaking API | `UNVERIFIED` | 建立跨主版本兼容矩阵；覆盖删除或重命名 API、配置键和默认值、运行时基线、模块系统、数据格式与回滚，AUTO 仅限已证明等价的确定性修改。 |
+### Java 17、Spring Framework 6 与依赖族
 
-`UNVERIFIED` 表示 Excel 提示已进入规格，但尚未用不可变的官方 tag/commit、发布说明和
-制品元数据完成验证。此时允许 README 和精确 MARK 设计，不允许据此发明 API AUTO。
+2.0.13 是 Java 17 字节码，目标 POM 对齐 Spring Framework 6.2.19。推荐配方只在
+精确 `1.3.4` build precondition 下升级构建基线，并标记：
 
-### `java` 生态最低核查项
+- 编译、测试、运行时、容器或 CI 仍低于 Java 17；
+- Spring 5、Boot 2 与 Spring 6 混装；
+- Micrometer 版本不对齐；
+- AOP/AspectJ 缺失或版本族冲突；
+- parent/BOM/platform/catalog 等外部 owner。
 
-- 确认规范 Maven 坐标、relocation 关系，以及 parent/BOM/property/platform 的真实版本 owner。
-- 覆盖 Maven 与 Gradle；核查 JDK/字节码基线、包名和公开 API、反射、注解处理与 ServiceLoader。
-- 核查 JPMS/OSGi、shade/native-image、序列化/缓存/数据库数据，以及配置文件和框架联动。
+### `RetryTemplate.rethrow` 签名变化
 
-## 证据台账
+1.3.4 的两参数受保护方法在 2.0.13 增加第三个
+`wrapInExhaustedRetryException` 参数。旧 override 和直接调用可能编译失败，但其值
+取决于旧实现的私有状态，不能安全猜测。配方精确标记子类和两参数方法，由业务方决定
+异常契约并补充测试。
 
-| Claim ID | 待证明事项 | 状态 | 固定官方证据 | 形成 AUTO 的条件 |
-| --- | --- | --- | --- | --- |
-| E-001 | 包/坐标身份、源版本和目标制品身份 | `UNVERIFIED` | 后续固定官网、registry/repository 元数据与 SHA | 身份无歧义且目标确为升级 |
-| E-002 | 每条迁移边的 API、配置和默认行为变化 | `UNVERIFIED` | 后续固定 release notes、迁移指南、tag/commit diff | 存在一一对应且语义等价的变换 |
-| E-003 | 真实工程中的用法和负例 | `UNVERIFIED` | 后续固定真实仓库 commit、路径、许可证与裁剪说明 | 正例、负例和上下文边界均可复现 |
+### `RetryConfiguration.buildAdvice()` 返回类型收窄
 
-真实仓库只能证明“用法存在”，不能替代官方兼容性证据。推断必须显式标为
-`INFERENCE`；只有固定上游证据支持的事实才能改为 `VERIFIED`。
+返回类型从 AOP Alliance `Advice` 收窄为
+`AnnotationAwareRetryOperationsInterceptor`。使用宽返回类型的子类 override 会编译
+失败。配方标记具体子类/override，要求修改返回类型并验证 advisor 顺序。
+
+### listener SPI
+
+2.0 为 `RetryListener` 增加 default 方法和 `onSuccess`，并弃用
+`RetryListenerSupport`。直接用 `ChangeType` 把 class 改为 interface 会遗漏
+`extends → implements`、构造、`super` 调用、继承层次和反射/序列化语义，因此本模块
+只标记：
+
+- `RetryListener` 实现和 callbacks；
+- `RetryListenerSupport`、`StatisticsListener`；
+- `setListeners`、`registerListener` 及调用顺序；
+- `onSuccess` 抛错、结果分类、事务、指标和审计行为。
+
+### 注解表达式
+
+2.0 区分 `#{...}` 初始化期求值和无分隔符运行期求值。配方标记
+`maxAttemptsExpression`、`exceptionExpression`、backoff 和 circuit breaker
+表达式，要求验证 bean/参数引用、求值次数、结果类型及异常路径。
+
+### stateful retry、cache、policy 与 backoff
+
+配方标记 `stateful=true`、`RetryState`、`RetryContextCache`、map cache、policy、
+backoff、timeout 和 `RetryTemplate.execute`。验收需覆盖 key 稳定性、容量/并发/淘汰、
+事务边界、attempt 计数、timeout、随机退避、interrupt、recoverer 和最后异常传播。
+
+### Micrometer、AOP 与打包
+
+配方定位 `MetricsRetryListener`、registry/tag 生命周期、Spring AOP/AspectJ、
+final/private/self-invocation、advisor 顺序，以及 shade/assembly/shadow、relocation、
+classifier/type/variant。它们需要业务运行时证据，不能靠 AST 猜测。
 
 ## 后续 OpenRewrite 配方契约
 
 ### AUTO
 
-- 当前阶段 AUTO 白名单为空；只有 E-001～E-003 变为 `VERIFIED` 后，升级候选边才可逐项进入；
-- 只处理经验证的原子源版本、明确坐标和当前文件拥有的标准依赖声明；
-- 更高版本永不降级，表外版本、变体和外部 owner 永不猜测；
-- 只实现有官方源码证明、上下文无歧义、行为等价且可幂等运行的 AST/配置修改；
-- 保留 scope、classifier/type、optional、exclusions、workspace/profile 和相邻内容。
+- 仅允许精确 `1.3.4` 且版本由当前文件唯一拥有的标准 Maven/Gradle 声明；
+- 只执行固定官方 recipe 已证明确定性的 Java 17、注解属性和方法改名；
+- 每项变换必须通过 before/after、类型归因、真实 fixture 和两周期幂等测试；
+- 不得用版本范围、BOM 推断或“最新版本”扩大本次白名单。
 
 ### MARK
 
-- 在具体依赖、属性、BOM/platform、调用、类型、配置键或资源节点标记未决事项；
-- marker 必须说明业务 owner 需要作出的决定、所需证据和验收方法；
-- 不用文件级泛化告警代替精确定位，也不把 README 文字伪装成已执行迁移。
+- 另外六个 Excel 源版本、动态版本和外部 owner 保持原文并标到具体声明；
+- 高于目标的版本保持字节级不变并标记 `目标版本冲突（禁止降级）`；
+- listener、表达式、stateful/cache、policy/backoff、指标、AOP 和打包边界标到
+  具体 AST/配置节点，而不是只写在 README。
 
 ### MANUAL
 
-- 运行时流量、安全策略、数据和 wire format、集群滚动策略、原生 ABI、性能容量、
-  外部服务兼容性与回滚均由业务证据决定；
-- 无法通过静态上下文证明安全的语义变换保持原样。
+- `rethrow` 第三参数、`buildAdvice` override、listener 顺序和异常传播由业务契约决定；
+- 运行时流量、事务、缓存状态、序列化、性能容量、部署及回滚须由业务测试验收；
+- 无法从静态上下文证明语义等价的修改保持原样。
+
+## OpenRewrite 官方能力复用审计
+
+审计锁定以下不可变版本：
+
+| 上游 | 版本 / commit | 结论 |
+| --- | --- | --- |
+| OpenRewrite Core | `8.87.5` / [`b3008cc`](https://github.com/openrewrite/rewrite/commit/b3008cc4a1f0c43f562da16e5933a2a56d9bc568) | 直接复用 6×`ChangeAnnotationAttributeName` 与 1×`ChangeMethodName` |
+| rewrite-migrate-java | `3.40.0` / [`6584812`](https://github.com/openrewrite/rewrite-migrate-java/commit/658481254a6ee678f5f162e51d8d49ee01c75877) | 直接复用低层 `UpgradeJavaVersion(17)` |
+| rewrite-spring | `6.35.0` / [`d28afcb`](https://github.com/openrewrite/rewrite-spring/commit/d28afcb6661ad413539056de0936c5489ff9d8ee) | 扫描 catalog、YAML 和实现类后，没有 Spring Retry 1→2 专用配方 |
+
+未直接使用的官方聚合：
+
+| 能力 | 不直接使用的原因 | 本模块策略 |
+| --- | --- | --- |
+| `UpgradeDependencyVersion` | 会扩大源版本/owner 范围，违反只允许 `1.3.4` 的合同 | 自研严格 owner 与版本守卫 |
+| 完整 `UpgradeToJava17` | 还会迁移无关插件、依赖和语言 API | 精确 precondition + 低层 `UpgradeJavaVersion(17)` |
+| Spring Framework/Boot 大版本聚合 | 不能替用户决定整个 Spring 平台 | 只 MARK 依赖族边界 |
+| `ChangeType(RetryListenerSupport, RetryListener)` | class→interface 不是一对一类型替换 | 精确 MARK，保留人工语义决策 |
+
+## 证据台账
+
+| 事项 | 固定证据 |
+| --- | --- |
+| 1.3.4 源码 | [`65cb556`](https://github.com/spring-projects/spring-retry/tree/65cb556fd312095e0d1d5af98b0acf483b549fef) |
+| 2.0.13 源码 | [`f101212`](https://github.com/spring-projects/spring-retry/tree/f1012127f6084800ef5d3b8f8f2bc3b51c53997a) |
+| Java 17 / Spring 6 基线 | [`b336712`](https://github.com/spring-projects/spring-retry/commit/b33671239bf0b2b0efcd77a95bd7920f52425878) |
+| runtime expression evaluation | [`47c1e52`](https://github.com/spring-projects/spring-retry/commit/47c1e52900b32dc29fbf54699cfa4c60007b3c01) |
+| `RetryListener.onSuccess` | [`aed39de`](https://github.com/spring-projects/spring-retry/commit/aed39de54bed72306503c9d1bfaf849caba00442) |
+| `retryFor` / `noRetryFor` | [`860bd0d`](https://github.com/spring-projects/spring-retry/commit/860bd0db4b8cb534d99ff696c9119d3ad80df645) |
 
 ## 测试与真实用例验收
 
-- 每个经验证的升级候选源版本才要求 AUTO 正例；目标/相同行为 NOOP；
-- 冲突、未知、截断和聚合版本保持不变并 MARK；所有更高版本和更高发布线验证禁止降级；
-- 覆盖对应生态的直接声明、共享 owner、BOM/platform/workspace、动态值、范围、锁文件和变体；
-- 覆盖同名业务符号、相似坐标、注释/字符串、生成目录、缓存和安装产物负例；
-- 每项 AUTO 有 before/after、类型或结构归因、两轮幂等和 aggregate 顺序测试；
-- 固定真实仓库 commit 与文件路径，记录裁剪内容；真实夹具不能取代官方差异证据；
-- 最终执行编译、单元/集成、行为、安全、性能、数据兼容、部署和回滚门禁。
+固定并精简的真实 Apache-2.0 片段：
 
-## 当前阶段结论
+| 仓库 | 覆盖 |
+| --- | --- |
+| [`Netflix/genie@923ea15`](https://github.com/Netflix/genie/commit/923ea15f963849b3594e1403c4a47ea8c80ac151) | `@Retryable(include=...)`、retry/backoff 表达式 |
+| [`oneops/oneops@54780ad`](https://github.com/oneops/oneops/commit/54780ad3de35a285f3d00baeb9be49e54f47619e) | listener support 继承与 callbacks |
+| [`spring-projects/spring-retry@f101212`](https://github.com/spring-projects/spring-retry/commit/f1012127f6084800ef5d3b8f8f2bc3b51c53997a) | 官方 builder 的 `withinMillis` 用法 |
 
-本模块的不兼容点文档规格已经建立；官方证据、真实仓库夹具和可执行配方属于下一阶段。
-在 E-001～E-003 完成前，除严格版本所有权和禁止降级守卫外，不批准猜测式 AUTO。
+模块当前执行 **161 个测试**，覆盖 Maven/Gradle owner、白名单和禁止降级、官方 Java
+17 配方实际运行、七个官方 API 变换、全部风险 scanner、三个真实 fixture、两周期幂等、
+生成目录排除和推荐组合顺序。
+
+```bash
+mvn -pl rewrite-spring-retry-upgrade -am clean verify
+```
+
+search marker 是实际配方输出，可导出数据表或在 IDE 中逐项处理；本 README 是规格和
+证据说明，不代替可执行迁移。

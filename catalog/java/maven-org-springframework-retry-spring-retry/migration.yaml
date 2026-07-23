@@ -13,11 +13,17 @@
     ],
     "canonicalIdentity": {
       "value": "org.springframework.retry:spring-retry",
-      "status": "unverified",
-      "evidence": []
+      "status": "verified",
+      "evidence": [
+        "https://github.com/spring-projects/spring-retry/tree/f1012127f6084800ef5d3b8f8f2bc3b51c53997a",
+        "maven-central:jar-sha256:213785750007f90b067ba43036cbffdad2890f6bb98917e199f6b049cf810040",
+        "maven-central:pom-sha256:2972b0b80e075558c7b9ff597c6d37b8f96338e0c4d0d62419cc27d1dc6acc49"
+      ]
     },
     "targetVersion": "2.0.13",
-    "candidateImplementationModules": []
+    "candidateImplementationModules": [
+      "rewrite-spring-retry-upgrade"
+    ]
   },
   "workbook": {
     "sha256": "17020a54165808d7a90801b56cf6c7dff428f3b6dfa931b089e84f9946104309",
@@ -38,7 +44,7 @@
           "relation": "upgrade-candidate",
           "action": "mark",
           "comparator": "conservative-numeric-prefix-v1",
-          "reason": "表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。"
+          "reason": "该工作簿原子版本不在用户最新高优先级精确白名单内；保留为待后续指示的 MARK，不把 1.3.4 的证据外推到其他源版本。"
         }
       },
       {
@@ -57,7 +63,7 @@
           "relation": "upgrade-candidate",
           "action": "mark",
           "comparator": "conservative-numeric-prefix-v1",
-          "reason": "表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。"
+          "reason": "该工作簿原子版本不在用户最新高优先级精确白名单内；保留为待后续指示的 MARK，不把 1.3.4 的证据外推到其他源版本。"
         }
       },
       {
@@ -76,7 +82,7 @@
           "relation": "upgrade-candidate",
           "action": "mark",
           "comparator": "conservative-numeric-prefix-v1",
-          "reason": "表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。"
+          "reason": "该工作簿原子版本不在用户最新高优先级精确白名单内；保留为待后续指示的 MARK，不把 1.3.4 的证据外推到其他源版本。"
         }
       },
       {
@@ -93,9 +99,9 @@
         "sourceAtomic": true,
         "direction": {
           "relation": "upgrade-candidate",
-          "action": "mark",
+          "action": "auto",
           "comparator": "conservative-numeric-prefix-v1",
-          "reason": "表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。"
+          "reason": "制品身份、迁移方向和用户最新高优先级精确原子版本已由固定证据验证；允许执行受所有权守卫约束的 AUTO。"
         }
       },
       {
@@ -114,7 +120,7 @@
           "relation": "upgrade-candidate",
           "action": "mark",
           "comparator": "conservative-numeric-prefix-v1",
-          "reason": "表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。"
+          "reason": "该工作簿原子版本不在用户最新高优先级精确白名单内；保留为待后续指示的 MARK，不把 1.3.4 的证据外推到其他源版本。"
         }
       },
       {
@@ -133,7 +139,7 @@
           "relation": "upgrade-candidate",
           "action": "mark",
           "comparator": "conservative-numeric-prefix-v1",
-          "reason": "表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。"
+          "reason": "该工作簿原子版本不在用户最新高优先级精确白名单内；保留为待后续指示的 MARK，不把 1.3.4 的证据外推到其他源版本。"
         }
       },
       {
@@ -152,21 +158,50 @@
           "relation": "upgrade-candidate",
           "action": "mark",
           "comparator": "conservative-numeric-prefix-v1",
-          "reason": "表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。"
+          "reason": "该工作簿原子版本不在用户最新高优先级精确白名单内；保留为待后续指示的 MARK，不把 1.3.4 的证据外推到其他源版本。"
         }
       }
     ]
   },
-  "taskDirectives": [],
+  "taskDirectives": [
+    {
+      "id": "U-001",
+      "status": "verified",
+      "sourceVersions": [
+        "1.3.4"
+      ],
+      "targetVersion": "2.0.13",
+      "relation": "user-supplied-upgrade",
+      "action": "auto",
+      "statement": "用户最新高优先级清单只批准 Spring Retry 1.3.4 精确升级到 2.0.13；依赖 owner、Java 17 与确定性 API 迁移均受测试保护。"
+    },
+    {
+      "id": "U-002",
+      "status": "verified",
+      "sourceVersions": [
+        "1.2.4.RELEASE",
+        "1.3.2",
+        "1.3.3",
+        "2.0.0",
+        "2.0.1",
+        "2.0.2"
+      ],
+      "targetVersion": "2.0.13",
+      "relation": "workbook-outside-current-priority",
+      "action": "mark",
+      "statement": "这些工作簿事实不在最新高优先级精确白名单内；本次保持原文并等待后续指示，不猜测扩大 AUTO 范围。"
+    }
+  ],
   "policy": {
     "allowDowngrade": false,
     "conflictMarker": "目标版本冲突（禁止降级）",
-    "autoSourceWhitelist": [],
+    "autoSourceWhitelist": [
+      "1.3.4"
+    ],
     "upgradeCandidatesPendingEvidence": [
       "1.2.4.RELEASE",
       "1.3.2",
       "1.3.3",
-      "1.3.4",
       "2.0.0",
       "2.0.1",
       "2.0.2"
@@ -178,23 +213,54 @@
   "evidence": [
     {
       "id": "E-001",
-      "claim": "制品身份、源版本与目标制品身份",
-      "status": "unverified",
-      "officialSources": [],
-      "realFixtures": []
+      "claim": "当前高优先级 1.3.4 源版本、目标版本与 Maven 制品身份",
+      "status": "verified",
+      "officialSources": [
+        "https://github.com/spring-projects/spring-retry/tree/65cb556fd312095e0d1d5af98b0acf483b549fef",
+        "https://github.com/spring-projects/spring-retry/tree/f1012127f6084800ef5d3b8f8f2bc3b51c53997a",
+        "maven-central:jar-sha256:213785750007f90b067ba43036cbffdad2890f6bb98917e199f6b049cf810040",
+        "maven-central:pom-sha256:2972b0b80e075558c7b9ff597c6d37b8f96338e0c4d0d62419cc27d1dc6acc49"
+      ],
+      "realFixtures": [
+        "spring-projects/spring-retry@f1012127f6084800ef5d3b8f8f2bc3b51c53997a"
+      ]
     },
     {
       "id": "E-002",
-      "claim": "迁移边的 API、配置与默认行为变化",
-      "status": "unverified",
-      "officialSources": [],
+      "claim": "1.3.4 到 2.0.13 的 Java 基线、API、注解、listener、表达式与依赖族变化",
+      "status": "verified",
+      "officialSources": [
+        "https://github.com/spring-projects/spring-retry/tree/f1012127f6084800ef5d3b8f8f2bc3b51c53997a",
+        "https://github.com/spring-projects/spring-retry/commit/b33671239bf0b2b0efcd77a95bd7920f52425878",
+        "https://github.com/spring-projects/spring-retry/commit/47c1e52900b32dc29fbf54699cfa4c60007b3c01",
+        "https://github.com/spring-projects/spring-retry/commit/aed39de54bed72306503c9d1bfaf849caba00442",
+        "https://github.com/spring-projects/spring-retry/commit/860bd0db4b8cb534d99ff696c9119d3ad80df645"
+      ],
       "realFixtures": []
     },
     {
       "id": "E-003",
-      "claim": "真实工程用法、负例与行为验收",
-      "status": "unverified",
-      "officialSources": [],
+      "claim": "真实工程用法、负例、幂等性与行为验收",
+      "status": "verified",
+      "officialSources": [
+        "https://github.com/openrewrite/rewrite/tree/b3008cc4a1f0c43f562da16e5933a2a56d9bc568/rewrite-test/src/main/java/org/openrewrite/test"
+      ],
+      "realFixtures": [
+        "Netflix/genie@923ea15f963849b3594e1403c4a47ea8c80ac151",
+        "oneops/oneops@54780ad3de35a285f3d00baeb9be49e54f47619e",
+        "spring-projects/spring-retry@f1012127f6084800ef5d3b8f8f2bc3b51c53997a"
+      ]
+    },
+    {
+      "id": "E-004",
+      "claim": "OpenRewrite 官方能力已检索、复用并通过运行时组合测试",
+      "status": "verified",
+      "officialSources": [
+        "https://github.com/openrewrite/rewrite/blob/b3008cc4a1f0c43f562da16e5933a2a56d9bc568/rewrite-java/src/main/java/org/openrewrite/java/ChangeAnnotationAttributeName.java",
+        "https://github.com/openrewrite/rewrite/blob/b3008cc4a1f0c43f562da16e5933a2a56d9bc568/rewrite-java/src/main/java/org/openrewrite/java/ChangeMethodName.java",
+        "https://github.com/openrewrite/rewrite-migrate-java/blob/658481254a6ee678f5f162e51d8d49ee01c75877/src/main/java/org/openrewrite/java/migrate/UpgradeJavaVersion.java",
+        "https://github.com/openrewrite/rewrite-spring/tree/d28afcb6661ad413539056de0936c5489ff9d8ee"
+      ],
       "realFixtures": []
     }
   ],
@@ -208,9 +274,13 @@
       "excelNoteStatus": "table_fact",
       "evidenceStatus": "unverified",
       "disposition": "mark",
-      "treatment": "建立跨主版本兼容矩阵；覆盖删除或重命名 API、配置键和默认值、运行时基线、模块系统、数据格式与回滚，AUTO 仅限已证明等价的确定性修改。",
-      "recipe": null,
-      "tests": []
+      "treatment": "1.2.4.RELEASE 不在用户最新高优先级精确白名单内；保持原文并由构建风险配方标记版本 owner，等待后续指示后再固定该源版本的专属证据与 AUTO。",
+      "recipe": "com.huawei.clouds.openrewrite.springretry.MigrateSpringRetryTo2_0_13",
+      "tests": [
+        "UpgradeSpringRetryDependencyTest",
+        "SpringRetryBuildRisksTest",
+        "SpringRetryRecommendedRecipeTest"
+      ]
     },
     {
       "id": "C-002",
@@ -221,9 +291,13 @@
       "excelNoteStatus": "table_fact",
       "evidenceStatus": "unverified",
       "disposition": "mark",
-      "treatment": "建立跨主版本兼容矩阵；覆盖删除或重命名 API、配置键和默认值、运行时基线、模块系统、数据格式与回滚，AUTO 仅限已证明等价的确定性修改。",
-      "recipe": null,
-      "tests": []
+      "treatment": "1.3.2 不在用户最新高优先级精确白名单内；保持原文并由构建风险配方标记版本 owner，等待后续指示后再固定该源版本的专属证据与 AUTO。",
+      "recipe": "com.huawei.clouds.openrewrite.springretry.MigrateSpringRetryTo2_0_13",
+      "tests": [
+        "UpgradeSpringRetryDependencyTest",
+        "SpringRetryBuildRisksTest",
+        "SpringRetryRecommendedRecipeTest"
+      ]
     },
     {
       "id": "C-003",
@@ -234,9 +308,13 @@
       "excelNoteStatus": "table_fact",
       "evidenceStatus": "unverified",
       "disposition": "mark",
-      "treatment": "建立跨主版本兼容矩阵；覆盖删除或重命名 API、配置键和默认值、运行时基线、模块系统、数据格式与回滚，AUTO 仅限已证明等价的确定性修改。",
-      "recipe": null,
-      "tests": []
+      "treatment": "1.3.3 不在用户最新高优先级精确白名单内；保持原文并由构建风险配方标记版本 owner，等待后续指示后再固定该源版本的专属证据与 AUTO。",
+      "recipe": "com.huawei.clouds.openrewrite.springretry.MigrateSpringRetryTo2_0_13",
+      "tests": [
+        "UpgradeSpringRetryDependencyTest",
+        "SpringRetryBuildRisksTest",
+        "SpringRetryRecommendedRecipeTest"
+      ]
     },
     {
       "id": "C-004",
@@ -245,11 +323,17 @@
       ],
       "dimension": "公开 API / 配置 / 默认行为 / 运行时",
       "excelNoteStatus": "table_fact",
-      "evidenceStatus": "unverified",
-      "disposition": "mark",
-      "treatment": "建立跨主版本兼容矩阵；覆盖删除或重命名 API、配置键和默认值、运行时基线、模块系统、数据格式与回滚，AUTO 仅限已证明等价的确定性修改。",
-      "recipe": null,
-      "tests": []
+      "evidenceStatus": "verified",
+      "disposition": "auto+mark",
+      "treatment": "把精确且本地拥有的 1.3.4 依赖升级到 2.0.13；实际运行官方 UpgradeJavaVersion(17)、六个 ChangeAnnotationAttributeName 和 ChangeMethodName，并对 listener、rethrow/buildAdvice、表达式、stateful/cache、policy/backoff、Micrometer、AOP 与打包边界执行结构化 MARK。",
+      "recipe": "com.huawei.clouds.openrewrite.springretry.MigrateSpringRetryTo2_0_13",
+      "tests": [
+        "UpgradeSpringRetryDependencyTest",
+        "SpringRetryBuildRisksTest",
+        "SpringRetryOfficialMigrationTest",
+        "SpringRetrySourceRisksTest",
+        "SpringRetryRecommendedRecipeTest"
+      ]
     },
     {
       "id": "C-005",
@@ -260,9 +344,13 @@
       "excelNoteStatus": "table_fact",
       "evidenceStatus": "unverified",
       "disposition": "mark",
-      "treatment": "固定官方补丁说明和制品身份后才允许版本 AUTO；仍需验证安全修复、默认行为、序列化与协议回归。",
-      "recipe": null,
-      "tests": []
+      "treatment": "2.0.0 不在用户最新高优先级精确白名单内；保持原文并由构建风险配方标记版本 owner，等待后续指示后再固定该补丁边的证据与 AUTO。",
+      "recipe": "com.huawei.clouds.openrewrite.springretry.MigrateSpringRetryTo2_0_13",
+      "tests": [
+        "UpgradeSpringRetryDependencyTest",
+        "SpringRetryBuildRisksTest",
+        "SpringRetryRecommendedRecipeTest"
+      ]
     },
     {
       "id": "C-006",
@@ -273,9 +361,13 @@
       "excelNoteStatus": "table_fact",
       "evidenceStatus": "unverified",
       "disposition": "mark",
-      "treatment": "固定官方补丁说明和制品身份后才允许版本 AUTO；仍需验证安全修复、默认行为、序列化与协议回归。",
-      "recipe": null,
-      "tests": []
+      "treatment": "2.0.1 不在用户最新高优先级精确白名单内；保持原文并由构建风险配方标记版本 owner，等待后续指示后再固定该补丁边的证据与 AUTO。",
+      "recipe": "com.huawei.clouds.openrewrite.springretry.MigrateSpringRetryTo2_0_13",
+      "tests": [
+        "UpgradeSpringRetryDependencyTest",
+        "SpringRetryBuildRisksTest",
+        "SpringRetryRecommendedRecipeTest"
+      ]
     },
     {
       "id": "C-007",
@@ -286,14 +378,18 @@
       "excelNoteStatus": "table_fact",
       "evidenceStatus": "unverified",
       "disposition": "mark",
-      "treatment": "固定官方补丁说明和制品身份后才允许版本 AUTO；仍需验证安全修复、默认行为、序列化与协议回归。",
-      "recipe": null,
-      "tests": []
+      "treatment": "2.0.2 不在用户最新高优先级精确白名单内；保持原文并由构建风险配方标记版本 owner，等待后续指示后再固定该补丁边的证据与 AUTO。",
+      "recipe": "com.huawei.clouds.openrewrite.springretry.MigrateSpringRetryTo2_0_13",
+      "tests": [
+        "UpgradeSpringRetryDependencyTest",
+        "SpringRetryBuildRisksTest",
+        "SpringRetryRecommendedRecipeTest"
+      ]
     }
   ],
   "status": {
     "spec": "complete",
-    "evidence": "pending",
-    "automation": "catalog-only"
+    "evidence": "verified",
+    "automation": "implemented"
   }
 }
