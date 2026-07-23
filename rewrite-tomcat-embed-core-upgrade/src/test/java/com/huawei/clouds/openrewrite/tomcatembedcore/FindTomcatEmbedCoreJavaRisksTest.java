@@ -33,7 +33,6 @@ class FindTomcatEmbedCoreJavaRisksTest implements RewriteTest {
         return Stream.of(
                 Arguments.of("response status message", "import jakarta.servlet.http.HttpServletResponse; class T { void x(HttpServletResponse r){r.setStatus(404,\"missing\");} }"),
                 Arguments.of("session context", "import jakarta.servlet.http.HttpSession; class T { Object x(HttpSession s){return s.getSessionContext();} }"),
-                Arguments.of("session value names", "import jakarta.servlet.http.HttpSession; class T { String[] x(HttpSession s){return s.getValueNames();} }"),
                 Arguments.of("servlet by name", "import jakarta.servlet.ServletContext; class T { Object x(ServletContext c){return c.getServlet(\"legacy\");} }"),
                 Arguments.of("servlets", "import jakarta.servlet.ServletContext; class T { Object x(ServletContext c){return c.getServlets();} }"),
                 Arguments.of("servlet names", "import jakarta.servlet.ServletContext; class T { Object x(ServletContext c){return c.getServletNames();} }"),
@@ -42,6 +41,16 @@ class FindTomcatEmbedCoreJavaRisksTest implements RewriteTest {
                 Arguments.of("HttpUtils URL", "import jakarta.servlet.http.*; class T { Object x(HttpServletRequest r){return HttpUtils.getRequestURL(r);} }"),
                 Arguments.of("UnavailableException state", "import jakarta.servlet.UnavailableException; class T { Object x(UnavailableException e){return e.getServlet();} }")
         );
+    }
+
+    @Test
+    void marksSessionValueNamesReturnTypeChangePrecisely() {
+        rewriteRun(java(
+                "import jakarta.servlet.http.HttpSession; class T { String[] x(HttpSession s){return s.getValueNames();} }",
+                source -> source.after(actual -> actual).afterRecipe(after -> {
+                    assertContains(after.printAll(), "returns Enumeration<String> instead of String[]");
+                    assertContains(after.printAll(), "adapt iteration, collection and public return types");
+                })));
     }
 
     @ParameterizedTest(name = "removed type {0}")
@@ -140,7 +149,7 @@ class FindTomcatEmbedCoreJavaRisksTest implements RewriteTest {
         rewriteRun(
                 java("import javax.servlet.http.HttpSession; class SessionCalls { String[] names(HttpSession session){return session.getValueNames();} }",
                         source -> source.after(actual -> actual).afterRecipe(after -> assertContains(
-                                after.printAll(), "no syntax-only behavior-preserving replacement"))),
+                                after.printAll(), "returns Enumeration<String> instead of String[]"))),
                 java("import javax.servlet.SingleThreadModel; class RemovedModel implements SingleThreadModel {}",
                         source -> source.after(actual -> actual).afterRecipe(after -> assertContains(
                                 after.printAll(), "no syntax-only behavior-preserving replacement")))

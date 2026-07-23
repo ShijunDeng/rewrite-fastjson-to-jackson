@@ -74,9 +74,11 @@ type: specs.openrewrite.org/v1beta/recipe
 name: com.huawei.clouds.openrewrite.tomcatembedcore.MigrateTomcatEmbedCore101Java
 displayName: Migrate deterministic Jakarta Servlet 6 and EL 5 APIs
 description: >-
-  Reuse the official Jakarta EE 10 Servlet removals, EL spelling correction
-  and RFC 6265 Cookie migration. Generated sources and compilation units
-  containing removed Servlet types are left for precise risk markers.
+  Reuse the return-type-safe leaves from the official Jakarta EE 10 Servlet
+  removal tree, plus the official EL spelling correction and RFC 6265 Cookie
+  migration. HttpSession.getValueNames() is deliberately omitted because its
+  replacement returns Enumeration<String>, not String[]; the risk recipe marks
+  that call for an owner-authored adaptation.
 preconditions:
   - com.huawei.clouds.openrewrite.tomcatembedcore.IsTomcatNonGeneratedSource
   - org.openrewrite.java.search.DoesNotUseType:
@@ -98,23 +100,109 @@ preconditions:
       fullyQualifiedTypeName: jakarta.servlet.http.HttpUtils
       includeImplicit: true
 recipeList:
-  - org.openrewrite.java.migrate.jakarta.RemovalsServletJakarta10
+  # Safe leaves from the pinned official RemovalsServletJakarta10 tree.
+  - org.openrewrite.java.ChangeMethodName:
+      methodPattern: jakarta.servlet.http.HttpServletRequest  isRequestedSessionIdFromUrl()
+      newMethodName: isRequestedSessionIdFromURL
+  - org.openrewrite.java.ChangeMethodName:
+      methodPattern: jakarta.servlet.http.HttpServletRequestWrapper  isRequestedSessionIdFromUrl()
+      newMethodName: isRequestedSessionIdFromURL
+  - org.openrewrite.java.ChangeMethodName:
+      methodPattern: jakarta.servlet.http.HttpServletResponse encodeUrl(String)
+      newMethodName: encodeURL
+  - org.openrewrite.java.ChangeMethodName:
+      methodPattern: jakarta.servlet.http.HttpServletResponseWrapper encodeUrl(String)
+      newMethodName: encodeURL
+  - org.openrewrite.java.ChangeMethodName:
+      methodPattern: jakarta.servlet.http.HttpServletResponse encodeRedirectUrl(String)
+      newMethodName: encodeRedirectURL
+  - org.openrewrite.java.ChangeMethodName:
+      methodPattern: jakarta.servlet.http.HttpServletResponseWrapper encodeRedirectUrl(String)
+      newMethodName: encodeRedirectURL
+  - org.openrewrite.java.ChangeMethodName:
+      methodPattern: jakarta.servlet.http.HttpSession getValue(String)
+      newMethodName: getAttribute
+  - org.openrewrite.java.ChangeMethodName:
+      methodPattern: jakarta.servlet.http.HttpSession putValue(String, Object)
+      newMethodName: setAttribute
+  - org.openrewrite.java.ChangeMethodName:
+      methodPattern: jakarta.servlet.http.HttpSession removeValue(String)
+      newMethodName: removeAttribute
+  - org.openrewrite.java.DeleteMethodArgument:
+      methodPattern: jakarta.servlet.http.HttpServletResponse setStatus(int, String)
+      argumentIndex: 1
+  - org.openrewrite.java.DeleteMethodArgument:
+      methodPattern: jakarta.servlet.http.HttpServletResponseWrapper setStatus(int, String)
+      argumentIndex: 1
+  - org.openrewrite.java.ReorderMethodArguments:
+      methodPattern: jakarta.servlet.ServletContext log(Exception, String)
+      newParameterNames: [ ex, str ]
+      oldParameterNames: [ str, ex ]
+      matchOverrides: true
+  - org.openrewrite.java.migrate.jakarta.UpdateGetRealPath
+  - org.openrewrite.java.DeleteMethodArgument:
+      methodPattern: jakarta.servlet.UnavailableException <constructor>(jakarta.servlet.Servlet, String)
+      argumentIndex: 0
+  - org.openrewrite.java.DeleteMethodArgument:
+      methodPattern: jakarta.servlet.UnavailableException <constructor>(int, jakarta.servlet.Servlet, String)
+      argumentIndex: 1
+  - org.openrewrite.java.ReorderMethodArguments:
+      methodPattern: jakarta.servlet.UnavailableException <constructor>(int, String)
+      oldParameterNames: [ in, str ]
+      newParameterNames: [ str, in ]
+      matchOverrides: true
   - org.openrewrite.java.migrate.jakarta.RemovedIsParmetersProvidedMethod
   - org.openrewrite.java.migrate.jakarta.ServletCookieBehaviorChangeRFC6265
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.tomcatembedcore.MigrateSelectedTomcat9Jakarta
+displayName: Migrate Jakarta APIs only in selected Tomcat 9 projects
+description: >-
+  Apply dependency and namespace migration only below a build root that proved
+  one exact approved Tomcat 9 source version before the dependency edit.
+preconditions:
+  - com.huawei.clouds.openrewrite.tomcatembedcore.FindSelectedTomcat9ProjectFiles
+recipeList:
+  - com.huawei.clouds.openrewrite.tomcatembedcore.MigrateTomcat9JakartaApiDependencies
+  - com.huawei.clouds.openrewrite.tomcatembedcore.MigrateTomcat9JakartaNamespaces
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.tomcatembedcore.MigrateSelectedTomcatEmbedCore101Changes
+displayName: Migrate deterministic APIs and configuration only in selected projects
+description: >-
+  Apply audited Servlet 6, EL 5 and listener changes only below a build root
+  that proved one exact, non-conflicting approved source version before edits.
+preconditions:
+  - com.huawei.clouds.openrewrite.tomcatembedcore.FindSelectedTomcatEmbedCoreProjectFiles
+recipeList:
+  - com.huawei.clouds.openrewrite.tomcatembedcore.MigrateTomcatEmbedCore101Java
+  - com.huawei.clouds.openrewrite.tomcatembedcore.MigrateTomcatEmbedCore101Configuration
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.tomcatembedcore.FindSelectedTomcatEmbedCoreMigrationRisks
+displayName: Find migration risks only in selected projects
+description: >-
+  Run build, source, configuration and resource risk searches only below a
+  build root that proved one exact approved source version before edits.
+preconditions:
+  - com.huawei.clouds.openrewrite.tomcatembedcore.FindSelectedTomcatEmbedCoreProjectFiles
+recipeList:
+  - com.huawei.clouds.openrewrite.tomcatembedcore.FindTomcatEmbedCoreBuildRisks
+  - com.huawei.clouds.openrewrite.tomcatembedcore.FindTomcatEmbedCoreJavaRisks
+  - com.huawei.clouds.openrewrite.tomcatembedcore.FindTomcatEmbedCoreConfigurationRisks
+  - com.huawei.clouds.openrewrite.tomcatembedcore.FindTomcatEmbedCoreResourceRisks
 ---
 type: specs.openrewrite.org/v1beta/recipe
 name: com.huawei.clouds.openrewrite.tomcatembedcore.MigrateTomcatEmbedCoreTo10_1_57
 displayName: Migrate Tomcat Embed Core to 10.1.57
 description: >-
-  Apply the strict dependency upgrade, rewrite only documented equivalent Servlet/EL APIs and obsolete listener
-  attributes, then mark build, source, protocol, security, clustering, and configuration decisions requiring evidence.
+  Capture upgrade-time build-root eligibility, apply the strict dependency
+  upgrade, rewrite only documented equivalent Servlet/EL APIs and obsolete
+  listener attributes in selected projects, then mark their remaining risks.
+  Supplied Tomcat 11 conflicts are only marked and never downgraded.
 recipeList:
+  - com.huawei.clouds.openrewrite.tomcatembedcore.MarkSelectedTomcatEmbedCoreProjects
   - com.huawei.clouds.openrewrite.tomcatembedcore.UpgradeTomcatEmbedCoreTo10_1_57
-  - com.huawei.clouds.openrewrite.tomcatembedcore.MigrateTomcat9JakartaApiDependencies
-  - com.huawei.clouds.openrewrite.tomcatembedcore.MigrateTomcat9JakartaNamespaces
-  - com.huawei.clouds.openrewrite.tomcatembedcore.MigrateTomcatEmbedCore101Java
-  - com.huawei.clouds.openrewrite.tomcatembedcore.MigrateTomcatEmbedCore101Configuration
-  - com.huawei.clouds.openrewrite.tomcatembedcore.FindTomcatEmbedCoreBuildRisks
-  - com.huawei.clouds.openrewrite.tomcatembedcore.FindTomcatEmbedCoreJavaRisks
-  - com.huawei.clouds.openrewrite.tomcatembedcore.FindTomcatEmbedCoreConfigurationRisks
-  - com.huawei.clouds.openrewrite.tomcatembedcore.FindTomcatEmbedCoreResourceRisks
+  - com.huawei.clouds.openrewrite.tomcatembedcore.MigrateSelectedTomcat9Jakarta
+  - com.huawei.clouds.openrewrite.tomcatembedcore.MigrateSelectedTomcatEmbedCore101Changes
+  - com.huawei.clouds.openrewrite.tomcatembedcore.FindSelectedTomcatEmbedCoreMigrationRisks

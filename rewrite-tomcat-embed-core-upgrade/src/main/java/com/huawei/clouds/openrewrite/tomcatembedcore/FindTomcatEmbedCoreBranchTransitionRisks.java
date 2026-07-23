@@ -25,7 +25,8 @@ public final class FindTomcatEmbedCoreBranchTransitionRisks extends Recipe {
             "migrate every Servlet/EL dependency, source type, descriptor, service provider and framework integration, " +
             "then run container-level compatibility tests";
     static final String TOMCAT_11 =
-            "This Tomcat 11 source conflicts with the supplied 10.1.57 target; the upgrade-only policy keeps the " +
+            "目标版本冲突（禁止降级）：This Tomcat 11 source conflicts with the supplied 10.1.57 target; " +
+            "the upgrade-only policy keeps the " +
             "source unchanged until an approved Tomcat 11 target is supplied";
     private static final String PREFIX = UpgradeSelectedTomcatEmbedCoreDependency.GROUP + ":" +
                                          UpgradeSelectedTomcatEmbedCoreDependency.ARTIFACT + ":";

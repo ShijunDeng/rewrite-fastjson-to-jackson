@@ -4,7 +4,10 @@ import org.junit.jupiter.api.Test;
 import org.openrewrite.Recipe;
 import org.openrewrite.config.DeclarativeRecipe;
 import org.openrewrite.config.Environment;
+import org.openrewrite.java.ChangeMethodName;
 import org.openrewrite.java.ChangePackage;
+import org.openrewrite.java.DeleteMethodArgument;
+import org.openrewrite.java.ReorderMethodArguments;
 import org.openrewrite.java.dependencies.ChangeDependency;
 import org.openrewrite.java.dependencies.UpgradeDependencyVersion;
 import org.openrewrite.java.search.DoesNotUseType;
@@ -93,15 +96,30 @@ class TomcatOfficialRecipeReuseTest {
     }
 
     @Test
-    void servletCompositionActivatesOnlyPreciseOfficialJakarta10Recipes() {
+    void servletCompositionUsesSafeOfficialJakarta10Leaves() {
         DeclarativeRecipe recipe = recipe("MigrateTomcatEmbedCore101Java");
         List<Recipe> composition = composition(recipe);
 
+        assertEquals(9, composition.stream().filter(ChangeMethodName.class::isInstance).count());
+        assertEquals(4, composition.stream().filter(DeleteMethodArgument.class::isInstance).count());
+        assertEquals(2, composition.stream().filter(ReorderMethodArguments.class::isInstance).count());
         assertEquals(List.of(
-                        "org.openrewrite.java.migrate.jakarta.RemovalsServletJakarta10",
+                        "org.openrewrite.java.migrate.jakarta.UpdateGetRealPath",
                         "org.openrewrite.java.migrate.jakarta.RemovedIsParmetersProvidedMethod",
                         "org.openrewrite.java.migrate.jakarta.ServletCookieBehaviorChangeRFC6265"),
-                composition.stream().map(Recipe::getName).toList());
+                composition.stream().map(Recipe::getName)
+                        .filter(name -> name.startsWith("org.openrewrite.java.migrate.jakarta."))
+                        .toList());
+        assertTrue(composition.stream().filter(ChangeMethodName.class::isInstance)
+                .map(ChangeMethodName.class::cast)
+                .noneMatch(change -> change.getMethodPattern().contains("getValueNames")));
+        assertEquals(Set.of(
+                        "getAttribute", "setAttribute", "removeAttribute",
+                        "isRequestedSessionIdFromURL", "encodeURL", "encodeRedirectURL"),
+                composition.stream().filter(ChangeMethodName.class::isInstance)
+                        .map(ChangeMethodName.class::cast)
+                        .map(ChangeMethodName::getNewMethodName)
+                        .collect(java.util.stream.Collectors.toSet()));
         assertEquals(IsTomcatNonGeneratedSource.class, recipe.getPreconditions().get(0).getClass());
         assertEquals(Set.of(
                         "javax.servlet.SingleThreadModel",
@@ -118,7 +136,6 @@ class TomcatOfficialRecipeReuseTest {
 
         Set<String> activated = flatten(recipe).map(Recipe::getName)
                 .collect(java.util.stream.Collectors.toSet());
-        assertTrue(activated.contains("org.openrewrite.java.ChangeType"));
         assertTrue(activated.contains("org.openrewrite.java.ChangeMethodName"));
         assertTrue(activated.contains("org.openrewrite.java.DeleteMethodArgument"));
         assertTrue(activated.contains("org.openrewrite.java.ReorderMethodArguments"));
@@ -126,6 +143,7 @@ class TomcatOfficialRecipeReuseTest {
         assertTrue(activated.contains("org.openrewrite.java.migrate.jakarta.UpdateGetRealPath"));
 
         Set<String> broadAggregates = Set.of(
+                "org.openrewrite.java.migrate.jakarta.RemovalsServletJakarta10",
                 "org.openrewrite.java.migrate.jakarta.JakartaEE10",
                 "org.openrewrite.java.migrate.jakarta.JavaxMigrationToJakarta",
                 "org.openrewrite.java.migrate.jakarta.JavaxServletToJakartaServlet",

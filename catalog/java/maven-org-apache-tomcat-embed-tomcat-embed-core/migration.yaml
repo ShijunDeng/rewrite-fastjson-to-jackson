@@ -14,8 +14,12 @@
     ],
     "canonicalIdentity": {
       "value": "org.apache.tomcat.embed:tomcat-embed-core",
-      "status": "unverified",
-      "evidence": []
+      "status": "verified",
+      "evidence": [
+        "https://github.com/apache/tomcat/tree/5da21b1c24a6443bca5c10dc80a69a76042ca337",
+        "maven-central:jar-sha256:9e230f12579c8c7158df5cbae0479fb93c81a1f1c33c5d56e75605e2074a4fa7",
+        "maven-central:pom-sha256:a649e2977149e18fc6e1bd4f6a769b2e494536d4308490b9d1edf15f7ce6e6a7"
+      ]
     },
     "targetVersion": "10.1.57",
     "candidateImplementationModules": [
@@ -58,9 +62,9 @@
         "sourceAtomic": true,
         "direction": {
           "relation": "upgrade-candidate",
-          "action": "mark",
+          "action": "auto",
           "comparator": "conservative-numeric-prefix-v1",
-          "reason": "表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。"
+          "reason": "用户最新最高优先级精确白名单已批准该原子版本；实现只迁移明确 owner，所有业务源码、配置、资源和官方叶子均受升级前最近构建根门控，高版本及冲突工程保持原文并精确 MARK。"
         }
       },
       {
@@ -77,9 +81,9 @@
         "sourceAtomic": true,
         "direction": {
           "relation": "upgrade-candidate",
-          "action": "mark",
+          "action": "auto",
           "comparator": "conservative-numeric-prefix-v1",
-          "reason": "表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。"
+          "reason": "用户最新最高优先级精确白名单已批准该原子版本；实现只迁移明确 owner，所有业务源码、配置、资源和官方叶子均受升级前最近构建根门控，高版本及冲突工程保持原文并精确 MARK。"
         }
       },
       {
@@ -96,9 +100,9 @@
         "sourceAtomic": true,
         "direction": {
           "relation": "upgrade-candidate",
-          "action": "mark",
+          "action": "auto",
           "comparator": "conservative-numeric-prefix-v1",
-          "reason": "表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。"
+          "reason": "用户最新最高优先级精确白名单已批准该原子版本；实现只迁移明确 owner，所有业务源码、配置、资源和官方叶子均受升级前最近构建根门控，高版本及冲突工程保持原文并精确 MARK。"
         }
       },
       {
@@ -115,9 +119,9 @@
         "sourceAtomic": true,
         "direction": {
           "relation": "upgrade-candidate",
-          "action": "mark",
+          "action": "auto",
           "comparator": "conservative-numeric-prefix-v1",
-          "reason": "表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。"
+          "reason": "用户最新最高优先级精确白名单已批准该原子版本；实现只迁移明确 owner，所有业务源码、配置、资源和官方叶子均受升级前最近构建根门控，高版本及冲突工程保持原文并精确 MARK。"
         }
       },
       {
@@ -134,9 +138,9 @@
         "sourceAtomic": true,
         "direction": {
           "relation": "upgrade-candidate",
-          "action": "mark",
+          "action": "auto",
           "comparator": "conservative-numeric-prefix-v1",
-          "reason": "表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。"
+          "reason": "用户最新最高优先级精确白名单已批准该原子版本；实现只迁移明确 owner，所有业务源码、配置、资源和官方叶子均受升级前最近构建根门控，高版本及冲突工程保持原文并精确 MARK。"
         }
       },
       {
@@ -153,9 +157,9 @@
         "sourceAtomic": true,
         "direction": {
           "relation": "upgrade-candidate",
-          "action": "mark",
+          "action": "auto",
           "comparator": "conservative-numeric-prefix-v1",
-          "reason": "表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。"
+          "reason": "用户最新最高优先级精确白名单已批准该原子版本；实现只迁移明确 owner，所有业务源码、配置、资源和官方叶子均受升级前最近构建根门控，高版本及冲突工程保持原文并精确 MARK。"
         }
       },
       {
@@ -172,9 +176,9 @@
         "sourceAtomic": true,
         "direction": {
           "relation": "upgrade-candidate",
-          "action": "mark",
+          "action": "auto",
           "comparator": "conservative-numeric-prefix-v1",
-          "reason": "表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。"
+          "reason": "用户最新最高优先级精确白名单已批准该原子版本；实现只迁移明确 owner，所有业务源码、配置、资源和官方叶子均受升级前最近构建根门控，高版本及冲突工程保持原文并精确 MARK。"
         }
       },
       {
@@ -191,9 +195,9 @@
         "sourceAtomic": true,
         "direction": {
           "relation": "upgrade-candidate",
-          "action": "mark",
+          "action": "auto",
           "comparator": "conservative-numeric-prefix-v1",
-          "reason": "表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。"
+          "reason": "用户最新最高优先级精确白名单已批准该原子版本；实现只迁移明确 owner，所有业务源码、配置、资源和官方叶子均受升级前最近构建根门控，高版本及冲突工程保持原文并精确 MARK。"
         }
       },
       {
@@ -248,9 +252,9 @@
         "sourceAtomic": true,
         "direction": {
           "relation": "upgrade-candidate",
-          "action": "mark",
+          "action": "auto",
           "comparator": "conservative-numeric-prefix-v1",
-          "reason": "表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。"
+          "reason": "用户最新最高优先级精确白名单已批准该原子版本；实现只迁移明确 owner，所有业务源码、配置、资源和官方叶子均受升级前最近构建根门控，高版本及冲突工程保持原文并精确 MARK。"
         }
       },
       {
@@ -267,9 +271,9 @@
         "sourceAtomic": true,
         "direction": {
           "relation": "upgrade-candidate",
-          "action": "mark",
+          "action": "auto",
           "comparator": "conservative-numeric-prefix-v1",
-          "reason": "表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。"
+          "reason": "用户最新最高优先级精确白名单已批准该原子版本；实现只迁移明确 owner，所有业务源码、配置、资源和官方叶子均受升级前最近构建根门控，高版本及冲突工程保持原文并精确 MARK。"
         }
       },
       {
@@ -286,9 +290,9 @@
         "sourceAtomic": true,
         "direction": {
           "relation": "upgrade-candidate",
-          "action": "mark",
+          "action": "auto",
           "comparator": "conservative-numeric-prefix-v1",
-          "reason": "表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。"
+          "reason": "用户最新最高优先级精确白名单已批准该原子版本；实现只迁移明确 owner，所有业务源码、配置、资源和官方叶子均受升级前最近构建根门控，高版本及冲突工程保持原文并精确 MARK。"
         }
       },
       {
@@ -305,9 +309,9 @@
         "sourceAtomic": true,
         "direction": {
           "relation": "upgrade-candidate",
-          "action": "mark",
+          "action": "auto",
           "comparator": "conservative-numeric-prefix-v1",
-          "reason": "表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。"
+          "reason": "用户最新最高优先级精确白名单已批准该原子版本；实现只迁移明确 owner，所有业务源码、配置、资源和官方叶子均受升级前最近构建根门控，高版本及冲突工程保持原文并精确 MARK。"
         }
       },
       {
@@ -324,9 +328,9 @@
         "sourceAtomic": true,
         "direction": {
           "relation": "upgrade-candidate",
-          "action": "mark",
+          "action": "auto",
           "comparator": "conservative-numeric-prefix-v1",
-          "reason": "表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。"
+          "reason": "用户最新最高优先级精确白名单已批准该原子版本；实现只迁移明确 owner，所有业务源码、配置、资源和官方叶子均受升级前最近构建根门控，高版本及冲突工程保持原文并精确 MARK。"
         }
       },
       {
@@ -343,9 +347,9 @@
         "sourceAtomic": true,
         "direction": {
           "relation": "upgrade-candidate",
-          "action": "mark",
+          "action": "auto",
           "comparator": "conservative-numeric-prefix-v1",
-          "reason": "表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。"
+          "reason": "用户最新最高优先级精确白名单已批准该原子版本；实现只迁移明确 owner，所有业务源码、配置、资源和官方叶子均受升级前最近构建根门控，高版本及冲突工程保持原文并精确 MARK。"
         }
       },
       {
@@ -362,9 +366,9 @@
         "sourceAtomic": true,
         "direction": {
           "relation": "upgrade-candidate",
-          "action": "mark",
+          "action": "auto",
           "comparator": "conservative-numeric-prefix-v1",
-          "reason": "表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。"
+          "reason": "用户最新最高优先级精确白名单已批准该原子版本；实现只迁移明确 owner，所有业务源码、配置、资源和官方叶子均受升级前最近构建根门控，高版本及冲突工程保持原文并精确 MARK。"
         }
       },
       {
@@ -381,9 +385,9 @@
         "sourceAtomic": true,
         "direction": {
           "relation": "upgrade-candidate",
-          "action": "mark",
+          "action": "auto",
           "comparator": "conservative-numeric-prefix-v1",
-          "reason": "表格方向看似升级，但制品身份和官方兼容证据未固定；当前仅作为候选边。"
+          "reason": "用户最新最高优先级精确白名单已批准该原子版本；实现只迁移明确 owner，所有业务源码、配置、资源和官方叶子均受升级前最近构建根门控，高版本及冲突工程保持原文并精确 MARK。"
         }
       }
     ]
@@ -391,7 +395,55 @@
   "taskDirectives": [
     {
       "id": "U-001",
-      "status": "user_directive",
+      "status": "verified",
+      "sourceVersions": [
+        "10.1.15",
+        "10.1.16",
+        "10.1.20",
+        "10.1.25",
+        "10.1.28",
+        "10.1.35",
+        "10.1.36",
+        "10.1.40",
+        "10.1.41",
+        "10.1.42",
+        "10.1.43",
+        "10.1.44",
+        "10.1.46",
+        "10.1.47",
+        "10.1.48",
+        "10.1.49",
+        "10.1.52",
+        "10.1.54",
+        "9.0.54",
+        "9.0.69",
+        "9.0.71",
+        "9.0.75",
+        "9.0.82",
+        "9.0.83",
+        "9.0.86",
+        "9.0.87",
+        "9.0.91",
+        "9.0.96",
+        "9.0.98",
+        "9.0.102",
+        "9.0.104",
+        "9.0.105",
+        "9.0.106",
+        "9.0.107",
+        "9.0.108",
+        "9.0.111",
+        "9.0.115",
+        "9.0.117"
+      ],
+      "targetVersion": "10.1.57",
+      "relation": "user-supplied-upgrade",
+      "action": "auto",
+      "statement": "用户最新最高优先级清单批准 38 个精确 Tomcat 9.0/10.1 源版本升级到 10.1.57；实现只修改明确 owner，并把所有源码、配置、资源与官方叶子限定在升级前最近构建根。"
+    },
+    {
+      "id": "U-002",
+      "status": "verified",
       "sourceVersions": [
         "11.0.18",
         "11.0.21"
@@ -399,14 +451,32 @@
       "relation": "conflict",
       "action": "mark",
       "statement": "用户提供的完整在用版本清单表明，Excel 的截断单元格中还包含 11.0.18 和 11.0.21。10.1.57 低于 11.x，因此这两项不是升级边；必须保持原样并标记目标版本冲突（禁止降级）。"
+    },
+    {
+      "id": "U-003",
+      "status": "verified",
+      "sourceVersions": [
+        "10.0.27"
+      ],
+      "relation": "superseded-source",
+      "action": "noop",
+      "statement": "最新最高优先级清单取代旧合并口径并不再包含 10.0.27；配方对此版本完整 NOOP，不沿用早期候选边。"
+    },
+    {
+      "id": "U-004",
+      "status": "verified",
+      "sourceVersions": [
+        "10.1.41 ... (共41个版本)"
+      ],
+      "relation": "workbook-aggregate",
+      "action": "mark",
+      "statement": "Excel 聚合文本不是原子白名单；只有 U-001 展开的 38 个精确版本可以 AUTO。"
     }
   ],
   "policy": {
     "allowDowngrade": false,
     "conflictMarker": "目标版本冲突（禁止降级）",
-    "autoSourceWhitelist": [],
-    "upgradeCandidatesPendingEvidence": [
-      "10.0.27",
+    "autoSourceWhitelist": [
       "10.1.15",
       "10.1.16",
       "10.1.20",
@@ -414,10 +484,46 @@
       "10.1.28",
       "10.1.35",
       "10.1.36",
-      "10.1.40"
+      "10.1.40",
+      "10.1.41",
+      "10.1.42",
+      "10.1.43",
+      "10.1.44",
+      "10.1.46",
+      "10.1.47",
+      "10.1.48",
+      "10.1.49",
+      "10.1.52",
+      "10.1.54",
+      "9.0.54",
+      "9.0.69",
+      "9.0.71",
+      "9.0.75",
+      "9.0.82",
+      "9.0.83",
+      "9.0.86",
+      "9.0.87",
+      "9.0.91",
+      "9.0.96",
+      "9.0.98",
+      "9.0.102",
+      "9.0.104",
+      "9.0.105",
+      "9.0.106",
+      "9.0.107",
+      "9.0.108",
+      "9.0.111",
+      "9.0.115",
+      "9.0.117"
     ],
-    "noopVersions": [],
-    "conflictVersions": [],
+    "upgradeCandidatesPendingEvidence": [],
+    "noopVersions": [
+      "10.0.27"
+    ],
+    "conflictVersions": [
+      "11.0.18",
+      "11.0.21"
+    ],
     "unresolvedVersions": [
       "10.1.41 ... (共41个版本)"
     ]
@@ -426,23 +532,36 @@
     {
       "id": "E-001",
       "claim": "制品身份、源版本与目标制品身份",
-      "status": "unverified",
-      "officialSources": [],
+      "status": "verified",
+      "officialSources": [
+        "https://github.com/apache/tomcat/tree/5da21b1c24a6443bca5c10dc80a69a76042ca337",
+        "maven-central:jar-sha256:9e230f12579c8c7158df5cbae0479fb93c81a1f1c33c5d56e75605e2074a4fa7",
+        "maven-central:pom-sha256:a649e2977149e18fc6e1bd4f6a769b2e494536d4308490b9d1edf15f7ce6e6a7"
+      ],
       "realFixtures": []
     },
     {
       "id": "E-002",
       "claim": "迁移边的 API、配置与默认行为变化",
-      "status": "unverified",
-      "officialSources": [],
+      "status": "verified",
+      "officialSources": [
+        "https://tomcat.apache.org/migration-10.html",
+        "https://tomcat.apache.org/migration-10.1.html",
+        "https://tomcat.apache.org/tomcat-10.1-doc/changelog.html",
+        "https://jakarta.ee/specifications/servlet/6.0/"
+      ],
       "realFixtures": []
     },
     {
       "id": "E-003",
       "claim": "真实工程用法、负例与行为验收",
-      "status": "unverified",
+      "status": "verified",
       "officialSources": [],
-      "realFixtures": []
+      "realFixtures": [
+        "https://github.com/jfinal/jfinal/blob/a0e9e8b99dc793bcf0cd40ca7feba005ba0c5349/src/main/java/com/jfinal/core/paragetter/JsonRequest.java",
+        "https://github.com/yona-projects/yona/blob/60a5ac40689fc36ee5b55eddedd345fc34878190/app/utils/PlayServletResponse.java",
+        "https://github.com/Jahia/jahia/blob/5e201521576ec5814b58321845915c3a984892d8/bundles/jahiamodule-extender/src/main/java/org/jahia/bundles/extender/jahiamodules/jsp/ServletContextWrapper.java"
+      ]
     }
   ],
   "incompatibilities": [
@@ -453,11 +572,17 @@
       ],
       "dimension": "弃用 / 默认值 / 配置 / 运行时",
       "excelNoteStatus": "table_fact",
-      "evidenceStatus": "unverified",
+      "evidenceStatus": "verified",
       "disposition": "mark",
       "treatment": "同一主版本不等于绝对兼容；核查弃用删除、默认值、运行时基线、传递依赖和配置，只自动处理有固定上游证据的一一对应修改。",
-      "recipe": null,
-      "tests": []
+      "recipe": "com.huawei.clouds.openrewrite.tomcatembedcore.MigrateTomcatEmbedCoreTo10_1_57",
+      "tests": [
+        "UpgradeTomcatEmbedCoreDependencyTest",
+        "TomcatEmbedCoreProjectGateTest",
+        "MigrateTomcatEmbedCore101JavaTest",
+        "RecommendedTomcatEmbedCoreMigrationTest",
+        "TomcatOfficialRecipeReuseTest"
+      ]
     },
     {
       "id": "C-002",
@@ -466,11 +591,17 @@
       ],
       "dimension": "补丁行为 / 安全 / 回归",
       "excelNoteStatus": "table_fact",
-      "evidenceStatus": "unverified",
+      "evidenceStatus": "verified",
       "disposition": "mark",
       "treatment": "固定官方补丁说明和制品身份后才允许版本 AUTO；仍需验证安全修复、默认行为、序列化与协议回归。",
-      "recipe": null,
-      "tests": []
+      "recipe": "com.huawei.clouds.openrewrite.tomcatembedcore.MigrateTomcatEmbedCoreTo10_1_57",
+      "tests": [
+        "UpgradeTomcatEmbedCoreDependencyTest",
+        "TomcatEmbedCoreProjectGateTest",
+        "MigrateTomcatEmbedCore101JavaTest",
+        "RecommendedTomcatEmbedCoreMigrationTest",
+        "TomcatOfficialRecipeReuseTest"
+      ]
     },
     {
       "id": "C-003",
@@ -479,11 +610,17 @@
       ],
       "dimension": "补丁行为 / 安全 / 回归",
       "excelNoteStatus": "table_fact",
-      "evidenceStatus": "unverified",
+      "evidenceStatus": "verified",
       "disposition": "mark",
       "treatment": "固定官方补丁说明和制品身份后才允许版本 AUTO；仍需验证安全修复、默认行为、序列化与协议回归。",
-      "recipe": null,
-      "tests": []
+      "recipe": "com.huawei.clouds.openrewrite.tomcatembedcore.MigrateTomcatEmbedCoreTo10_1_57",
+      "tests": [
+        "UpgradeTomcatEmbedCoreDependencyTest",
+        "TomcatEmbedCoreProjectGateTest",
+        "MigrateTomcatEmbedCore101JavaTest",
+        "RecommendedTomcatEmbedCoreMigrationTest",
+        "TomcatOfficialRecipeReuseTest"
+      ]
     },
     {
       "id": "C-004",
@@ -492,11 +629,17 @@
       ],
       "dimension": "补丁行为 / 安全 / 回归",
       "excelNoteStatus": "table_fact",
-      "evidenceStatus": "unverified",
+      "evidenceStatus": "verified",
       "disposition": "mark",
       "treatment": "固定官方补丁说明和制品身份后才允许版本 AUTO；仍需验证安全修复、默认行为、序列化与协议回归。",
-      "recipe": null,
-      "tests": []
+      "recipe": "com.huawei.clouds.openrewrite.tomcatembedcore.MigrateTomcatEmbedCoreTo10_1_57",
+      "tests": [
+        "UpgradeTomcatEmbedCoreDependencyTest",
+        "TomcatEmbedCoreProjectGateTest",
+        "MigrateTomcatEmbedCore101JavaTest",
+        "RecommendedTomcatEmbedCoreMigrationTest",
+        "TomcatOfficialRecipeReuseTest"
+      ]
     },
     {
       "id": "C-005",
@@ -505,11 +648,17 @@
       ],
       "dimension": "补丁行为 / 安全 / 回归",
       "excelNoteStatus": "table_fact",
-      "evidenceStatus": "unverified",
+      "evidenceStatus": "verified",
       "disposition": "mark",
       "treatment": "固定官方补丁说明和制品身份后才允许版本 AUTO；仍需验证安全修复、默认行为、序列化与协议回归。",
-      "recipe": null,
-      "tests": []
+      "recipe": "com.huawei.clouds.openrewrite.tomcatembedcore.MigrateTomcatEmbedCoreTo10_1_57",
+      "tests": [
+        "UpgradeTomcatEmbedCoreDependencyTest",
+        "TomcatEmbedCoreProjectGateTest",
+        "MigrateTomcatEmbedCore101JavaTest",
+        "RecommendedTomcatEmbedCoreMigrationTest",
+        "TomcatOfficialRecipeReuseTest"
+      ]
     },
     {
       "id": "C-006",
@@ -518,11 +667,17 @@
       ],
       "dimension": "补丁行为 / 安全 / 回归",
       "excelNoteStatus": "table_fact",
-      "evidenceStatus": "unverified",
+      "evidenceStatus": "verified",
       "disposition": "mark",
       "treatment": "固定官方补丁说明和制品身份后才允许版本 AUTO；仍需验证安全修复、默认行为、序列化与协议回归。",
-      "recipe": null,
-      "tests": []
+      "recipe": "com.huawei.clouds.openrewrite.tomcatembedcore.MigrateTomcatEmbedCoreTo10_1_57",
+      "tests": [
+        "UpgradeTomcatEmbedCoreDependencyTest",
+        "TomcatEmbedCoreProjectGateTest",
+        "MigrateTomcatEmbedCore101JavaTest",
+        "RecommendedTomcatEmbedCoreMigrationTest",
+        "TomcatOfficialRecipeReuseTest"
+      ]
     },
     {
       "id": "C-007",
@@ -531,11 +686,17 @@
       ],
       "dimension": "补丁行为 / 安全 / 回归",
       "excelNoteStatus": "table_fact",
-      "evidenceStatus": "unverified",
+      "evidenceStatus": "verified",
       "disposition": "mark",
       "treatment": "固定官方补丁说明和制品身份后才允许版本 AUTO；仍需验证安全修复、默认行为、序列化与协议回归。",
-      "recipe": null,
-      "tests": []
+      "recipe": "com.huawei.clouds.openrewrite.tomcatembedcore.MigrateTomcatEmbedCoreTo10_1_57",
+      "tests": [
+        "UpgradeTomcatEmbedCoreDependencyTest",
+        "TomcatEmbedCoreProjectGateTest",
+        "MigrateTomcatEmbedCore101JavaTest",
+        "RecommendedTomcatEmbedCoreMigrationTest",
+        "TomcatOfficialRecipeReuseTest"
+      ]
     },
     {
       "id": "C-008",
@@ -544,11 +705,17 @@
       ],
       "dimension": "补丁行为 / 安全 / 回归",
       "excelNoteStatus": "table_fact",
-      "evidenceStatus": "unverified",
+      "evidenceStatus": "verified",
       "disposition": "mark",
       "treatment": "固定官方补丁说明和制品身份后才允许版本 AUTO；仍需验证安全修复、默认行为、序列化与协议回归。",
-      "recipe": null,
-      "tests": []
+      "recipe": "com.huawei.clouds.openrewrite.tomcatembedcore.MigrateTomcatEmbedCoreTo10_1_57",
+      "tests": [
+        "UpgradeTomcatEmbedCoreDependencyTest",
+        "TomcatEmbedCoreProjectGateTest",
+        "MigrateTomcatEmbedCore101JavaTest",
+        "RecommendedTomcatEmbedCoreMigrationTest",
+        "TomcatOfficialRecipeReuseTest"
+      ]
     },
     {
       "id": "C-009",
@@ -557,11 +724,17 @@
       ],
       "dimension": "补丁行为 / 安全 / 回归",
       "excelNoteStatus": "table_fact",
-      "evidenceStatus": "unverified",
+      "evidenceStatus": "verified",
       "disposition": "mark",
       "treatment": "固定官方补丁说明和制品身份后才允许版本 AUTO；仍需验证安全修复、默认行为、序列化与协议回归。",
-      "recipe": null,
-      "tests": []
+      "recipe": "com.huawei.clouds.openrewrite.tomcatembedcore.MigrateTomcatEmbedCoreTo10_1_57",
+      "tests": [
+        "UpgradeTomcatEmbedCoreDependencyTest",
+        "TomcatEmbedCoreProjectGateTest",
+        "MigrateTomcatEmbedCore101JavaTest",
+        "RecommendedTomcatEmbedCoreMigrationTest",
+        "TomcatOfficialRecipeReuseTest"
+      ]
     },
     {
       "id": "C-010",
@@ -570,11 +743,17 @@
       ],
       "dimension": "补丁行为 / 安全 / 回归",
       "excelNoteStatus": "table_fact",
-      "evidenceStatus": "unverified",
+      "evidenceStatus": "verified",
       "disposition": "mark",
       "treatment": "固定官方补丁说明和制品身份后才允许版本 AUTO；仍需验证安全修复、默认行为、序列化与协议回归。",
-      "recipe": null,
-      "tests": []
+      "recipe": "com.huawei.clouds.openrewrite.tomcatembedcore.MigrateTomcatEmbedCoreTo10_1_57",
+      "tests": [
+        "UpgradeTomcatEmbedCoreDependencyTest",
+        "TomcatEmbedCoreProjectGateTest",
+        "MigrateTomcatEmbedCore101JavaTest",
+        "RecommendedTomcatEmbedCoreMigrationTest",
+        "TomcatOfficialRecipeReuseTest"
+      ]
     },
     {
       "id": "C-011",
@@ -583,11 +762,17 @@
       ],
       "dimension": "弃用 / 默认值 / 配置 / 运行时",
       "excelNoteStatus": "table_fact",
-      "evidenceStatus": "unverified",
+      "evidenceStatus": "verified",
       "disposition": "mark",
       "treatment": "同一主版本不等于绝对兼容；核查弃用删除、默认值、运行时基线、传递依赖和配置，只自动处理有固定上游证据的一一对应修改。",
-      "recipe": null,
-      "tests": []
+      "recipe": "com.huawei.clouds.openrewrite.tomcatembedcore.MigrateTomcatEmbedCoreTo10_1_57",
+      "tests": [
+        "UpgradeTomcatEmbedCoreDependencyTest",
+        "TomcatEmbedCoreProjectGateTest",
+        "MigrateTomcatEmbedCore101JavaTest",
+        "RecommendedTomcatEmbedCoreMigrationTest",
+        "TomcatOfficialRecipeReuseTest"
+      ]
     },
     {
       "id": "C-012",
@@ -596,11 +781,17 @@
       ],
       "dimension": "补丁行为 / 安全 / 回归",
       "excelNoteStatus": "table_fact",
-      "evidenceStatus": "unverified",
+      "evidenceStatus": "verified",
       "disposition": "mark",
       "treatment": "固定官方补丁说明和制品身份后才允许版本 AUTO；仍需验证安全修复、默认行为、序列化与协议回归。",
-      "recipe": null,
-      "tests": []
+      "recipe": "com.huawei.clouds.openrewrite.tomcatembedcore.MigrateTomcatEmbedCoreTo10_1_57",
+      "tests": [
+        "UpgradeTomcatEmbedCoreDependencyTest",
+        "TomcatEmbedCoreProjectGateTest",
+        "MigrateTomcatEmbedCore101JavaTest",
+        "RecommendedTomcatEmbedCoreMigrationTest",
+        "TomcatOfficialRecipeReuseTest"
+      ]
     },
     {
       "id": "C-013",
@@ -609,11 +800,17 @@
       ],
       "dimension": "补丁行为 / 安全 / 回归",
       "excelNoteStatus": "table_fact",
-      "evidenceStatus": "unverified",
+      "evidenceStatus": "verified",
       "disposition": "mark",
       "treatment": "固定官方补丁说明和制品身份后才允许版本 AUTO；仍需验证安全修复、默认行为、序列化与协议回归。",
-      "recipe": null,
-      "tests": []
+      "recipe": "com.huawei.clouds.openrewrite.tomcatembedcore.MigrateTomcatEmbedCoreTo10_1_57",
+      "tests": [
+        "UpgradeTomcatEmbedCoreDependencyTest",
+        "TomcatEmbedCoreProjectGateTest",
+        "MigrateTomcatEmbedCore101JavaTest",
+        "RecommendedTomcatEmbedCoreMigrationTest",
+        "TomcatOfficialRecipeReuseTest"
+      ]
     },
     {
       "id": "C-014",
@@ -622,11 +819,17 @@
       ],
       "dimension": "补丁行为 / 安全 / 回归",
       "excelNoteStatus": "table_fact",
-      "evidenceStatus": "unverified",
+      "evidenceStatus": "verified",
       "disposition": "mark",
       "treatment": "固定官方补丁说明和制品身份后才允许版本 AUTO；仍需验证安全修复、默认行为、序列化与协议回归。",
-      "recipe": null,
-      "tests": []
+      "recipe": "com.huawei.clouds.openrewrite.tomcatembedcore.MigrateTomcatEmbedCoreTo10_1_57",
+      "tests": [
+        "UpgradeTomcatEmbedCoreDependencyTest",
+        "TomcatEmbedCoreProjectGateTest",
+        "MigrateTomcatEmbedCore101JavaTest",
+        "RecommendedTomcatEmbedCoreMigrationTest",
+        "TomcatOfficialRecipeReuseTest"
+      ]
     },
     {
       "id": "C-015",
@@ -635,11 +838,17 @@
       ],
       "dimension": "补丁行为 / 安全 / 回归",
       "excelNoteStatus": "table_fact",
-      "evidenceStatus": "unverified",
+      "evidenceStatus": "verified",
       "disposition": "mark",
       "treatment": "固定官方补丁说明和制品身份后才允许版本 AUTO；仍需验证安全修复、默认行为、序列化与协议回归。",
-      "recipe": null,
-      "tests": []
+      "recipe": "com.huawei.clouds.openrewrite.tomcatembedcore.MigrateTomcatEmbedCoreTo10_1_57",
+      "tests": [
+        "UpgradeTomcatEmbedCoreDependencyTest",
+        "TomcatEmbedCoreProjectGateTest",
+        "MigrateTomcatEmbedCore101JavaTest",
+        "RecommendedTomcatEmbedCoreMigrationTest",
+        "TomcatOfficialRecipeReuseTest"
+      ]
     },
     {
       "id": "C-016",
@@ -648,11 +857,17 @@
       ],
       "dimension": "补丁行为 / 安全 / 回归",
       "excelNoteStatus": "table_fact",
-      "evidenceStatus": "unverified",
+      "evidenceStatus": "verified",
       "disposition": "mark",
       "treatment": "固定官方补丁说明和制品身份后才允许版本 AUTO；仍需验证安全修复、默认行为、序列化与协议回归。",
-      "recipe": null,
-      "tests": []
+      "recipe": "com.huawei.clouds.openrewrite.tomcatembedcore.MigrateTomcatEmbedCoreTo10_1_57",
+      "tests": [
+        "UpgradeTomcatEmbedCoreDependencyTest",
+        "TomcatEmbedCoreProjectGateTest",
+        "MigrateTomcatEmbedCore101JavaTest",
+        "RecommendedTomcatEmbedCoreMigrationTest",
+        "TomcatOfficialRecipeReuseTest"
+      ]
     },
     {
       "id": "C-017",
@@ -661,11 +876,17 @@
       ],
       "dimension": "补丁行为 / 安全 / 回归",
       "excelNoteStatus": "table_fact",
-      "evidenceStatus": "unverified",
+      "evidenceStatus": "verified",
       "disposition": "mark",
       "treatment": "固定官方补丁说明和制品身份后才允许版本 AUTO；仍需验证安全修复、默认行为、序列化与协议回归。",
-      "recipe": null,
-      "tests": []
+      "recipe": "com.huawei.clouds.openrewrite.tomcatembedcore.MigrateTomcatEmbedCoreTo10_1_57",
+      "tests": [
+        "UpgradeTomcatEmbedCoreDependencyTest",
+        "TomcatEmbedCoreProjectGateTest",
+        "MigrateTomcatEmbedCore101JavaTest",
+        "RecommendedTomcatEmbedCoreMigrationTest",
+        "TomcatOfficialRecipeReuseTest"
+      ]
     },
     {
       "id": "C-018",
@@ -674,11 +895,17 @@
       ],
       "dimension": "补丁行为 / 安全 / 回归",
       "excelNoteStatus": "table_fact",
-      "evidenceStatus": "unverified",
+      "evidenceStatus": "verified",
       "disposition": "mark",
       "treatment": "固定官方补丁说明和制品身份后才允许版本 AUTO；仍需验证安全修复、默认行为、序列化与协议回归。",
-      "recipe": null,
-      "tests": []
+      "recipe": "com.huawei.clouds.openrewrite.tomcatembedcore.MigrateTomcatEmbedCoreTo10_1_57",
+      "tests": [
+        "UpgradeTomcatEmbedCoreDependencyTest",
+        "TomcatEmbedCoreProjectGateTest",
+        "MigrateTomcatEmbedCore101JavaTest",
+        "RecommendedTomcatEmbedCoreMigrationTest",
+        "TomcatOfficialRecipeReuseTest"
+      ]
     },
     {
       "id": "C-019",
@@ -687,16 +914,22 @@
       ],
       "dimension": "补丁行为 / 安全 / 回归",
       "excelNoteStatus": "table_fact",
-      "evidenceStatus": "unverified",
+      "evidenceStatus": "verified",
       "disposition": "mark",
       "treatment": "固定官方补丁说明和制品身份后才允许版本 AUTO；仍需验证安全修复、默认行为、序列化与协议回归。",
-      "recipe": null,
-      "tests": []
+      "recipe": "com.huawei.clouds.openrewrite.tomcatembedcore.MigrateTomcatEmbedCoreTo10_1_57",
+      "tests": [
+        "UpgradeTomcatEmbedCoreDependencyTest",
+        "TomcatEmbedCoreProjectGateTest",
+        "MigrateTomcatEmbedCore101JavaTest",
+        "RecommendedTomcatEmbedCoreMigrationTest",
+        "TomcatOfficialRecipeReuseTest"
+      ]
     }
   ],
   "status": {
     "spec": "complete",
-    "evidence": "pending",
-    "automation": "catalog-only"
+    "evidence": "verified",
+    "automation": "implemented"
   }
 }

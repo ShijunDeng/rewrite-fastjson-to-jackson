@@ -47,9 +47,6 @@ class MigrateTomcatEmbedCore101JavaTest implements RewriteTest {
                 Arguments.of("session get",
                         "import jakarta.servlet.http.HttpSession; class T { Object x(HttpSession s){return s.getValue(\"user\");} }",
                         "import jakarta.servlet.http.HttpSession; class T { Object x(HttpSession s){return s.getAttribute(\"user\");} }"),
-                Arguments.of("session value names",
-                        "import jakarta.servlet.http.HttpSession; class T { Object x(HttpSession s){return s.getValueNames();} }",
-                        "import jakarta.servlet.http.HttpSession; class T { Object x(HttpSession s){return s.getAttributeNames();} }"),
                 Arguments.of("session put",
                         "import jakarta.servlet.http.HttpSession; class T { void x(HttpSession s,Object v){s.putValue(\"user\",v);} }",
                         "import jakarta.servlet.http.HttpSession; class T { void x(HttpSession s,Object v){s.setAttribute(\"user\",v);} }"),
@@ -63,6 +60,12 @@ class MigrateTomcatEmbedCore101JavaTest implements RewriteTest {
                         "import jakarta.servlet.ServletContext; class T { void x(ServletContext c,Exception e){c.log(e,\"failed\");} }",
                         "import jakarta.servlet.ServletContext; class T { void x(ServletContext c,Exception e){c.log(\"failed\",e);} }")
         );
+    }
+
+    @Test
+    void leavesReturnTypeIncompatibleSessionValueNamesForRiskRecipe() {
+        rewriteRun(java(
+                "import jakarta.servlet.http.HttpSession; class T { String[] x(HttpSession s){return s.getValueNames();} }"));
     }
 
     @Test

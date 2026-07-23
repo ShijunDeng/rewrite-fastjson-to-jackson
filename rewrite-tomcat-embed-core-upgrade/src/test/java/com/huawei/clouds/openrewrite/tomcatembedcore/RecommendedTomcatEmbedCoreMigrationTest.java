@@ -38,18 +38,33 @@ class RecommendedTomcatEmbedCoreMigrationTest implements RewriteTest {
 
     @Test
     void removesListenerAttributeBeforeRiskFinder() {
-        rewriteRun(xml(
-                "<Server><Listener className=\"org.apache.catalina.core.JreMemoryLeakPreventionListener\" gcDaemonProtection=\"true\" appContextProtection=\"true\"/></Server>",
-                "<Server><Listener className=\"org.apache.catalina.core.JreMemoryLeakPreventionListener\" appContextProtection=\"true\"/></Server>",
-                source -> source.path("conf/server.xml").afterRecipe(after ->
-                        assertFalse(after.printAll().contains("has no Tomcat 10.1 setter"), after::printAll))));
+        rewriteRun(
+                xml(UpgradeTomcatEmbedCoreDependencyTest.pom("10.1.15"),
+                        UpgradeTomcatEmbedCoreDependencyTest.pom("10.1.57"),
+                        source -> source.path("pom.xml")),
+                xml(
+                        "<Server><Listener className=\"org.apache.catalina.core.JreMemoryLeakPreventionListener\" gcDaemonProtection=\"true\" appContextProtection=\"true\"/></Server>",
+                        "<Server><Listener className=\"org.apache.catalina.core.JreMemoryLeakPreventionListener\" appContextProtection=\"true\"/></Server>",
+                        source -> source.path("conf/server.xml").afterRecipe(after ->
+                                assertFalse(after.printAll().contains("has no Tomcat 10.1 setter"),
+                                        after::printAll))));
     }
 
     @Test
-    void officialServletRemovalRunsBeforeRiskFinder() {
-        rewriteRun(java(
-                "import jakarta.servlet.http.*; class T { Object x(HttpSession s,HttpServletResponse r){ r.encodeUrl(\"/\"); return s.getValueNames(); } }",
-                "import jakarta.servlet.http.*; class T { Object x(HttpSession s,HttpServletResponse r){ r.encodeURL(\"/\"); return s.getAttributeNames(); } }"));
+    void safeOfficialServletLeavesRunBeforeRiskFinderAndUnsafeCallIsMarked() {
+        rewriteRun(
+                xml(UpgradeTomcatEmbedCoreDependencyTest.pom("10.1.15"),
+                        UpgradeTomcatEmbedCoreDependencyTest.pom("10.1.57"),
+                        source -> source.path("pom.xml")),
+                java(
+                        "import jakarta.servlet.http.*; class T { String[] x(HttpSession s,HttpServletResponse r){ r.encodeUrl(\"/\"); return s.getValueNames(); } }",
+                        source -> source.after(actual -> actual).afterRecipe(after -> {
+                            assertTrue(after.printAll().contains("r.encodeURL(\"/\")"), after::printAll);
+                            assertTrue(after.printAll().contains("s.getValueNames()"), after::printAll);
+                            assertTrue(after.printAll().contains("returns Enumeration<String> instead of String[]"),
+                                    after::printAll);
+                            assertFalse(after.printAll().contains("s.getAttributeNames()"), after::printAll);
+                        })));
     }
 
     @Test
@@ -67,6 +82,9 @@ class RecommendedTomcatEmbedCoreMigrationTest implements RewriteTest {
     void realJfinalShapeAndParameterLimitAreHandledTogether() {
         // Java shape reduced from jfinal/jfinal@a0e9e8b99dc793bcf0cd40ca7feba005ba0c5349.
         rewriteRun(
+                xml(UpgradeTomcatEmbedCoreDependencyTest.pom("10.1.15"),
+                        UpgradeTomcatEmbedCoreDependencyTest.pom("10.1.57"),
+                        source -> source.path("pom.xml")),
                 java("import jakarta.servlet.http.HttpServletRequest; class JsonRequest { boolean x(HttpServletRequest req){return req.isRequestedSessionIdFromUrl();} }",
                         "import jakarta.servlet.http.HttpServletRequest; class JsonRequest { boolean x(HttpServletRequest req){return req.isRequestedSessionIdFromURL();} }"),
                 xml("<Server><Service><Connector port=\"8080\"/></Service></Server>", source -> source.path("server.xml")
@@ -79,15 +97,11 @@ class RecommendedTomcatEmbedCoreMigrationTest implements RewriteTest {
     void recommendedCompositionOrderIsExact() {
         var recipe = environment().activateRecipes(RECIPE);
         assertEquals(List.of(
+                        "com.huawei.clouds.openrewrite.tomcatembedcore.MarkSelectedTomcatEmbedCoreProjects",
                         "com.huawei.clouds.openrewrite.tomcatembedcore.UpgradeTomcatEmbedCoreTo10_1_57",
-                        "com.huawei.clouds.openrewrite.tomcatembedcore.MigrateTomcat9JakartaApiDependencies",
-                        "com.huawei.clouds.openrewrite.tomcatembedcore.MigrateTomcat9JakartaNamespaces",
-                        "com.huawei.clouds.openrewrite.tomcatembedcore.MigrateTomcatEmbedCore101Java",
-                        "com.huawei.clouds.openrewrite.tomcatembedcore.MigrateTomcatEmbedCore101Configuration",
-                        "com.huawei.clouds.openrewrite.tomcatembedcore.FindTomcatEmbedCoreBuildRisks",
-                        "com.huawei.clouds.openrewrite.tomcatembedcore.FindTomcatEmbedCoreJavaRisks",
-                        "com.huawei.clouds.openrewrite.tomcatembedcore.FindTomcatEmbedCoreConfigurationRisks",
-                        "com.huawei.clouds.openrewrite.tomcatembedcore.FindTomcatEmbedCoreResourceRisks"),
+                        "com.huawei.clouds.openrewrite.tomcatembedcore.MigrateSelectedTomcat9Jakarta",
+                        "com.huawei.clouds.openrewrite.tomcatembedcore.MigrateSelectedTomcatEmbedCore101Changes",
+                        "com.huawei.clouds.openrewrite.tomcatembedcore.FindSelectedTomcatEmbedCoreMigrationRisks"),
                 recipe.getRecipeList().stream().map(org.openrewrite.Recipe::getName).toList());
     }
 

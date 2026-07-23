@@ -9,6 +9,7 @@ import org.openrewrite.config.Environment;
 import org.openrewrite.test.RecipeSpec;
 import org.openrewrite.test.RewriteTest;
 
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -218,13 +219,16 @@ class UpgradeTomcatEmbedCoreDependencyTest implements RewriteTest {
     }
 
     @Test
-    void recommendedStartsWithPublicUpgrade() {
+    void recommendedCapturesEligibilityBeforePublicUpgrade() {
         Environment environment = Environment.builder()
                 .scanRuntimeClasspath("com.huawei.clouds.openrewrite.tomcatembedcore").build();
         var migration = environment.activateRecipes(
                 "com.huawei.clouds.openrewrite.tomcatembedcore.MigrateTomcatEmbedCoreTo10_1_57");
-        assertEquals("com.huawei.clouds.openrewrite.tomcatembedcore.UpgradeTomcatEmbedCoreTo10_1_57",
-                migration.getRecipeList().get(0).getName());
+        assertEquals(List.of(
+                        MarkSelectedTomcatEmbedCoreProjects.class.getName(),
+                        "com.huawei.clouds.openrewrite.tomcatembedcore.UpgradeTomcatEmbedCoreTo10_1_57"),
+                migration.getRecipeList().stream().limit(2)
+                        .map(org.openrewrite.Recipe::getName).toList());
     }
 
     static String pom(String version) {

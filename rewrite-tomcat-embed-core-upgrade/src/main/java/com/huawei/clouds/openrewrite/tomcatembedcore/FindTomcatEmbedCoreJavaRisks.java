@@ -22,6 +22,9 @@ public final class FindTomcatEmbedCoreJavaRisks extends Recipe {
     static final String OVERRIDE =
             "Servlet 6 removed this deprecated interface method; remove the obsolete @Override/method after routing callers " +
             "to the non-deprecated API, taking care not to create a duplicate replacement method";
+    static final String SESSION_VALUE_NAMES =
+            "Servlet 6 removed HttpSession.getValueNames(); getAttributeNames() returns Enumeration<String> instead of " +
+            "String[], so adapt iteration, collection and public return types explicitly before replacing this call";
     static final String INTERNAL =
             "Tomcat 10.1 internal APIs are not binary compatible with 10.0; verify this import and every custom Valve, Realm, " +
             "Connector, Lifecycle, class-loader or container extension against the 10.1.57 JavaDoc";
@@ -102,6 +105,10 @@ public final class FindTomcatEmbedCoreJavaRisks extends Recipe {
                 String name = method.getName();
                 if ("jakarta.servlet.http.HttpServletResponse".equals(owner) && "setStatus".equals(name) &&
                     visited.getArguments().size() != 2) return visited;
+                if ("jakarta.servlet.http.HttpSession".equals(owner) &&
+                    "getValueNames".equals(name) && method.getParameterTypes().isEmpty()) {
+                    return mark(visited, SESSION_VALUE_NAMES);
+                }
                 if (REMOVED_METHODS.getOrDefault(owner, Set.of()).contains(name)) return mark(visited, REMOVED_SERVLET);
                 if ("jakarta.servlet.http.Cookie".equals(owner) && COOKIE_METHODS.contains(name)) return mark(visited, COOKIE);
                 if ("org.apache.catalina.core.JreMemoryLeakPreventionListener".equals(owner) &&
