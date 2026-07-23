@@ -1,0 +1,33 @@
+---
+type: specs.openrewrite.org/v1beta/category
+name: com.huawei.clouds.openrewrite.twelvemonkeysjpeg
+packageName: com.huawei.clouds.openrewrite.twelvemonkeysjpeg
+description: Upgrade TwelveMonkeys ImageIO JPEG with executable family-alignment and runtime compatibility review.
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.twelvemonkeysjpeg.UpgradeTwelveMonkeysImageIoJpegTo3_12_0
+displayName: Upgrade workbook-selected TwelveMonkeys imageio-jpeg to 3.12.0
+description: Upgrade only exact com.twelvemonkeys.imageio:imageio-jpeg 3.9.3 standard direct Maven and root Gradle declarations to 3.12.0.
+tags:
+  - twelvemonkeys
+  - imageio
+  - jpeg
+  - dependency-upgrade
+recipeList:
+  - com.huawei.clouds.openrewrite.twelvemonkeysjpeg.UpgradeSelectedTwelveMonkeysJpegDependency
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.twelvemonkeysjpeg.MigrateTwelveMonkeysImageIoJpegTo3_12_0
+displayName: Migrate TwelveMonkeys imageio-jpeg 3.9.3 applications to 3.12.0
+description: Reuse the public strict upgrade, align safely owned family pins, and mark exact ImageIO behavior and packaging decisions affected by 3.12.0.
+tags:
+  - twelvemonkeys
+  - imageio
+  - jpeg
+  - java
+  - migration
+recipeList:
+  - com.huawei.clouds.openrewrite.twelvemonkeysjpeg.UpgradeTwelveMonkeysImageIoJpegTo3_12_0
+  - com.huawei.clouds.openrewrite.twelvemonkeysjpeg.AlignTwelveMonkeysJpegCompanions
+  - com.huawei.clouds.openrewrite.twelvemonkeysjpeg.FindTwelveMonkeysJpegSourceRisks
+  - com.huawei.clouds.openrewrite.twelvemonkeysjpeg.FindTwelveMonkeysJpegBuildRisks

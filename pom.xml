@@ -136,6 +136,7 @@
     <module>rewrite-angular-elements-upgrade</module>
     <module>rewrite-ws-upgrade</module>
     <module>rewrite-commons-cli-upgrade</module>
+    <module>rewrite-twelvemonkeys-imageio-jpeg-upgrade</module>
   </modules>
 
   <dependencyManagement>
