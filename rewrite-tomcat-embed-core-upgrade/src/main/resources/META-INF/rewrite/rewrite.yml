@@ -1,0 +1,26 @@
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.tomcatembedcore.UpgradeTomcatEmbedCoreTo10_1_57
+displayName: Upgrade workbook-selected Tomcat Embed Core dependencies to 10.1.57
+description: >-
+  Upgrade only the 38 approved Tomcat 9.0/10.1 org.apache.tomcat.embed:tomcat-embed-core versions and block
+  the supplied Tomcat 11 to 10.1 downgrade conflict, in declarations owned by the current build file.
+recipeList:
+  - com.huawei.clouds.openrewrite.tomcatembedcore.FindTomcatEmbedCoreBranchTransitionRisks
+  - com.huawei.clouds.openrewrite.tomcatembedcore.UpgradeSelectedTomcatEmbedCoreDependency
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.tomcatembedcore.MigrateTomcatEmbedCoreTo10_1_57
+displayName: Migrate Tomcat Embed Core to 10.1.57
+description: >-
+  Apply the strict dependency upgrade, rewrite only documented equivalent Servlet/EL APIs and obsolete listener
+  attributes, then mark build, source, protocol, security, clustering, and configuration decisions requiring evidence.
+recipeList:
+  - com.huawei.clouds.openrewrite.tomcatembedcore.UpgradeTomcatEmbedCoreTo10_1_57
+  - com.huawei.clouds.openrewrite.tomcatembedcore.MigrateTomcatEmbedCore101Java
+  - com.huawei.clouds.openrewrite.tomcatembedcore.MigrateTomcat9JakartaNamespaces
+  - com.huawei.clouds.openrewrite.tomcatembedcore.MigrateTomcatEmbedCore101Configuration
+  - com.huawei.clouds.openrewrite.tomcatembedcore.FindTomcatEmbedCoreBuildRisks
+  - com.huawei.clouds.openrewrite.tomcatembedcore.FindTomcatEmbedCoreJavaRisks
+  - com.huawei.clouds.openrewrite.tomcatembedcore.FindTomcatEmbedCoreConfigurationRisks
+  - com.huawei.clouds.openrewrite.tomcatembedcore.FindTomcatEmbedCoreResourceRisks

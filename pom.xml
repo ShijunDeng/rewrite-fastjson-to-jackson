@@ -152,6 +152,7 @@
     <module>rewrite-bson-upgrade</module>
     <module>rewrite-junit-jupiter-upgrade</module>
     <module>rewrite-spring-webmvc-upgrade</module>
+    <module>rewrite-tomcat-embed-core-upgrade</module>
   </modules>
 
   <dependencyManagement>
