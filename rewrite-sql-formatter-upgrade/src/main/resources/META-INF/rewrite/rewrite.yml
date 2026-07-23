@@ -1,0 +1,20 @@
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.sqlformatter.UpgradeSqlFormatterTo15_6_5
+displayName: Upgrade workbook-selected Vertical Blank SQL Formatter dependencies to 15.6.5
+description: >-
+  Apply only the four exact source versions selected by the workbook, without guessing inherited owners,
+  dynamic versions, ranges, variants, or nested Gradle DSL.
+recipeList:
+  - com.huawei.clouds.openrewrite.sqlformatter.UpgradeSelectedSqlFormatterDependency
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.sqlformatter.MigrateSqlFormatterTo15_6_5
+displayName: Migrate workbook-selected Vertical Blank SQL Formatter declarations to 15.6.5
+description: >-
+  Reuse the public strict upgrade and mark the exact unresolvable Maven target, Java API migration surface,
+  formatter output/configuration semantics, external owners, variants, and unsupported source declarations.
+recipeList:
+  - com.huawei.clouds.openrewrite.sqlformatter.UpgradeSqlFormatterTo15_6_5
+  - com.huawei.clouds.openrewrite.sqlformatter.FindSqlFormatter15SourceRisks
+  - com.huawei.clouds.openrewrite.sqlformatter.FindSqlFormatter15BuildRisks

@@ -127,6 +127,7 @@
     <module>rewrite-element-plus-icons-vue-upgrade</module>
     <module>rewrite-feign-httpclient-upgrade</module>
     <module>rewrite-feign-okhttp-upgrade</module>
+    <module>rewrite-sql-formatter-upgrade</module>
   </modules>
 
   <dependencyManagement>
