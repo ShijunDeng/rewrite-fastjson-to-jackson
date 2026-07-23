@@ -1,18 +1,51 @@
 package com.huawei.clouds.openrewrite.nettyhandler;
 
 import org.junit.jupiter.api.Test;
+import org.openrewrite.Recipe;
+import org.openrewrite.config.Environment;
 import org.openrewrite.java.JavaParser;
 import org.openrewrite.test.RecipeSpec;
 import org.openrewrite.test.RewriteTest;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.openrewrite.java.Assertions.java;
 
-class MigrateDeprecatedNettyHandlerApisTest implements RewriteTest {
+class MigrateRuleBasedIpFilterDefaultTest implements RewriteTest {
+    private static final String RECIPE =
+            "com.huawei.clouds.openrewrite.nettyhandler.MigrateRuleBasedIpFilterDefault";
+
     @Override
     public void defaults(RecipeSpec spec) {
-        spec.recipe(new MigrateDeprecatedNettyHandlerApis())
+        spec.recipe(recipe())
                 .parser(JavaParser.fromJavaVersion().classpath("netty-handler", "netty-buffer"));
+    }
+
+    @Test
+    void runtimeTreeUsesOfficialConstructorRecipeAndFormattingOnlyAdapter() {
+        Recipe recipe = recipe();
+        List<Recipe> tree = flatten(recipe);
+        var official = tree.stream()
+                .filter(org.openrewrite.java.AddLiteralMethodArgument.class::isInstance)
+                .map(org.openrewrite.java.AddLiteralMethodArgument.class::cast)
+                .findFirst().orElseThrow();
+        assertEquals("io.netty.handler.ipfilter.RuleBasedIpFilter " +
+                     "<constructor>(io.netty.handler.ipfilter.IpFilterRule[])",
+                official.getMethodPattern());
+        assertEquals(0, official.getArgumentIndex());
+        assertEquals(true, official.getLiteral());
+        assertEquals("boolean", official.getPrimitiveType());
+        assertEquals(1, tree.stream()
+                .filter(org.openrewrite.java.AddLiteralMethodArgument.class::isInstance).count());
+        assertTrue(tree.stream()
+                .anyMatch(NormalizeRuleBasedIpFilterLiteralSpacing.class::isInstance));
+        assertFalse(tree.stream()
+                .map(Recipe::getName)
+                .anyMatch("com.huawei.clouds.openrewrite.nettyhandler.MigrateDeprecatedNettyHandlerApis"::equals));
     }
 
     @Test
@@ -66,6 +99,29 @@ class MigrateDeprecatedNettyHandlerApisTest implements RewriteTest {
     }
 
     @Test
+    void makesZeroRuleVarargsDefaultExplicit() {
+        rewriteRun(java(
+                """
+                import io.netty.handler.ipfilter.RuleBasedIpFilter;
+
+                class FilterFactory {
+                    RuleBasedIpFilter create() {
+                        return new RuleBasedIpFilter();
+                    }
+                }
+                """,
+                """
+                import io.netty.handler.ipfilter.RuleBasedIpFilter;
+
+                class FilterFactory {
+                    RuleBasedIpFilter create() {
+                        return new RuleBasedIpFilter(true);
+                    }
+                }
+                """));
+    }
+
+    @Test
     void preservesRuleEvaluationAndOrder() {
         rewriteRun(java(
                 """
@@ -93,6 +149,37 @@ class MigrateDeprecatedNettyHandlerApisTest implements RewriteTest {
     }
 
     @Test
+    void preservesMultilineCommentPrefix() {
+        rewriteRun(java(
+                """
+                import io.netty.handler.ipfilter.IpFilterRule;
+                import io.netty.handler.ipfilter.RuleBasedIpFilter;
+
+                class FilterFactory {
+                    RuleBasedIpFilter create(IpFilterRule first, IpFilterRule second) {
+                        return new RuleBasedIpFilter(
+                                // first rule stays attached to the rule
+                                first,
+                                second);
+                    }
+                }
+                """,
+                """
+                import io.netty.handler.ipfilter.IpFilterRule;
+                import io.netty.handler.ipfilter.RuleBasedIpFilter;
+
+                class FilterFactory {
+                    RuleBasedIpFilter create(IpFilterRule first, IpFilterRule second) {
+                        return new RuleBasedIpFilter(true,
+                                // first rule stays attached to the rule
+                                first,
+                                second);
+                    }
+                }
+                """));
+    }
+
+    @Test
     void explicitPolicyAndBusinessLookalikeAreNoop() {
         rewriteRun(
                 java("""
@@ -102,6 +189,9 @@ class MigrateDeprecatedNettyHandlerApisTest implements RewriteTest {
                         class Explicit {
                             RuleBasedIpFilter create(IpFilterRule[] rules) {
                                 return new RuleBasedIpFilter(false, rules);
+                            }
+                            RuleBasedIpFilter accept(IpFilterRule[] rules) {
+                                return new RuleBasedIpFilter(true, rules);
                             }
                         }
                         """),
@@ -188,5 +278,22 @@ class MigrateDeprecatedNettyHandlerApisTest implements RewriteTest {
         int count = 0;
         for (int at = 0; (at = value.indexOf(token, at)) >= 0; at += token.length()) count++;
         return count;
+    }
+
+    private static Recipe recipe() {
+        return Environment.builder().scanRuntimeClasspath(
+                "com.huawei.clouds.openrewrite.nettyhandler", "org.openrewrite.java").build()
+                .activateRecipes(RECIPE);
+    }
+
+    private static List<Recipe> flatten(Recipe recipe) {
+        List<Recipe> recipes = new ArrayList<>();
+        Recipe unwrapped = recipe;
+        while (unwrapped instanceof Recipe.DelegatingRecipe delegating) {
+            unwrapped = delegating.getDelegate();
+        }
+        recipes.add(unwrapped);
+        for (Recipe child : unwrapped.getRecipeList()) recipes.addAll(flatten(child));
+        return recipes;
     }
 }

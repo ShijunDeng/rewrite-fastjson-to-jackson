@@ -26,17 +26,20 @@ class NettyHandlerRecommendedRecipeTest implements RewriteTest {
         assertEquals(List.of(
                 "com.huawei.clouds.openrewrite.nettyhandler.UpgradeSelectedNettyHandlerDependency",
                 "com.huawei.clouds.openrewrite.nettyhandler.FindNettyHandler41136BuildRisks",
-                "com.huawei.clouds.openrewrite.nettyhandler.MigrateDeprecatedNettyHandlerApis",
+                "com.huawei.clouds.openrewrite.nettyhandler.MigrateRuleBasedIpFilterDefault",
                 "com.huawei.clouds.openrewrite.nettyhandler.MigrateSslHandlerIsEncrypted",
                 "com.huawei.clouds.openrewrite.nettyhandler.FindNettyHandler41136SourceRisks",
                 "com.huawei.clouds.openrewrite.nettyhandler.FindNettyHandlerConfigurationRisks"), names);
-        assertTrue(recipe.getRecipeList().get(3).getRecipeList().stream()
-                .map(Recipe::getName)
-                .anyMatch("org.openrewrite.java.AddLiteralMethodArgument"::equals));
+        for (int index : List.of(2, 3)) {
+            assertTrue(flatten(recipe.getRecipeList().get(index)).stream()
+                    .anyMatch("org.openrewrite.java.AddLiteralMethodArgument"::equals));
+        }
+        assertTrue(flatten(recipe.getRecipeList().get(2)).contains(
+                "com.huawei.clouds.openrewrite.nettyhandler.NormalizeRuleBasedIpFilterLiteralSpacing"));
     }
 
     @Test
-    void officialLiteralRecipeAndCustomConstructorRecipeWorkTogether() {
+    void twoOfficialLiteralRecipesWorkTogether() {
         rewriteRun(spec -> spec.recipe(recipe()).parser(targetParser()),
                 java("""
                         import io.netty.buffer.ByteBuf;
@@ -59,6 +62,35 @@ class NettyHandlerRecommendedRecipeTest implements RewriteTest {
                     assertTrue(printed.contains(FindNettyHandler41136SourceRisks.TLS_DETECTION), printed);
                     assertTrue(printed.contains(FindNettyHandler41136SourceRisks.IP_FILTER), printed);
                 })));
+    }
+
+    @Test
+    void fixedRewriteNettyRuntimeTreeIsAuditedButBroadUpgradeIsNotComposed() {
+        Recipe official = environment().activateRecipes("org.openrewrite.netty.UpgradeNetty_4_1_to_4_2");
+        List<String> officialChildren = flatten(official);
+        assertTrue(officialChildren.contains(
+                "org.openrewrite.java.dependencies.UpgradeDependencyVersion"), officialChildren.toString());
+        assertTrue(officialChildren.contains(
+                "org.openrewrite.java.dependencies.ChangeDependency"), officialChildren.toString());
+        assertTrue(officialChildren.contains("org.openrewrite.java.ChangeType"), officialChildren.toString());
+        assertTrue(officialChildren.contains("org.openrewrite.java.ChangePackage"), officialChildren.toString());
+        assertTrue(officialChildren.contains(
+                "org.openrewrite.java.netty.EventLoopGroupToMultiThreadIoEventLoopGroupRecipes"),
+                officialChildren.toString());
+
+        List<String> selectedTree = flatten(recipe());
+        assertFalse(selectedTree.contains("org.openrewrite.netty.UpgradeNetty_4_1_to_4_2"),
+                selectedTree.toString());
+        assertFalse(selectedTree.contains("org.openrewrite.java.dependencies.UpgradeDependencyVersion"),
+                selectedTree.toString());
+        assertFalse(selectedTree.contains("org.openrewrite.java.dependencies.ChangeDependency"),
+                selectedTree.toString());
+        assertFalse(selectedTree.contains(
+                "org.openrewrite.java.netty.EventLoopGroupToMultiThreadIoEventLoopGroupRecipes"),
+                selectedTree.toString());
+        assertEquals(2, selectedTree.stream()
+                .filter("org.openrewrite.java.AddLiteralMethodArgument"::equals).count(),
+                selectedTree.toString());
     }
 
     @Test
@@ -165,9 +197,23 @@ class NettyHandlerRecommendedRecipeTest implements RewriteTest {
     }
 
     private static Recipe recipe() {
+        return environment().activateRecipes(RECIPE);
+    }
+
+    private static Environment environment() {
         return Environment.builder().scanRuntimeClasspath(
-                "com.huawei.clouds.openrewrite.nettyhandler", "org.openrewrite.java").build()
-                .activateRecipes(RECIPE);
+                "com.huawei.clouds.openrewrite.nettyhandler",
+                "org.openrewrite.netty",
+                "org.openrewrite.java.netty",
+                "org.openrewrite.java.dependencies",
+                "org.openrewrite.java").build();
+    }
+
+    private static List<String> flatten(Recipe recipe) {
+        java.util.ArrayList<String> names = new java.util.ArrayList<>();
+        names.add(recipe.getName());
+        for (Recipe child : recipe.getRecipeList()) names.addAll(flatten(child));
+        return names;
     }
 
     private static JavaParser.Builder<?, ?> targetParser() {

@@ -10,6 +10,22 @@ recipeList:
   - com.huawei.clouds.openrewrite.nettyhandler.UpgradeSelectedNettyHandlerDependency
 ---
 type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.nettyhandler.MigrateRuleBasedIpFilterDefault
+displayName: Make the Netty IP filter default-accept policy explicit
+description: >-
+  Reuse the official AddLiteralMethodArgument constructor support on authored source files to
+  preserve RuleBasedIpFilter(IpFilterRule...) as RuleBasedIpFilter(true, IpFilterRule...).
+preconditions:
+  - com.huawei.clouds.openrewrite.nettyhandler.FindAuthoredSourceFiles
+recipeList:
+  - org.openrewrite.java.AddLiteralMethodArgument:
+      methodPattern: io.netty.handler.ipfilter.RuleBasedIpFilter <constructor>(io.netty.handler.ipfilter.IpFilterRule[])
+      argumentIndex: 0
+      literal: true
+      primitiveType: boolean
+  - com.huawei.clouds.openrewrite.nettyhandler.NormalizeRuleBasedIpFilterLiteralSpacing
+---
+type: specs.openrewrite.org/v1beta/recipe
 name: com.huawei.clouds.openrewrite.nettyhandler.MigrateSslHandlerIsEncrypted
 displayName: Make the Netty SSLv2 detection choice explicit
 description: >-
@@ -34,7 +50,7 @@ description: >-
 recipeList:
   - com.huawei.clouds.openrewrite.nettyhandler.UpgradeSelectedNettyHandlerDependency
   - com.huawei.clouds.openrewrite.nettyhandler.FindNettyHandler41136BuildRisks
-  - com.huawei.clouds.openrewrite.nettyhandler.MigrateDeprecatedNettyHandlerApis
+  - com.huawei.clouds.openrewrite.nettyhandler.MigrateRuleBasedIpFilterDefault
   - com.huawei.clouds.openrewrite.nettyhandler.MigrateSslHandlerIsEncrypted
   - com.huawei.clouds.openrewrite.nettyhandler.FindNettyHandler41136SourceRisks
   - com.huawei.clouds.openrewrite.nettyhandler.FindNettyHandlerConfigurationRisks
