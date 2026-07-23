@@ -10,6 +10,99 @@ recipeList:
   - com.huawei.clouds.openrewrite.tomcatembedcore.UpgradeSelectedTomcatEmbedCoreDependency
 ---
 type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.tomcatembedcore.MigrateTomcat9JakartaApiDependencies
+displayName: Migrate Tomcat 9 Servlet and EL API dependencies to Jakarta EE 10
+description: >-
+  Reuse the official dependency migration building blocks with the exact
+  Tomcat 10.1 API baselines: Jakarta Servlet 6.0.0 and Jakarta EL 5.0.1.
+  The broad official Jakarta EE 9 aggregates target Servlet 5 and EL 4 and
+  are therefore intentionally not activated.
+preconditions:
+  - com.huawei.clouds.openrewrite.tomcatembedcore.IsTomcatNonGeneratedSource
+recipeList:
+  - org.openrewrite.java.dependencies.ChangeDependency:
+      oldGroupId: javax.servlet
+      oldArtifactId: javax.servlet-api
+      newGroupId: jakarta.servlet
+      newArtifactId: jakarta.servlet-api
+      newVersion: 6.0.0
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: jakarta.servlet
+      artifactId: jakarta.servlet-api
+      newVersion: 6.0.0
+  - org.openrewrite.java.dependencies.ChangeDependency:
+      oldGroupId: javax.el
+      oldArtifactId: javax.el-api
+      newGroupId: jakarta.el
+      newArtifactId: jakarta.el-api
+      newVersion: 5.0.1
+  - org.openrewrite.java.dependencies.UpgradeDependencyVersion:
+      groupId: jakarta.el
+      artifactId: jakarta.el-api
+      newVersion: 5.0.1
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.tomcatembedcore.MigrateTomcat9JakartaNamespaces
+displayName: Migrate Tomcat 9 Servlet and EL source namespaces to Jakarta
+description: >-
+  Reuse the official ChangePackage recipes for type-attributed javax.servlet
+  and javax.el source. Compilation units using Servlet 6 removed types are
+  deliberately left intact for the risk recipe instead of manufacturing
+  nonexistent jakarta types.
+preconditions:
+  - com.huawei.clouds.openrewrite.tomcatembedcore.IsTomcatNonGeneratedSource
+  - org.openrewrite.java.search.DoesNotUseType:
+      fullyQualifiedTypeName: javax.servlet.SingleThreadModel
+      includeImplicit: true
+  - org.openrewrite.java.search.DoesNotUseType:
+      fullyQualifiedTypeName: javax.servlet.http.HttpSessionContext
+      includeImplicit: true
+  - org.openrewrite.java.search.DoesNotUseType:
+      fullyQualifiedTypeName: javax.servlet.http.HttpUtils
+      includeImplicit: true
+recipeList:
+  - org.openrewrite.java.ChangePackage:
+      oldPackageName: javax.servlet
+      newPackageName: jakarta.servlet
+      recursive: true
+  - org.openrewrite.java.ChangePackage:
+      oldPackageName: javax.el
+      newPackageName: jakarta.el
+      recursive: true
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.huawei.clouds.openrewrite.tomcatembedcore.MigrateTomcatEmbedCore101Java
+displayName: Migrate deterministic Jakarta Servlet 6 and EL 5 APIs
+description: >-
+  Reuse the official Jakarta EE 10 Servlet removals, EL spelling correction
+  and RFC 6265 Cookie migration. Generated sources and compilation units
+  containing removed Servlet types are left for precise risk markers.
+preconditions:
+  - com.huawei.clouds.openrewrite.tomcatembedcore.IsTomcatNonGeneratedSource
+  - org.openrewrite.java.search.DoesNotUseType:
+      fullyQualifiedTypeName: javax.servlet.SingleThreadModel
+      includeImplicit: true
+  - org.openrewrite.java.search.DoesNotUseType:
+      fullyQualifiedTypeName: javax.servlet.http.HttpSessionContext
+      includeImplicit: true
+  - org.openrewrite.java.search.DoesNotUseType:
+      fullyQualifiedTypeName: javax.servlet.http.HttpUtils
+      includeImplicit: true
+  - org.openrewrite.java.search.DoesNotUseType:
+      fullyQualifiedTypeName: jakarta.servlet.SingleThreadModel
+      includeImplicit: true
+  - org.openrewrite.java.search.DoesNotUseType:
+      fullyQualifiedTypeName: jakarta.servlet.http.HttpSessionContext
+      includeImplicit: true
+  - org.openrewrite.java.search.DoesNotUseType:
+      fullyQualifiedTypeName: jakarta.servlet.http.HttpUtils
+      includeImplicit: true
+recipeList:
+  - org.openrewrite.java.migrate.jakarta.RemovalsServletJakarta10
+  - org.openrewrite.java.migrate.jakarta.RemovedIsParmetersProvidedMethod
+  - org.openrewrite.java.migrate.jakarta.ServletCookieBehaviorChangeRFC6265
+---
+type: specs.openrewrite.org/v1beta/recipe
 name: com.huawei.clouds.openrewrite.tomcatembedcore.MigrateTomcatEmbedCoreTo10_1_57
 displayName: Migrate Tomcat Embed Core to 10.1.57
 description: >-
@@ -17,8 +110,9 @@ description: >-
   attributes, then mark build, source, protocol, security, clustering, and configuration decisions requiring evidence.
 recipeList:
   - com.huawei.clouds.openrewrite.tomcatembedcore.UpgradeTomcatEmbedCoreTo10_1_57
-  - com.huawei.clouds.openrewrite.tomcatembedcore.MigrateTomcatEmbedCore101Java
+  - com.huawei.clouds.openrewrite.tomcatembedcore.MigrateTomcat9JakartaApiDependencies
   - com.huawei.clouds.openrewrite.tomcatembedcore.MigrateTomcat9JakartaNamespaces
+  - com.huawei.clouds.openrewrite.tomcatembedcore.MigrateTomcatEmbedCore101Java
   - com.huawei.clouds.openrewrite.tomcatembedcore.MigrateTomcatEmbedCore101Configuration
   - com.huawei.clouds.openrewrite.tomcatembedcore.FindTomcatEmbedCoreBuildRisks
   - com.huawei.clouds.openrewrite.tomcatembedcore.FindTomcatEmbedCoreJavaRisks
