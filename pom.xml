@@ -155,6 +155,7 @@
     <module>rewrite-tomcat-embed-core-upgrade</module>
     <module>rewrite-log4j-core-upgrade</module>
     <module>rewrite-bcprov-jdk18on-upgrade</module>
+    <module>rewrite-netty-codec-http-upgrade</module>
   </modules>
 
   <dependencyManagement>
