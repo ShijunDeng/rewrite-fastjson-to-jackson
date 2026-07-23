@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "migration.schema.json",
+  "title": "Documentation-first migration specification",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "module",
+    "workbook",
+    "policy",
+    "evidence",
+    "incompatibilities",
+    "status"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "module": {
+      "type": "object",
+      "required": [
+        "id",
+        "catalogPath",
+        "languageProfile",
+        "rawIdentifiers",
+        "canonicalIdentity",
+        "targetVersion"
+      ]
+    },
+    "workbook": {
+      "type": "object",
+      "required": [
+        "sha256",
+        "edges"
+      ]
+    },
+    "policy": {
+      "type": "object",
+      "required": [
+        "allowDowngrade",
+        "conflictMarker",
+        "autoSourceWhitelist"
+      ]
+    },
+    "evidence": {
+      "type": "array"
+    },
+    "incompatibilities": {
+      "type": "array"
+    },
+    "status": {
+      "type": "object",
+      "required": [
+        "spec",
+        "evidence",
+        "automation"
+      ]
+    }
+  }
+}

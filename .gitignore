@@ -5,3 +5,6 @@ target/
 .project
 .settings/
 .DS_Store
+__pycache__/
+*.pyc
+开源软件升级.xlsx
