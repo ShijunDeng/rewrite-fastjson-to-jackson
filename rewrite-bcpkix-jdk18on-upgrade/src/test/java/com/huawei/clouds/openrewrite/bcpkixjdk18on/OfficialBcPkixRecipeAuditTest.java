@@ -41,8 +41,8 @@ class OfficialBcPkixRecipeAuditTest {
 
     @Test
     void pinsTheAuditedCoreAndMigrateJavaArtifacts() throws Exception {
-        assertEquals("8.87.5", Recipe.class.getPackage().getImplementationVersion());
-        assertEquals("b3008cc4a1f0c43f562da16e5933a2a56d9bc568",
+        assertEquals("8.87.7", Recipe.class.getPackage().getImplementationVersion());
+        assertEquals("af06bb1b159249695dc92187093cd0909da6c843",
                 manifestAttribute(Recipe.class, "Full-Change"));
         assertEquals("3.40.0", UpgradeJavaVersion.class.getPackage().getImplementationVersion());
         assertEquals("658481254a6ee678f5f162e51d8d49ee01c75877",

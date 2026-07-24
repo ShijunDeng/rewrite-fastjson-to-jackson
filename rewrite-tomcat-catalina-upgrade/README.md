@@ -134,14 +134,14 @@ tree:
 
 | Artifact | Fixed commit | JAR SHA-256 | Audit use |
 | --- | --- | --- | --- |
-| `rewrite-java:8.87.5` | [`91e23c2858176877428ddc03e146d2bb023217a8`](https://github.com/openrewrite/rewrite/commit/91e23c2858176877428ddc03e146d2bb023217a8) | `a378253fe0c0865ab39d1743e468fe3d2557d7760e0a6897de294ca18ea90043` | Core `ChangePackage`, method/type/argument leaves and test harness behavior. |
-| `rewrite-maven:8.87.5` | [`b3008cc4a1f0c43f562da16e5933a2a56d9bc568`](https://github.com/openrewrite/rewrite/commit/b3008cc4a1f0c43f562da16e5933a2a56d9bc568) | `d7d4a38376a87e9de2a27f43dfe522abba6a8e20ca3429587ec349fcde23db4c` | Maven model/parser used by dependency fixtures. |
+| `rewrite-java:8.87.7` | [`ea77ee7c7471c17423726ae2612de17b6fc8b111`](https://github.com/openrewrite/rewrite/commit/ea77ee7c7471c17423726ae2612de17b6fc8b111) | `015cca0c660685f8107ee1c173db1063302926bb5f7e4598ed908428b0a9550f` | Core `ChangePackage`, method/type/argument leaves and test harness behavior. |
+| `rewrite-maven:8.87.7` | [`af06bb1b159249695dc92187093cd0909da6c843`](https://github.com/openrewrite/rewrite/commit/af06bb1b159249695dc92187093cd0909da6c843) | `0038ebc92e3fa2ec6b6aa4445a03922aff2820caa2a5cd16504297b6300e285c` | Maven model/parser used by dependency fixtures. |
 | `rewrite-migrate-java:3.40.0` | [`658481254a6ee678f5f162e51d8d49ee01c75877`](https://github.com/openrewrite/rewrite-migrate-java/commit/658481254a6ee678f5f162e51d8d49ee01c75877) | `8c00217ff2cf4dc9c139a1eff49ed1403fe20e010e42295f5aeb1dd9a5872dc6` | Precise Servlet 6, EL 5 and Cookie leaves plus the broad-aggregate comparison tree. |
 | `rewrite-java-dependencies:1.59.0` | [`decb8dbb2b5b726f8815efc51c85c34a60268bb0`](https://github.com/openrewrite/rewrite-java-dependencies/commit/decb8dbb2b5b726f8815efc51c85c34a60268bb0) | `b5c5ffaa0aea06cbbb8ae110ed138261bce621806c789f14ea0f3fe92cf95550` | Exact Servlet/EL dependency relocation leaves. |
 | `rewrite-spring:6.35.0` | [`d28afcb6661ad413539056de0936c5489ff9d8ee`](https://github.com/openrewrite/rewrite-spring/commit/d28afcb6661ad413539056de0936c5489ff9d8ee) | `27df444210c8bfee7e9d0f04d6d6f7986d2bee36bcd472d8307912613e93e98b` | Test-scope catalog audit proving there is no standalone Tomcat Catalina 10.1 recipe. |
 
 License boundary: the Core
-[`rewrite-java`/`rewrite-maven`](https://github.com/openrewrite/rewrite/blob/91e23c2858176877428ddc03e146d2bb023217a8/LICENSE)
+[`rewrite-java`/`rewrite-maven`](https://github.com/openrewrite/rewrite/blob/ea77ee7c7471c17423726ae2612de17b6fc8b111/LICENSE)
 artifacts and
 [`rewrite-java-dependencies`](https://github.com/openrewrite/rewrite-java-dependencies/blob/decb8dbb2b5b726f8815efc51c85c34a60268bb0/LICENSE)
 are Apache-2.0; the fixed

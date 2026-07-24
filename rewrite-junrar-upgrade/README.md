@@ -230,8 +230,8 @@ SHA-256、API digest、class major 和 module 名。
 
 审计固定到：
 
-- OpenRewrite Core `8.87.5`，提交
-  [`b3008cc4a1f0c43f562da16e5933a2a56d9bc568`](https://github.com/openrewrite/rewrite/tree/b3008cc4a1f0c43f562da16e5933a2a56d9bc568)；
+- OpenRewrite Core `8.87.7`，提交
+  [`af06bb1b159249695dc92187093cd0909da6c843`](https://github.com/openrewrite/rewrite/tree/af06bb1b159249695dc92187093cd0909da6c843)；
 - `rewrite-java-dependencies:1.59.0`，提交
   [`decb8dbb2b5b726f8815efc51c85c34a60268bb0`](https://github.com/openrewrite/rewrite-java-dependencies/tree/decb8dbb2b5b726f8815efc51c85c34a60268bb0)。
 
@@ -242,8 +242,8 @@ scope 做 catalog/类型审计，不进入本模块发布物的运行时 recipe 
 
 | 官方能力 | 审计结论 | 本模块处理 |
 | --- | --- | --- |
-| [`org.openrewrite.java.search.FindMethods`](https://github.com/openrewrite/rewrite/blob/b3008cc4a1f0c43f562da16e5933a2a56d9bc568/rewrite-java/src/main/java/org/openrewrite/java/search/FindMethods.java) | 能用类型归因精确定位 Junrar 方法调用、member reference，并生成官方 data table/search marker | **直接组合复用** 8 个叶子；只加 authored-source 与 selected-project precondition |
-| [`org.openrewrite.semver.LatestRelease`](https://github.com/openrewrite/rewrite/blob/b3008cc4a1f0c43f562da16e5933a2a56d9bc568/rewrite-core/src/main/java/org/openrewrite/semver/LatestRelease.java) | 能按 Core 的 release/pre-release/service-pack 规则比较固定版本 | **直接复用** 于禁止降级；仅对超大数字段补 `BigInteger` overflow fallback |
+| [`org.openrewrite.java.search.FindMethods`](https://github.com/openrewrite/rewrite/blob/ea77ee7c7471c17423726ae2612de17b6fc8b111/rewrite-java/src/main/java/org/openrewrite/java/search/FindMethods.java) | 能用类型归因精确定位 Junrar 方法调用、member reference，并生成官方 data table/search marker | **直接组合复用** 8 个叶子；只加 authored-source 与 selected-project precondition |
+| [`org.openrewrite.semver.LatestRelease`](https://github.com/openrewrite/rewrite/blob/af06bb1b159249695dc92187093cd0909da6c843/rewrite-core/src/main/java/org/openrewrite/semver/LatestRelease.java) | 能按 Core 的 release/pre-release/service-pack 规则比较固定版本 | **直接复用** 于禁止降级；仅对超大数字段补 `BigInteger` overflow fallback |
 | [`org.openrewrite.java.dependencies.FindDependency`](https://github.com/openrewrite/rewrite-java-dependencies/blob/decb8dbb2b5b726f8815efc51c85c34a60268bb0/src/main/java/org/openrewrite/java/dependencies/FindDependency.java) | 有精确 version 参数，但只标记当前 build file，不能在版本改写前把 raw owner 的独占性与最近 build root 资格传给 Java 源码 | **审计但不冒充 project gate**；本地 scanning marker 补跨文件 gap |
 | [`org.openrewrite.java.dependencies.ChangeDependency`](https://github.com/openrewrite/rewrite-java-dependencies/blob/decb8dbb2b5b726f8815efc51c85c34a60268bb0/src/main/java/org/openrewrite/java/dependencies/ChangeDependency.java) | 能改 Maven/Gradle GAV，但没有 old-version 白名单；同一文件存在 7.5.8 和 7.6.0 时可能改动不应触碰的声明 | **拒绝组合**；严格 owner/白名单 visitor 补 gap |
 | [`org.openrewrite.java.dependencies.UpgradeDependencyVersion`](https://github.com/openrewrite/rewrite-java-dependencies/blob/decb8dbb2b5b726f8815efc51c85c34a60268bb0/src/main/java/org/openrewrite/java/dependencies/UpgradeDependencyVersion.java) | 通用 selector 会按版本选择器升级，不能同时保证仅 7.5.5/7.5.8、属性独占、variant NOOP 和全部高版本精确 MARK | **明确拒绝**；推荐树测试证明不存在 |

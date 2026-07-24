@@ -39,12 +39,12 @@ class JettyHttpOfficialRecipeAuditTest {
         assertArtifact(UpgradeJavaVersion.class, "rewrite-migrate-java-3.40.0.jar",
                 "658481254a6ee678f5f162e51d8d49ee01c75877",
                 "8c00217ff2cf4dc9c139a1eff49ed1403fe20e010e42295f5aeb1dd9a5872dc6");
-        assertArtifact(ChangeType.class, "rewrite-java-8.87.5.jar",
-                "91e23c2858176877428ddc03e146d2bb023217a8",
-                "a378253fe0c0865ab39d1743e468fe3d2557d7760e0a6897de294ca18ea90043");
-        assertArtifact(ChangeMethodName.class, "rewrite-java-8.87.5.jar",
-                "91e23c2858176877428ddc03e146d2bb023217a8",
-                "a378253fe0c0865ab39d1743e468fe3d2557d7760e0a6897de294ca18ea90043");
+        assertArtifact(ChangeType.class, "rewrite-java-8.87.7.jar",
+                "ea77ee7c7471c17423726ae2612de17b6fc8b111",
+                "015cca0c660685f8107ee1c173db1063302926bb5f7e4598ed908428b0a9550f");
+        assertArtifact(ChangeMethodName.class, "rewrite-java-8.87.7.jar",
+                "ea77ee7c7471c17423726ae2612de17b6fc8b111",
+                "015cca0c660685f8107ee1c173db1063302926bb5f7e4598ed908428b0a9550f");
         assertArtifact(ChangeDependency.class, "rewrite-java-dependencies-1.59.0.jar",
                 "decb8dbb2b5b726f8815efc51c85c34a60268bb0",
                 "b5c5ffaa0aea06cbbb8ae110ed138261bce621806c789f14ea0f3fe92cf95550");

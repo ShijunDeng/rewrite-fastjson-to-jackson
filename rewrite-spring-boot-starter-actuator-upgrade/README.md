@@ -193,7 +193,7 @@ SHA-256：
 | --- | --- | --- |
 | `org.openrewrite.recipe:rewrite-spring:6.35.0` | [`d28afcb6`](https://github.com/openrewrite/rewrite-spring/tree/d28afcb6661ad413539056de0936c5489ff9d8ee)，SHA-256 `27df444210c8bfee7e9d0f04d6d6f7986d2bee36bcd472d8307912613e93e98b` | 直接执行 Spring property 和 endpoint access 配方，并审计 Boot 3.5 aggregate。 |
 | `org.openrewrite.recipe:rewrite-migrate-java:3.40.0` | [`65848125`](https://github.com/openrewrite/rewrite-migrate-java/tree/658481254a6ee678f5f162e51d8d49ee01c75877)，SHA-256 `8c00217ff2cf4dc9c139a1eff49ed1403fe20e010e42295f5aeb1dd9a5872dc6` | 审计官方 Jakarta EE 9/10 aggregate 的真实运行时树。 |
-| `org.openrewrite:rewrite-java:8.87.5` | JAR manifest 实际为 `8.88.0-SNAPSHOT` / [`91e23c28`](https://github.com/openrewrite/rewrite/tree/91e23c2858176877428ddc03e146d2bb023217a8)，SHA-256 `a378253fe0c0865ab39d1743e468fe3d2557d7760e0a6897de294ca18ea90043` | 直接执行 `ChangePackage` 和 `ChangeType`。坐标与 manifest 的异常差异由测试显式保留，不隐藏供应链事实。 |
+| `org.openrewrite:rewrite-java:8.87.7` | JAR manifest 实际为 `8.88.0-SNAPSHOT` / [`ea77ee7`](https://github.com/openrewrite/rewrite/tree/ea77ee7c7471c17423726ae2612de17b6fc8b111)，SHA-256 `015cca0c660685f8107ee1c173db1063302926bb5f7e4598ed908428b0a9550f` | 直接执行 `ChangePackage` 和 `ChangeType`。坐标与 manifest 的异常差异由测试显式保留，不隐藏供应链事实。 |
 
 `rewrite-spring` 和 `rewrite-migrate-java` 采用 Moderne Source Available
 License；本仓库只组合其公开 recipe，不复制实现源码。
@@ -202,7 +202,7 @@ License；本仓库只组合其公开 recipe，不复制实现源码。
 | --- | --- | --- |
 | [`ChangeSpringPropertyKey`](https://github.com/openrewrite/rewrite-spring/blob/d28afcb6661ad413539056de0936c5489ff9d8ee/src/main/java/org/openrewrite/java/spring/ChangeSpringPropertyKey.java) | 直接复用 | 18 个 metrics exporter 前缀及 probes、JMX、observations 共 21 组映射均由官方 Spring-aware recipe 执行，覆盖 properties、YAML 和 Java 注解；原自定义 properties/YAML visitor 已删除 |
 | [`SpringBootProperties_3_4_EnabledToAccess`](https://github.com/openrewrite/rewrite-spring/blob/d28afcb6661ad413539056de0936c5489ff9d8ee/src/main/resources/META-INF/rewrite/spring-boot-34-properties.yml) | 直接复用 | 完整组合官方 endpoint 清单和 `true` → `read-only`、`false` → `none` 语义；回查时据此纠正了原自定义代码错误的 `true` → `unrestricted` 行为 |
-| [`ChangePackage`](https://github.com/openrewrite/rewrite/blob/91e23c2858176877428ddc03e146d2bb023217a8/rewrite-java/src/main/java/org/openrewrite/java/ChangePackage.java) / [`ChangeType`](https://github.com/openrewrite/rewrite/blob/91e23c2858176877428ddc03e146d2bb023217a8/rewrite-java/src/main/java/org/openrewrite/java/ChangeType.java) | 直接复用 | `rewrite.yml` 直接声明 8 个 package move 和 6 个精确 annotation type move；原先仅返回这些官方叶子的本地 Java wrapper 已删除 |
+| [`ChangePackage`](https://github.com/openrewrite/rewrite/blob/ea77ee7c7471c17423726ae2612de17b6fc8b111/rewrite-java/src/main/java/org/openrewrite/java/ChangePackage.java) / [`ChangeType`](https://github.com/openrewrite/rewrite/blob/ea77ee7c7471c17423726ae2612de17b6fc8b111/rewrite-java/src/main/java/org/openrewrite/java/ChangeType.java) | 直接复用 | `rewrite.yml` 直接声明 8 个 package move 和 6 个精确 annotation type move；原先仅返回这些官方叶子的本地 Java wrapper 已删除 |
 | `JavaxMigrationToJakarta` / `JakartaEE10` | 已检索，未整体组合 | 官方总配方还会改大量 API 依赖、插件、Jetty/Faces 和平台版本；本模块必须保留 Boot BOM 所有权并限制为已证明的源码命名空间，因此只复用其底层官方原语，剩余 Jakarta 风险交给 marker |
 | `UpgradeSpringBoot_3_5` | 已检索，未整体组合 | 官方配方使用 `3.5.x` 选择器并联动所有 Boot dependency/plugin、Spring Cloud 和 Spring Security；这会突破工作簿 14 个精确来源、固定 `3.5.15` 和禁止降级契约，因此严格版本/owner 逻辑保留为自定义实现 |
 | `SpringBootProperties_3_5` / `UpdatePrometheusPushgateway` | 已检索，未直接组合 | 官方能力会改 Pushgateway 键和依赖坐标，但没有把既有 URL 值可靠转换成目标 `host:port`；本模块保留原值并生成精确 marker，避免产生看似成功但运行时无效的配置 |
@@ -250,11 +250,11 @@ MigrateSpringBootActuatorTo3_5_15
 fixture 的裁剪范围、许可证和固定链接记录在
 [`src/test/resources/fixtures/real/README.md`](src/test/resources/fixtures/real/README.md)。
 
-测试风格遵循 OpenRewrite `8.87.5` 固定源码中的
-[`RewriteTest`](https://github.com/openrewrite/rewrite/blob/b3008cc4a1f0c43f562da16e5933a2a56d9bc568/rewrite-test/src/main/java/org/openrewrite/test/RewriteTest.java)、
-[`ChangeTypeTest`](https://github.com/openrewrite/rewrite/blob/b3008cc4a1f0c43f562da16e5933a2a56d9bc568/rewrite-java-test/src/test/java/org/openrewrite/java/ChangeTypeTest.java)
+测试风格遵循 OpenRewrite `8.87.7` 固定源码中的
+[`RewriteTest`](https://github.com/openrewrite/rewrite/blob/af06bb1b159249695dc92187093cd0909da6c843/rewrite-test/src/main/java/org/openrewrite/test/RewriteTest.java)、
+[`ChangeTypeTest`](https://github.com/openrewrite/rewrite/blob/ea77ee7c7471c17423726ae2612de17b6fc8b111/rewrite-java-test/src/test/java/org/openrewrite/java/ChangeTypeTest.java)
 和
-[`ChangePropertyKeyTest`](https://github.com/openrewrite/rewrite/blob/b3008cc4a1f0c43f562da16e5933a2a56d9bc568/rewrite-yaml/src/test/java/org/openrewrite/yaml/ChangePropertyKeyTest.java)：
+[`ChangePropertyKeyTest`](https://github.com/openrewrite/rewrite/blob/af06bb1b159249695dc92187093cd0909da6c843/rewrite-yaml/src/test/java/org/openrewrite/yaml/ChangePropertyKeyTest.java)：
 同时覆盖 before→after、精确 marker、no-op、路径边界、格式保留和两周期幂等。
 
 ## 官方依据

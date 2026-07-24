@@ -67,7 +67,8 @@ mvn rewrite:run \
 
 | 制品 | 固定版本 / commit | 本地验证 |
 |---|---|---|
-| OpenRewrite Core / Java | `8.87.5` / [`b3008cc4`](https://github.com/openrewrite/rewrite/tree/b3008cc4a1f0c43f562da16e5933a2a56d9bc568) | `rewrite-core` JAR SHA-256 `a7ff59eebc8072353ec5c3aee3e2033bc69a844b3c9ce2e9be8d4adaec10cbf8` |
+| OpenRewrite Core | `8.87.7` / [`af06bb1`](https://github.com/openrewrite/rewrite/tree/af06bb1b159249695dc92187093cd0909da6c843) | `rewrite-core` JAR SHA-256 `a4fb7cd35ada08af9e9585a8d63de4d7b2f12b70af1dc506aff963a6f5434448` |
+| OpenRewrite Java | 坐标 `8.87.7`，manifest `8.88.0-SNAPSHOT` / [`ea77ee7`](https://github.com/openrewrite/rewrite/tree/ea77ee7c7471c17423726ae2612de17b6fc8b111) | `rewrite-java` JAR SHA-256 `015cca0c660685f8107ee1c173db1063302926bb5f7e4598ed908428b0a9550f` |
 | `rewrite-logging-frameworks` | `3.30.0` / [`c357a720`](https://github.com/openrewrite/rewrite-logging-frameworks/tree/c357a7209d721078dc942a777b1d8cc95941f722) | JAR SHA-256 `366a1cd43ee8e0f4378cac52036831df07d74d1648222d0664de2c63f7e26827` |
 | `rewrite-apache` | `2.28.0` / [`b0424eb1`](https://github.com/openrewrite/rewrite-apache/tree/b0424eb13da62085a34a7e84a3987ac78227b70b) | JAR SHA-256 `1841723a57e3dad3a47777a311275f1d18fed8e197c99aa3526503e7c8a06d17`；运行时 catalog 无 Log4j 配方 |
 | 目标 `log4j-1.2-api` | `2.25.5` / [`2e1d9c62`](https://github.com/apache/logging-log4j2/tree/2e1d9c6284af1da1dec189f4b5b98ac0f32a7645) | 目标 JAR SHA-256 `4dd812dc5a6343f542a9e0046b1ec78ecf10bdd5a8c15745101cdd8b9aa24974` |
@@ -82,10 +83,10 @@ class recipe 的运行时依赖，后者只以 test scope 审计 catalog。
 
 | 顺序 | 官方能力 | 固定参数 / 作用 |
 |---:|---|---|
-| 1 | Core [`ChangeMethodTargetToStatic`](https://github.com/openrewrite/rewrite/blob/b3008cc4a1f0c43f562da16e5933a2a56d9bc568/rewrite-java/src/main/java/org/openrewrite/java/ChangeMethodTargetToStatic.java) | `org.apache.log4j.Logger getLogger(..)` → `org.apache.logging.log4j.LogManager` |
+| 1 | Core [`ChangeMethodTargetToStatic`](https://github.com/openrewrite/rewrite/blob/ea77ee7c7471c17423726ae2612de17b6fc8b111/rewrite-java/src/main/java/org/openrewrite/java/ChangeMethodTargetToStatic.java) | `org.apache.log4j.Logger getLogger(..)` → `org.apache.logging.log4j.LogManager` |
 | 2 | 同上 | `org.apache.log4j.Logger getRootLogger()` → `org.apache.logging.log4j.LogManager` |
 | 3 | [`LoggerSetLevelToConfiguratorRecipe`](https://github.com/openrewrite/rewrite-logging-frameworks/blob/c357a7209d721078dc942a777b1d8cc95941f722/src/main/java/org/openrewrite/java/logging/log4j/LoggerSetLevelToConfigurator.java) | `logger.setLevel(level)` → `Configurator.setLevel(logger, level)` |
-| 4 | Core [`ChangeType`](https://github.com/openrewrite/rewrite/blob/b3008cc4a1f0c43f562da16e5933a2a56d9bc568/rewrite-java/src/main/java/org/openrewrite/java/ChangeType.java) | `org.apache.log4j.Logger` → `org.apache.logging.log4j.Logger`，`ignoreDefinition=true` |
+| 4 | Core [`ChangeType`](https://github.com/openrewrite/rewrite/blob/ea77ee7c7471c17423726ae2612de17b6fc8b111/rewrite-java/src/main/java/org/openrewrite/java/ChangeType.java) | `org.apache.log4j.Logger` → `org.apache.logging.log4j.Logger`，`ignoreDefinition=true` |
 | 5 | 同上 | `org.apache.log4j.Level` → `org.apache.logging.log4j.Level`，`ignoreDefinition=true` |
 
 五个叶子只进入 `WithOwnedCore` opt-in，并受 `FindSafeLog4j12SetLevelSources` 源码前置

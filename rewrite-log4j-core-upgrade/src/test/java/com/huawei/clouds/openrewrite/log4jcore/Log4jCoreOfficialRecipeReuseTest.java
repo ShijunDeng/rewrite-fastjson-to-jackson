@@ -38,12 +38,12 @@ class Log4jCoreOfficialRecipeReuseTest implements RewriteTest {
 
     @Test
     void pinsEveryAuditedOfficialArtifact() throws Exception {
-        assertArtifact(Recipe.class, "8.87.5",
-                "b3008cc4a1f0c43f562da16e5933a2a56d9bc568",
-                "a7ff59eebc8072353ec5c3aee3e2033bc69a844b3c9ce2e9be8d4adaec10cbf8");
+        assertArtifact(Recipe.class, "8.87.7",
+                "af06bb1b159249695dc92187093cd0909da6c843",
+                "a4fb7cd35ada08af9e9585a8d63de4d7b2f12b70af1dc506aff963a6f5434448");
         assertArtifact(ChangeMethodName.class, "8.88.0-SNAPSHOT",
-                "91e23c2858176877428ddc03e146d2bb023217a8",
-                "a378253fe0c0865ab39d1743e468fe3d2557d7760e0a6897de294ca18ea90043");
+                "ea77ee7c7471c17423726ae2612de17b6fc8b111",
+                "015cca0c660685f8107ee1c173db1063302926bb5f7e4598ed908428b0a9550f");
         assertArtifact(LoggerSetLevelToConfiguratorRecipe.class, "3.30.0",
                 "c357a7209d721078dc942a777b1d8cc95941f722",
                 "366a1cd43ee8e0f4378cac52036831df07d74d1648222d0664de2c63f7e26827");
